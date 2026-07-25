@@ -13,6 +13,10 @@ pub const MAIN_CSS: Asset = asset!("/assets/main.css");
 pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
 fn main() {
+    #[cfg(feature = "server")]
+    backend::launch(App);
+
+    #[cfg(not(feature = "server"))]
     dioxus::launch(App);
 }
 
