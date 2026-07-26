@@ -75,7 +75,7 @@ pub fn SettingsIntegrations() -> Element {
         }
 
         section {
-            class: "mb-8 grid grid-cols-2 gap-3 md:grid-cols-4",
+            class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Connected", value: "6", accent: "#7b8cff" }
             StatPill { label: "Webhooks", value: "11", accent: "#5b9dff" }
             StatPill { label: "Linked accounts", value: "892", accent: "#3ecf8e" }

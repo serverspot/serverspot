@@ -12,10 +12,10 @@
   --color-border: #454556;
   --color-border-subtle: #343444;
 
-  --color-accent: #b8b0ff;
-  --color-accent-strong: #a59bff;
-  --color-accent-muted: #8b7fe0;
-  --color-accent-soft: rgba(184, 176, 255, 0.16);
+  --color-accent: #87d1fe;
+  --color-accent-strong: #6bc0f5;
+  --color-accent-muted: #4aaee8;
+  --color-accent-soft: rgba(135, 209, 254, 0.16);
 
   --color-success: #3ecf8e;
   --color-danger: #f87171;
@@ -54,6 +54,11 @@
 
   .motion-fade-up {
     animation: ui-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .page-enter {
+    opacity: 1;
+    animation: page-enter 0.34s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .motion-delay-1 {
@@ -102,6 +107,66 @@
   .interactive-card:active {
     transform: translateY(0);
   }
+
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-sheet-backdrop-enter {
+    animation: nav-sheet-backdrop-in 0.28s ease both;
+  }
+
+  .nav-sheet-backdrop-exit {
+    animation: nav-sheet-backdrop-out 0.24s ease both;
+  }
+
+  .nav-sheet-panel-enter {
+    animation: nav-sheet-panel-in 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .nav-sheet-panel-exit {
+    animation: nav-sheet-panel-out 0.28s cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  .splash-logo {
+    animation: splash-logo-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .splash-label {
+    animation: splash-label-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+  }
+
+  .splash-bar-track {
+    width: min(12rem, 56vw);
+    height: 3px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-surface-3) 80%, transparent);
+  }
+
+  .splash-bar-fill {
+    height: 100%;
+    width: 100%;
+    transform-origin: left center;
+    border-radius: inherit;
+    background: linear-gradient(
+      90deg,
+      #b1e1ff 0%,
+      var(--color-accent) 45%,
+      var(--color-accent-muted) 100%
+    );
+    animation: splash-bar-progress 1.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .splash-screen {
+    animation: splash-screen-lifecycle 1.85s cubic-bezier(0.4, 0, 0.2, 1)
+      forwards;
+  }
 }
 
 @keyframes ui-fade-up {
@@ -112,6 +177,99 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nav-sheet-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes nav-sheet-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes nav-sheet-panel-in {
+  from {
+    opacity: 0.85;
+    transform: translate3d(-104%, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes nav-sheet-panel-out {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0.85;
+    transform: translate3d(-104%, 0, 0);
+  }
+}
+
+@keyframes splash-logo-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes splash-label-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes splash-bar-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes splash-screen-lifecycle {
+  0%,
+  72% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
 }
 
@@ -135,13 +293,18 @@
 
 @media (prefers-reduced-motion: reduce) {
   .motion-fade-up,
+  .page-enter,
   .interactive-card,
   .interactive-row,
   .ui-btn,
   .ui-input,
   .ui-chip,
   .ui-nav-link,
-  .sparkline-path {
+  .sparkline-path,
+  .nav-sheet-backdrop-enter,
+  .nav-sheet-backdrop-exit,
+  .nav-sheet-panel-enter,
+  .nav-sheet-panel-exit {
     animation: none !important;
     transition: none !important;
   }
@@ -152,9 +315,52 @@
   .ui-btn:active:not(:disabled) {
     transform: none !important;
   }
+
+  .nav-sheet-panel-enter,
+  .nav-sheet-panel-exit {
+    opacity: 1 !important;
+    transform: none !important;
+    animation-duration: 1ms !important;
+  }
+
+  .nav-sheet-backdrop-enter,
+  .nav-sheet-backdrop-exit {
+    opacity: 1 !important;
+    animation-duration: 1ms !important;
+  }
+
+  .splash-logo {
+    animation: splash-logo-in 1ms both !important;
+  }
+
+  .splash-label {
+    animation: splash-label-in 1ms both !important;
+  }
+
+  .splash-bar-fill {
+    animation: splash-bar-progress 1ms both !important;
+  }
+
+  .splash-screen {
+    animation: splash-screen-lifecycle 1ms forwards !important;
+  }
+
+  .page-enter {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
 }
 
 @layer components {
+  html,
+  body {
+    min-height: 100%;
+    background: #1c1c24;
+    color: #f4f4f7;
+    font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  }
+
   .ui-squircle {
     border-radius: var(--radius-squircle);
     corner-shape: squircle;

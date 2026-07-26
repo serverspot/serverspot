@@ -1,10 +1,10 @@
 use dioxus::prelude::*;
 
 use super::hugeicon::{
-    HugeIcon, ADD_01, AI_CHAT_01, ANALYTICS_UP, ARROW_DOWN_01, BOOK_OPEN_01, CHART_LINE_DATA_01,
-    CUSTOMER_SERVICE_01, DASHBOARD_SQUARE_01, DISCORD, GLOBE_02, HELP_CIRCLE, LAYERS_01,
-    MESSAGE_01, NEWS, NOTIFICATION_03, PACKAGE_01, SEARCH_01, SETTINGS_01, SHOPPING_CART_01,
-    STORE_01, TICKET_01, USER_GROUP, WALLET_01,
+    HugeIcon, ADD_01, AI_CHAT_01, ANALYTICS_UP, ARROW_DOWN_01, BOOK_OPEN_01, CANCEL_01,
+    CHART_LINE_DATA_01, CUSTOMER_SERVICE_01, DASHBOARD_SQUARE_01, DISCORD, GLOBE_02, HELP_CIRCLE,
+    LAYERS_01, MENU_01, MESSAGE_01, NEWS, NOTIFICATION_03, PACKAGE_01, SEARCH_01, SETTINGS_01,
+    SHOPPING_CART_01, STORE_01, TICKET_01, USER_GROUP, WALLET_01,
 };
 
 #[component]
@@ -120,6 +120,16 @@ pub fn IconHelp(#[props(default, into)] class: String) -> Element {
 #[component]
 pub fn IconAi(#[props(default, into)] class: String) -> Element {
     rsx! { HugeIcon { icon: AI_CHAT_01, class } }
+}
+
+#[component]
+pub fn IconMenu(#[props(default, into)] class: String) -> Element {
+    rsx! { HugeIcon { icon: MENU_01, class } }
+}
+
+#[component]
+pub fn IconClose(#[props(default, into)] class: String) -> Element {
+    rsx! { HugeIcon { icon: CANCEL_01, class } }
 }
 
 #[component]

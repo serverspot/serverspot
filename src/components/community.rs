@@ -18,7 +18,7 @@ pub fn CommunityPlayers() -> Element {
         }
 
         section {
-            class: "mb-8 grid grid-cols-2 gap-3 md:grid-cols-4",
+            class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Players", value: "1,842", accent: "#5b9dff" }
             StatPill { label: "Votes today", value: "214", accent: "#fbbf24" }
             StatPill { label: "Applications", value: "7", accent: "#fb7185" }

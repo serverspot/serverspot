@@ -1,6 +1,22 @@
 use dioxus::prelude::*;
 
+use crate::router::Route;
+
 use super::ui::*;
+
+#[component]
+pub fn PageTransition() -> Element {
+    let route = use_route::<Route>();
+    let key = format!("{route:?}");
+
+    rsx! {
+        div {
+            key: "{key}",
+            class: "page-enter",
+            Outlet::<Route> {}
+        }
+    }
+}
 
 #[component]
 pub fn StubPage(
@@ -31,16 +47,16 @@ pub fn PageHeader(
 ) -> Element {
     rsx! {
         div {
-            class: "mb-8 flex flex-wrap items-end justify-between gap-4",
+            class: "mb-6 flex flex-wrap items-end justify-between gap-3 sm:mb-8 sm:gap-4",
             div {
                 class: "min-w-0",
-                h1 { class: "text-3xl font-semibold tracking-tight", "{title}" }
+                h1 { class: "text-2xl font-semibold tracking-tight sm:text-3xl", "{title}" }
                 if !subtitle.is_empty() {
-                    p { class: "mt-2 max-w-2xl text-sm text-text-muted", "{subtitle}" }
+                    p { class: "mt-1.5 max-w-2xl text-sm text-text-muted sm:mt-2", "{subtitle}" }
                 }
             }
             if let Some(action) = action {
-                {action}
+                div { class: "w-full sm:w-auto", {action} }
             }
         }
     }
@@ -50,10 +66,10 @@ pub fn PageHeader(
 pub fn StatPill(label: &'static str, value: &'static str, accent: &'static str) -> Element {
     rsx! {
         div {
-            class: "rounded-squircle-lg border border-border-subtle bg-surface/30 px-4 py-3",
+            class: "rounded-squircle-lg border border-border-subtle bg-surface/30 px-3 py-2.5 sm:px-4 sm:py-3",
             p { class: "text-xs text-text-muted", "{label}" }
             p {
-                class: "mt-1 text-xl font-semibold tabular-nums tracking-tight",
+                class: "mt-1 text-lg font-semibold tabular-nums tracking-tight sm:text-xl",
                 style: "color: {accent};",
                 "{value}"
             }
@@ -90,7 +106,7 @@ pub fn RowItem(
 ) -> Element {
     rsx! {
         div {
-            class: "flex items-center justify-between gap-4 border-b border-border-subtle py-3 last:border-0",
+            class: "flex flex-col gap-2 border-b border-border-subtle py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4",
             div {
                 class: "min-w-0",
                 p { class: "truncate text-sm font-medium text-text", "{title}" }
@@ -111,13 +127,14 @@ pub fn SettingRow(
 ) -> Element {
     rsx! {
         div {
-            class: "flex items-start justify-between gap-4 border-b border-border-subtle py-4 last:border-0",
+            class: "flex flex-col gap-3 border-b border-border-subtle py-4 last:border-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
             div {
                 class: "min-w-0",
                 p { class: "text-sm font-medium text-text", "{title}" }
                 p { class: "mt-1 text-sm text-text-muted", "{description}" }
             }
             Button {
+                class: "self-start",
                 variant: if enabled { ButtonVariant::Primary } else { ButtonVariant::Secondary },
                 size: ButtonSize::Sm,
                 if enabled { "On" } else { "Off" }

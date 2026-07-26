@@ -31,7 +31,7 @@ pub fn Dashboard() -> Element {
         FeatureModule {
             title: "Help Center",
             blurb: "Build FAQs, rules, and guides so players find answers themselves.",
-            accent: "#b8b0ff",
+            accent: "#87d1fe",
         },
         FeatureModule {
             title: "Blog & News",
@@ -82,7 +82,7 @@ pub fn Dashboard() -> Element {
         }
 
         section {
-            class: "mb-10 grid grid-cols-2 gap-3 md:grid-cols-4",
+            class: "mb-6 grid grid-cols-2 gap-2 sm:mb-10 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Revenue", value: "£4,281", accent: "#3ecf8e" }
             StatPill { label: "Open tickets", value: "12", accent: "#f0a35e" }
             StatPill { label: "Players", value: "1,842", accent: "#5b9dff" }
@@ -90,7 +90,7 @@ pub fn Dashboard() -> Element {
         }
 
         section {
-            class: "grid gap-x-10 gap-y-8 sm:grid-cols-2",
+            class: "grid grid-cols-1 gap-x-10 gap-y-4 sm:grid-cols-2 sm:gap-y-8",
             for module in modules {
                 ModuleCard { module }
             }
@@ -134,7 +134,7 @@ fn ModuleCard(module: FeatureModule) -> Element {
 
     rsx! {
         button {
-            class: "ui-btn ui-btn-secondary ui-squircle group flex h-full w-full items-start gap-4 px-4 py-4 text-left font-normal",
+            class: "ui-btn ui-btn-secondary ui-squircle group flex h-full w-full items-start gap-3 px-3 py-3 text-left font-normal sm:gap-4 sm:px-4 sm:py-4",
             div {
                 class: "flex h-10 w-10 shrink-0 items-center justify-center rounded-squircle-sm",
                 style: "background: color-mix(in srgb, {module.accent} 16%, transparent); color: {module.accent};",

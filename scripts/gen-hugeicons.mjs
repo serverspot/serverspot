@@ -25,6 +25,8 @@ const selected = {
   Package01: "Package01Icon",
   HelpCircle: "HelpCircleIcon",
   AiChat01: "AiChat01Icon",
+  Menu01: "Menu01Icon",
+  Cancel01: "Cancel01Icon",
 };
 
 function esc(s) {

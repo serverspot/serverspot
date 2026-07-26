@@ -5,6 +5,7 @@ pub mod content;
 pub mod dashboard;
 pub mod forum;
 pub mod home;
+pub mod loading;
 pub mod page;
 pub mod settings;
 pub mod shell;

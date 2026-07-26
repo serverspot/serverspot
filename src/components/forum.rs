@@ -18,7 +18,7 @@ pub fn ForumCategories() -> Element {
         }
 
         section {
-            class: "mb-8 grid grid-cols-2 gap-3 md:grid-cols-4",
+            class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Threads", value: "1,204", accent: "#5b9dff" }
             StatPill { label: "Posts today", value: "52", accent: "#f071a5" }
             StatPill { label: "Members", value: "3,481", accent: "#3ecf8e" }

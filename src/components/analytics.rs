@@ -18,10 +18,10 @@ pub fn AnalyticsOverview() -> Element {
         }
 
         section {
-            class: "mb-8 grid grid-cols-2 gap-3 md:grid-cols-4",
+            class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Revenue", value: "£1,094", accent: "#3ecf8e" }
             StatPill { label: "Visitors", value: "8,420", accent: "#5b9dff" }
-            StatPill { label: "Conversion", value: "3.8%", accent: "#b8b0ff" }
+            StatPill { label: "Conversion", value: "3.8%", accent: "#87d1fe" }
             StatPill { label: "Ticket CSAT", value: "94%", accent: "#f071a5" }
         }
 

@@ -17,6 +17,7 @@ pub enum ButtonSize {
     Md,
     Lg,
     Icon,
+    IconSm,
 }
 
 #[component]
@@ -42,6 +43,7 @@ pub fn Button(
         ButtonSize::Md => "h-10 px-4 text-sm gap-2",
         ButtonSize::Lg => "h-11 px-5 text-sm gap-2.5",
         ButtonSize::Icon => "h-10 w-10 p-0 justify-center",
+        ButtonSize::IconSm => "h-9 w-9 p-0 justify-center",
     };
 
     let width = if full_width { "w-full" } else { "" };
@@ -64,9 +66,9 @@ pub fn IconButton(
 ) -> Element {
     rsx! {
         Button {
-            variant: ButtonVariant::Secondary,
-            size: ButtonSize::Icon,
-            class,
+            variant: ButtonVariant::Ghost,
+            size: ButtonSize::IconSm,
+            class: "text-text-muted {class}",
             onclick,
             {children}
         }

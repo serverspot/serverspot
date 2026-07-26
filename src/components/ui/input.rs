@@ -42,7 +42,7 @@ pub fn SearchInput(
 
     rsx! {
         div {
-            class: "relative {class}",
+            class: "relative flex min-w-0 {class}",
             span {
                 class: "pointer-events-none absolute inset-y-0 left-3.5 z-10 flex items-center text-text-muted",
                 IconSearch {}
@@ -50,7 +50,7 @@ pub fn SearchInput(
             Input {
                 value,
                 placeholder,
-                class: "pl-10",
+                class: "h-9 pl-10",
                 oninput,
             }
         }

@@ -18,9 +18,9 @@ pub fn ContentBlog() -> Element {
         }
 
         section {
-            class: "mb-8 grid grid-cols-2 gap-3 md:grid-cols-4",
+            class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Published", value: "48", accent: "#f071a5" }
-            StatPill { label: "Drafts", value: "6", accent: "#b8b0ff" }
+            StatPill { label: "Drafts", value: "6", accent: "#87d1fe" }
             StatPill { label: "Help articles", value: "32", accent: "#5b9dff" }
             StatPill { label: "Custom pages", value: "9", accent: "#3ecf8e" }
         }

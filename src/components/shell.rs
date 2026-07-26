@@ -1,11 +1,21 @@
 use dioxus::prelude::*;
 
+use crate::components::page::PageTransition;
 use crate::components::ui::*;
 use crate::nav::{crumb_for, section_for, Section};
 use crate::router::Route;
 
+const LOGO: Asset = asset!("/assets/logo.svg");
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum SheetAnim {
+    Open,
+    Closing,
+}
+
 #[component]
 pub fn AppShell() -> Element {
+    let mut sheet = use_signal(|| Option::<SheetAnim>::None);
     let mut search_open = use_signal(|| false);
     let mut search = use_signal(|| String::new());
     let route = use_route::<Route>();
@@ -13,8 +23,28 @@ pub fn AppShell() -> Element {
     let section = section_for(&route);
     let crumb = crumb_for(&route);
     let nav_home = navigator.clone();
-    let nav_grid = navigator.clone();
+    let nav_home_mobile = navigator.clone();
     let nav_settings = navigator.clone();
+
+    use_effect(move || {
+        let _ = route;
+        if sheet().is_some_and(|s| s == SheetAnim::Open) {
+            sheet.set(Some(SheetAnim::Closing));
+        }
+        search_open.set(false);
+    });
+
+    let sheet_anim = sheet();
+    let backdrop_class = match sheet_anim {
+        Some(SheetAnim::Open) => "nav-sheet-backdrop-enter",
+        Some(SheetAnim::Closing) => "nav-sheet-backdrop-exit",
+        None => "",
+    };
+    let panel_class = match sheet_anim {
+        Some(SheetAnim::Open) => "nav-sheet-panel-enter",
+        Some(SheetAnim::Closing) => "nav-sheet-panel-exit",
+        None => "",
+    };
 
     rsx! {
         div {
@@ -22,16 +52,15 @@ pub fn AppShell() -> Element {
 
             aside {
                 class: "sticky top-0 hidden h-dvh w-[68px] shrink-0 flex-col items-center self-start overflow-y-auto border-r border-border-subtle py-5 md:flex",
-                div {
-                    class: "mb-8 flex h-9 w-9 items-center justify-center",
-                    Button {
-                        variant: ButtonVariant::Primary,
-                        size: ButtonSize::Icon,
-                        class: "h-9 w-9 text-sm",
-                        onclick: move |_| {
-                            nav_home.push(Route::Dashboard {});
-                        },
-                        "S"
+                button {
+                    class: "mb-8 flex h-9 w-9 items-center justify-center rounded-squircle-sm transition-opacity hover:opacity-80",
+                    onclick: move |_| {
+                        nav_home.push(Route::Dashboard {});
+                    },
+                    img {
+                        src: LOGO,
+                        alt: "ServerSpot",
+                        class: "h-9 w-auto",
                     }
                 }
                 nav {
@@ -53,7 +82,7 @@ pub fn AppShell() -> Element {
                     }
                     div {
                         class: "h-8 w-8 rounded-full",
-                        style: "background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);",
+                        style: "background: linear-gradient(135deg, #b1e1ff, #87d1fe, #4aaee8);",
                     }
                 }
             }
@@ -78,58 +107,178 @@ pub fn AppShell() -> Element {
                 class: "flex min-w-0 flex-1 flex-col",
 
                 header {
-                    class: "flex items-center justify-between gap-4 px-6 py-4 md:px-8",
+                    class: "sticky top-0 z-30 border-b border-border-subtle/60 bg-bg/90 backdrop-blur-md",
                     div {
-                        class: "flex items-center gap-2 text-sm text-text-muted",
-                        Link {
-                            to: section.home(),
-                            class: "opacity-70 hover:opacity-100 transition-opacity text-text-muted",
-                            "{section.label()}"
-                        }
-                        span { class: "opacity-40", "/" }
-                        span { class: "text-text-secondary", "{crumb}" }
-                    }
+                        class: "flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-5 md:px-8",
 
-                    div {
-                        class: "flex items-center gap-2",
                         if search_open() {
+                            IconButton {
+                                class: "shrink-0",
+                                onclick: move |_| {
+                                    search_open.set(false);
+                                    search.set(String::new());
+                                },
+                                IconClose {}
+                            }
                             SearchInput {
-                                class: "w-44 sm:w-56",
+                                class: "min-w-0 flex-1",
                                 value: search(),
                                 placeholder: "Search…",
                                 oninput: move |evt: FormEvent| search.set(evt.value()),
                             }
-                        }
-                        div {
-                            class: "flex items-center gap-1.5",
+                        } else {
                             IconButton {
-                                onclick: move |_| search_open.set(!search_open()),
-                                IconSearch {}
+                                class: "shrink-0 md:hidden",
+                                onclick: move |_| sheet.set(Some(SheetAnim::Open)),
+                                IconMenu {}
                             }
-                            IconButton {
+
+                            button {
+                                class: "flex h-8 w-8 shrink-0 items-center justify-center md:hidden",
                                 onclick: move |_| {
-                                    nav_grid.push(Route::Dashboard {});
+                                    nav_home_mobile.push(Route::Dashboard {});
                                 },
-                                IconGrid {}
+                                img {
+                                    src: LOGO,
+                                    alt: "ServerSpot",
+                                    class: "h-7 w-auto",
+                                }
                             }
-                            IconButton { IconBell {} }
-                            IconButton {
-                                onclick: move |_| {
-                                    nav_settings.push(Route::SettingsIntegrations {});
-                                },
-                                IconGlobe {}
+
+                            div {
+                                class: "min-w-0 flex-1",
+                                p {
+                                    class: "truncate text-sm font-medium text-text md:hidden",
+                                    "{section.label()}"
+                                    span { class: "font-normal text-text-muted", " / {crumb}" }
+                                }
+                                div {
+                                    class: "hidden min-w-0 items-center gap-2 text-sm text-text-muted md:flex",
+                                    Link {
+                                        to: section.home(),
+                                        class: "truncate opacity-70 transition-opacity hover:opacity-100 text-text-muted",
+                                        "{section.label()}"
+                                    }
+                                    span { class: "opacity-40", "/" }
+                                    span { class: "truncate text-text-secondary", "{crumb}" }
+                                }
+                            }
+
+                            div {
+                                class: "flex shrink-0 items-center gap-0.5 sm:gap-1",
+                                IconButton {
+                                    onclick: move |_| search_open.set(true),
+                                    IconSearch {}
+                                }
+                                IconButton {
+                                    class: "max-lg:hidden",
+                                    IconBell {}
+                                }
+                                IconButton {
+                                    class: "max-lg:hidden",
+                                    onclick: move |_| {
+                                        nav_settings.push(Route::SettingsIntegrations {});
+                                    },
+                                    IconGlobe {}
+                                }
+                                Button {
+                                    class: "ml-1 max-sm:hidden",
+                                    size: ButtonSize::Sm,
+                                    IconPlus {}
+                                    "New"
+                                }
+                                IconButton {
+                                    class: "sm:hidden",
+                                    IconPlus {}
+                                }
                             }
                         }
-                        Button {
-                            IconPlus {}
-                            "New"
+                    }
+
+                    nav {
+                        class: "flex gap-1 overflow-x-auto border-t border-border-subtle/50 px-3 py-2 sm:px-5 md:px-8 lg:hidden scrollbar-none",
+                        for sub in section.subs().iter().copied() {
+                            SubChip {
+                                to: sub.route,
+                                label: sub.label,
+                                active: route == sub.route,
+                            }
                         }
                     }
                 }
 
                 main {
-                    class: "flex-1 px-6 pb-12 md:px-8",
-                    Outlet::<Route> {}
+                    class: "flex-1 px-4 pb-10 sm:px-6 sm:pb-12 md:px-8",
+                    PageTransition {}
+                }
+            }
+
+            if sheet_anim.is_some() {
+                div {
+                    class: "fixed inset-0 z-40 md:hidden",
+                    button {
+                        class: "absolute inset-0 bg-black/50 {backdrop_class}",
+                        aria_label: "Close menu",
+                        onclick: move |_| {
+                            if sheet() == Some(SheetAnim::Open) {
+                                sheet.set(Some(SheetAnim::Closing));
+                            }
+                        },
+                    }
+                    div {
+                        class: "absolute inset-y-0 left-0 flex w-[min(100%,18.5rem)] flex-col border-r border-border-subtle bg-bg shadow-xl {panel_class}",
+                        onanimationend: move |_| {
+                            if sheet() == Some(SheetAnim::Closing) {
+                                sheet.set(None);
+                            }
+                        },
+                        div {
+                            class: "flex h-14 items-center justify-between gap-3 border-b border-border-subtle px-4",
+                            div {
+                                class: "flex items-center gap-3",
+                                img {
+                                    src: LOGO,
+                                    alt: "ServerSpot",
+                                    class: "h-7 w-auto",
+                                }
+                                span { class: "text-base font-semibold tracking-tight", "ServerSpot" }
+                            }
+                            IconButton {
+                                onclick: move |_| {
+                                    if sheet() == Some(SheetAnim::Open) {
+                                        sheet.set(Some(SheetAnim::Closing));
+                                    }
+                                },
+                                IconClose {}
+                            }
+                        }
+
+                        div {
+                            class: "flex-1 overflow-y-auto px-3 py-4",
+                            p { class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted", "Sections" }
+                            nav {
+                                class: "mb-6 flex flex-col gap-0.5",
+                                for main in Section::all().iter().copied().chain(std::iter::once(Section::Settings)) {
+                                    MobileSectionNav {
+                                        section: main,
+                                        active: section == main,
+                                    }
+                                }
+                            }
+
+                            p { class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted", "{section.label()}" }
+                            nav {
+                                class: "flex flex-col gap-0.5",
+                                for sub in section.subs().iter().copied() {
+                                    SideNav {
+                                        to: sub.route,
+                                        label: sub.label,
+                                        active: route == sub.route,
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -157,7 +306,7 @@ fn RailNav(to: Route, active: bool, icon: Element) -> Element {
     rsx! {
         Button {
             variant: if active { ButtonVariant::Secondary } else { ButtonVariant::Ghost },
-            size: ButtonSize::Icon,
+            size: ButtonSize::IconSm,
             class: if active { "text-accent" } else { "text-text-muted" },
             onclick: move |_| {
                 navigator.push(dest.clone());
@@ -186,6 +335,50 @@ fn SideNav(to: Route, label: &'static str, active: bool) -> Element {
                 navigator.push(dest.clone());
             },
             "{label}"
+        }
+    }
+}
+
+#[component]
+fn SubChip(to: Route, label: &'static str, active: bool) -> Element {
+    let navigator = use_navigator();
+    let dest = to.clone();
+
+    rsx! {
+        button {
+            class: if active {
+                "shrink-0 rounded-squircle-sm bg-surface-2 px-3 py-1.5 text-xs font-medium text-accent"
+            } else {
+                "shrink-0 rounded-squircle-sm px-3 py-1.5 text-xs font-medium text-text-muted transition-colors hover:bg-surface/60 hover:text-text"
+            },
+            onclick: move |_| {
+                navigator.push(dest.clone());
+            },
+            "{label}"
+        }
+    }
+}
+
+#[component]
+fn MobileSectionNav(section: Section, active: bool) -> Element {
+    let navigator = use_navigator();
+    let dest = section.home();
+
+    rsx! {
+        Button {
+            variant: if active { ButtonVariant::Secondary } else { ButtonVariant::Ghost },
+            size: ButtonSize::Sm,
+            full_width: true,
+            class: if active {
+                "justify-start gap-2.5 text-accent"
+            } else {
+                "justify-start gap-2.5 text-text-muted"
+            },
+            onclick: move |_| {
+                navigator.push(dest);
+            },
+            span { class: "opacity-80", {rail_icon(section)} }
+            span { "{section.label()}" }
         }
     }
 }

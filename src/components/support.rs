@@ -18,7 +18,7 @@ pub fn SupportTickets() -> Element {
         }
 
         section {
-            class: "mb-8 grid grid-cols-2 gap-3 md:grid-cols-4",
+            class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Open", value: "12", accent: "#f0a35e" }
             StatPill { label: "Waiting on staff", value: "3", accent: "#fb7185" }
             StatPill { label: "Resolved today", value: "27", accent: "#3ecf8e" }

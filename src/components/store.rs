@@ -18,10 +18,10 @@ pub fn StoreProducts() -> Element {
         }
 
         section {
-            class: "mb-8 grid grid-cols-2 gap-3 md:grid-cols-4",
+            class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Revenue", value: "£4,281", accent: "#3ecf8e" }
             StatPill { label: "Orders", value: "96", accent: "#5b9dff" }
-            StatPill { label: "Avg. order", value: "£11.40", accent: "#b8b0ff" }
+            StatPill { label: "Avg. order", value: "£11.40", accent: "#87d1fe" }
             StatPill { label: "Coupons used", value: "18", accent: "#f0a35e" }
         }
 
