@@ -3,11 +3,58 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      # you can configure build args (features) under the `args` field here.
-    # TODO env secrets such as API keys
+    environment:
+      SURREAL_URL: "surrealdb:8000"
+      SURREAL_USER: "root"
+      SURREAL_PASS: "${SURREAL_PASS:-root}"
+      SURREAL_NS: "serverspot-prod"
     restart: unless-stopped
+    networks:
+      - internal
+    depends_on:
+      surrealdb:
+        condition: service_healthy
+      surrealkit:
+        condition: service_completed_successfully
+
+# TODO we should really create a backup and run tests before applying any migrations
+  surrealkit:
+    image: ghcr.io/surrealdb/surrealkit:latest
+    depends_on:
+      surrealdb:
+        condition: service_healthy
+    command: sync
+    environment:
+      SURREALDB_HOST: "ws://surrealdb:8000"
+      SURREALDB_NAME: "serverspot"
+      SURREALDB_NAMESPACE: "serverspot"
+      SURREALDB_USER: "root"
+      SURREALDB_PASSWORD: "${SURREAL_PASS:-root}"
+      SURREALDB_FOLDER: "/database"
+    networks:
+      - internal
     volumes:
-      - db:/data
+      - ./database:/database:ro
+    restart: no
+
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    command: start --user root --pass ${SURREAL_PASS:-root} rocksdb:/data/db.db
+    volumes:
+      - surreal_data:/data
+    user: root
+    healthcheck:
+      test: ["CMD", "/surreal", "isready", "--endpoint", "ws://surrealdb:8000"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - internal
+    restart: unless-stopped
 
 volumes:
-  db:
+  surreal_data:
+
+networks:
+  internal:

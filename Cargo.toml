@@ -10,7 +10,7 @@ edition = "2021"
 anyhow = "1.0.104"
 dioxus = { version = "0.7.1", features = ["router", "fullstack"] }
 dotenvy = { version = "0.15.7", features = ["clap"], optional = true }
-surrealdb = { version = "3.2.3", features = ["kv-rocksdb"], optional = true }
+surrealdb = { version = "3.2.3", optional = true }
 
 [features]
 default = ["web"]
@@ -18,6 +18,3 @@ web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
 server = ["dioxus/server", "dep:surrealdb", "dep:dotenvy"]
-
-store = []
-forum = []
