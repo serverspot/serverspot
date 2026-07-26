@@ -8,9 +8,12 @@ RUN apt update && apt install -y clang
 
 # copy project files and compile
 COPY . .
-RUN dx bundle --web --release
+RUN dx bundle --fullstack --release
 
 FROM debian:bookworm-slim AS runner
+
+ENV IP="0.0.0.0"
+ENV PORT="8080"
 
 # setup app
 WORKDIR /app

@@ -16,6 +16,8 @@ services:
         condition: service_healthy
       surrealkit:
         condition: service_completed_successfully
+    ports:
+      - "8080:8080"
 
 # TODO we should really create a backup and run tests before applying any migrations
   surrealkit:
