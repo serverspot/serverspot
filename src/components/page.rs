@@ -1,0 +1,127 @@
+use dioxus::prelude::*;
+
+use super::ui::*;
+
+#[component]
+pub fn StubPage(
+    title: &'static str,
+    subtitle: &'static str,
+    #[props(default)] hint: &'static str,
+) -> Element {
+    rsx! {
+        PageHeader { title, subtitle }
+        DataPanel {
+            title: "Coming together",
+            EmptyHint {
+                message: if hint.is_empty() {
+                    "This sub-page is wired up — content will land here next."
+                } else {
+                    hint
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn PageHeader(
+    title: &'static str,
+    #[props(default)] subtitle: &'static str,
+    #[props(default)] action: Option<Element>,
+) -> Element {
+    rsx! {
+        div {
+            class: "mb-8 flex flex-wrap items-end justify-between gap-4",
+            div {
+                class: "min-w-0",
+                h1 { class: "text-3xl font-semibold tracking-tight", "{title}" }
+                if !subtitle.is_empty() {
+                    p { class: "mt-2 max-w-2xl text-sm text-text-muted", "{subtitle}" }
+                }
+            }
+            if let Some(action) = action {
+                {action}
+            }
+        }
+    }
+}
+
+#[component]
+pub fn StatPill(label: &'static str, value: &'static str, accent: &'static str) -> Element {
+    rsx! {
+        div {
+            class: "rounded-squircle-lg border border-border-subtle bg-surface/30 px-4 py-3",
+            p { class: "text-xs text-text-muted", "{label}" }
+            p {
+                class: "mt-1 text-xl font-semibold tabular-nums tracking-tight",
+                style: "color: {accent};",
+                "{value}"
+            }
+        }
+    }
+}
+
+#[component]
+pub fn DataPanel(title: &'static str, children: Element) -> Element {
+    rsx! {
+        section {
+            class: "rounded-squircle-lg border border-border-subtle bg-surface/20 overflow-hidden",
+            div {
+                class: "border-b border-border-subtle px-4 py-3",
+                h2 { class: "text-sm font-medium text-text", "{title}" }
+            }
+            div { class: "p-4", {children} }
+        }
+    }
+}
+
+#[component]
+pub fn EmptyHint(message: &'static str) -> Element {
+    rsx! {
+        p { class: "text-sm text-text-muted", "{message}" }
+    }
+}
+
+#[component]
+pub fn RowItem(
+    title: &'static str,
+    meta: &'static str,
+    #[props(default)] trailing: &'static str,
+) -> Element {
+    rsx! {
+        div {
+            class: "flex items-center justify-between gap-4 border-b border-border-subtle py-3 last:border-0",
+            div {
+                class: "min-w-0",
+                p { class: "truncate text-sm font-medium text-text", "{title}" }
+                p { class: "mt-0.5 text-xs text-text-muted", "{meta}" }
+            }
+            if !trailing.is_empty() {
+                span { class: "shrink-0 text-xs text-text-secondary", "{trailing}" }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn SettingRow(
+    title: &'static str,
+    description: &'static str,
+    #[props(default)] enabled: bool,
+) -> Element {
+    rsx! {
+        div {
+            class: "flex items-start justify-between gap-4 border-b border-border-subtle py-4 last:border-0",
+            div {
+                class: "min-w-0",
+                p { class: "text-sm font-medium text-text", "{title}" }
+                p { class: "mt-1 text-sm text-text-muted", "{description}" }
+            }
+            Button {
+                variant: if enabled { ButtonVariant::Primary } else { ButtonVariant::Secondary },
+                size: ButtonSize::Sm,
+                if enabled { "On" } else { "Off" }
+            }
+        }
+    }
+}

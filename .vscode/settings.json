@@ -1,3 +1,9 @@
 {
-    "rust-analyzer.cargo.features": ["server"]
+  "rust-analyzer.cargo.features": ["server"],
+  "rust-analyzer.cargo.extraEnv": {
+    "LIBCLANG_PATH": "C:\\Program Files\\LLVM\\bin"
+  },
+  "terminal.integrated.env.windows": {
+    "LIBCLANG_PATH": "C:\\Program Files\\LLVM\\bin"
+  }
 }

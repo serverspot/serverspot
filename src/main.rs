@@ -1,8 +1,9 @@
 #[cfg(feature = "server")]
 mod backend;
-mod server_funcs;
-mod router;
 mod components;
+mod nav;
+mod router;
+mod server_funcs;
 
 use dioxus::prelude::*;
 

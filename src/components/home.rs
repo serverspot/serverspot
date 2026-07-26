@@ -20,7 +20,6 @@ pub fn Hero() -> Element {
     }
 }
 
-/// Home page
 #[component]
 pub fn Home() -> Element {
     rsx! {
@@ -29,7 +28,6 @@ pub fn Home() -> Element {
     }
 }
 
-/// Echo component that demonstrates fullstack server functions.
 #[component]
 fn Echo() -> Element {
     let mut response = use_signal(|| String::new());
@@ -40,7 +38,7 @@ fn Echo() -> Element {
             h4 { "ServerFn Echo" }
             input {
                 placeholder: "Type here to echo...",
-                oninput:  move |event| async move {
+                oninput: move |event| async move {
                     let data = crate::server_funcs::echo(event.value()).await.unwrap();
                     response.set(data);
                 },

@@ -1,0 +1,13 @@
+{
+  "name": "serverspot-tooling",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "gen:icons": "node scripts/gen-hugeicons.mjs",
+    "format": "prettier --write \"package.json\" \"scripts/**/*.{js,mjs}\" \"tailwind.css\" \"assets/main.css\" \".vscode/settings.json\""
+  },
+  "devDependencies": {
+    "@hugeicons/core-free-icons": "4.2.3",
+    "prettier": "^3.9.6"
+  }
+}

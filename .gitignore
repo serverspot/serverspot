@@ -9,3 +9,7 @@
 # development/testing files
 **/*.env
 /dev/
+# Icon generator deps
+/node_modules/
+/tmp-hugeicons/
+
