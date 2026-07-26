@@ -2,12 +2,14 @@ use dioxus::prelude::*;
 
 use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill};
 use crate::components::ui::*;
+use crate::router::Route;
 
 #[derive(Clone, PartialEq)]
 struct FeatureModule {
     title: &'static str,
     blurb: &'static str,
     accent: &'static str,
+    route: Route,
 }
 
 #[component]
@@ -17,61 +19,73 @@ pub fn Dashboard() -> Element {
             title: "Web Store",
             blurb: "Sell ranks, crates, and packages with coupons, gifts, and stock controls.",
             accent: "#3ecf8e",
+            route: Route::StoreProducts {},
         },
         FeatureModule {
             title: "Forum",
             blurb: "Categories, roles, awards, and tags that keep your community talking.",
             accent: "#5b9dff",
+            route: Route::ForumCategories {},
         },
         FeatureModule {
             title: "Support Tickets",
             blurb: "Staff queues, custom fields, and AI-assisted replies in one inbox.",
             accent: "#f0a35e",
+            route: Route::SupportTickets {},
         },
         FeatureModule {
             title: "Help Center",
             blurb: "Build FAQs, rules, and guides so players find answers themselves.",
             accent: "#87d1fe",
+            route: Route::ContentHelp {},
         },
         FeatureModule {
             title: "Blog & News",
             blurb: "Publish updates and events, then keep the conversation going in comments.",
             accent: "#f071a5",
+            route: Route::ContentBlog {},
         },
         FeatureModule {
             title: "Discord Sync",
             blurb: "Link accounts, grant donor roles, and announce purchases automatically.",
             accent: "#7b8cff",
+            route: Route::SettingsIntegrations {},
         },
         FeatureModule {
             title: "Leaderboards",
             blurb: "Show player rankings pulled from your game database in real time.",
             accent: "#5eead4",
+            route: Route::CommunityLeaderboards {},
         },
         FeatureModule {
             title: "Vote Rewards",
             blurb: "Share vote links and automatically reward players with in-game items.",
             accent: "#fbbf24",
+            route: Route::CommunityVotes {},
         },
         FeatureModule {
             title: "Player Profiles",
             blurb: "Public profiles with stats, badges, and linked social accounts.",
-            accent: "#a78bfa",
+            accent: "#69bdf2",
+            route: Route::CommunityPlayers {},
         },
         FeatureModule {
             title: "Staff Applications",
             blurb: "Collect and review applications with custom fields and workflows.",
             accent: "#fb7185",
+            route: Route::CommunityApplications {},
         },
         FeatureModule {
             title: "Analytics",
             blurb: "Track revenue, tickets, and engagement across your whole website.",
             accent: "#38bdf8",
+            route: Route::AnalyticsOverview {},
         },
         FeatureModule {
             title: "Localization",
             blurb: "Serve players worldwide with multiple languages and currencies.",
             accent: "#34d399",
+            route: Route::SettingsGeneral {},
         },
     ];
 
@@ -90,7 +104,7 @@ pub fn Dashboard() -> Element {
         }
 
         section {
-            class: "grid grid-cols-1 gap-x-10 gap-y-4 sm:grid-cols-2 sm:gap-y-8",
+            class: "grid grid-cols-1 sm:grid-cols-2 sm:gap-x-12",
             for module in modules {
                 ModuleCard { module }
             }
@@ -117,6 +131,9 @@ pub fn DashboardActivity() -> Element {
 
 #[component]
 fn ModuleCard(module: FeatureModule) -> Element {
+    let navigator = use_navigator();
+    let dest = module.route;
+
     let icon = match module.title {
         "Web Store" => rsx! { IconStore {} },
         "Forum" => rsx! { IconForum {} },
@@ -134,16 +151,20 @@ fn ModuleCard(module: FeatureModule) -> Element {
 
     rsx! {
         button {
-            class: "ui-btn ui-btn-secondary ui-squircle group flex h-full w-full items-start gap-3 px-3 py-3 text-left font-normal sm:gap-4 sm:px-4 sm:py-4",
+            class: "module-index-row group",
+            style: "--row-accent: {module.accent};",
+            onclick: move |_| {
+                navigator.push(dest);
+            },
             div {
-                class: "flex h-10 w-10 shrink-0 items-center justify-center rounded-squircle-sm",
-                style: "background: color-mix(in srgb, {module.accent} 16%, transparent); color: {module.accent};",
+                class: "module-index-icon rounded-squircle-sm",
+                style: "background: {module.accent};",
                 {icon}
             }
             div {
-                class: "min-w-0 pt-0.5",
-                p { class: "text-[15px] font-semibold tracking-tight text-text", "{module.title}" }
-                p { class: "mt-1 text-sm font-normal leading-relaxed text-text-muted", "{module.blurb}" }
+                class: "min-w-0 flex-1",
+                p { class: "module-index-title", "{module.title}" }
+                p { class: "module-index-blurb", "{module.blurb}" }
             }
         }
     }
