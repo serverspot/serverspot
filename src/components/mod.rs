@@ -4,6 +4,7 @@ pub mod content;
 pub mod dashboard;
 pub mod forum;
 pub mod loading;
+pub mod login;
 pub mod page;
 pub mod settings;
 pub mod shell;

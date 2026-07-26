@@ -27,10 +27,10 @@ pub fn CommunityPlayers() -> Element {
 
         DataPanel {
             title: "Top players",
-            RowItem { title: "NovaCraft", meta: "Playtime · Level 84", trailing: "#1" }
-            RowItem { title: "SkyBuilder", meta: "Balance · £2,140", trailing: "#2" }
-            RowItem { title: "RedstoneRex", meta: "Kills · 1,902", trailing: "#3" }
-            RowItem { title: "AetherFox", meta: "Votes · 128 this month", trailing: "#4" }
+            RowItem { title: "NovaCraft", meta: "Playtime · Level 84", trailing: "#1", email: "novacraft@players.serverspot.app" }
+            RowItem { title: "SkyBuilder", meta: "Balance · £2,140", trailing: "#2", email: "skybuilder@players.serverspot.app" }
+            RowItem { title: "RedstoneRex", meta: "Kills · 1,902", trailing: "#3", email: "redstonerex@players.serverspot.app" }
+            RowItem { title: "AetherFox", meta: "Votes · 128 this month", trailing: "#4", email: "aetherfox@players.serverspot.app" }
         }
     }
 }
@@ -44,9 +44,9 @@ pub fn CommunityApplications() -> Element {
         }
         DataPanel {
             title: "Open applications",
-            RowItem { title: "Moderator · PixelPanda", meta: "Submitted 2h ago", trailing: "Review" }
-            RowItem { title: "Builder · ClayMage", meta: "Submitted yesterday", trailing: "Review" }
-            RowItem { title: "Helper · QuietLeaf", meta: "Submitted 3 days ago", trailing: "Review" }
+            RowItem { title: "Moderator · PixelPanda", meta: "Submitted 2h ago", trailing: "Review", email: "pixelpanda@players.serverspot.app" }
+            RowItem { title: "Builder · ClayMage", meta: "Submitted yesterday", trailing: "Review", email: "claymage@players.serverspot.app" }
+            RowItem { title: "Helper · QuietLeaf", meta: "Submitted 3 days ago", trailing: "Review", email: "quietleaf@players.serverspot.app" }
         }
     }
 }

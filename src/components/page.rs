@@ -18,6 +18,31 @@ pub fn PageTransition() -> Element {
     }
 }
 
+const LOGO: Asset = asset!("/assets/logo.svg");
+const REPO_URL: &str = "https://github.com/serverspot/serverspot";
+
+#[component]
+pub fn PoweredByFooter() -> Element {
+    rsx! {
+        footer {
+            class: "flex items-center justify-center py-6",
+            a {
+                href: REPO_URL,
+                target: "_blank",
+                rel: "noopener noreferrer",
+                class: "inline-flex items-center gap-2 text-xs text-text-muted transition-colors hover:text-text-secondary",
+                span { "Powered by" }
+                img {
+                    src: LOGO,
+                    alt: "",
+                    class: "h-3.5 w-auto opacity-50 grayscale",
+                }
+                span { class: "font-medium", "ServerSpot" }
+            }
+        }
+    }
+}
+
 #[component]
 pub fn PageHeader(
     title: &'static str,
@@ -75,14 +100,25 @@ pub fn RowItem(
     title: &'static str,
     meta: &'static str,
     #[props(default)] trailing: &'static str,
+    #[props(default, into)] email: String,
 ) -> Element {
     rsx! {
         div {
             class: "flex flex-col gap-2 border-b border-border-subtle py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4",
             div {
-                class: "min-w-0",
-                p { class: "truncate text-sm font-medium text-text", "{title}" }
-                p { class: "mt-0.5 text-xs text-text-muted", "{meta}" }
+                class: "flex min-w-0 items-center gap-3",
+                if !email.is_empty() {
+                    Avatar {
+                        email: email.clone(),
+                        size: 32,
+                        alt: title,
+                    }
+                }
+                div {
+                    class: "min-w-0",
+                    p { class: "truncate text-sm font-medium text-text", "{title}" }
+                    p { class: "mt-0.5 text-xs text-text-muted", "{meta}" }
+                }
             }
             if !trailing.is_empty() {
                 span { class: "shrink-0 text-xs text-text-secondary", "{trailing}" }

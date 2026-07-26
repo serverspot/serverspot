@@ -1,6 +1,7 @@
 #[cfg(feature = "server")]
 mod backend;
 mod components;
+mod gravatar;
 mod nav;
 mod router;
 mod server_funcs;

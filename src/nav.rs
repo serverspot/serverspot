@@ -139,6 +139,7 @@ impl Section {
 
 pub fn section_for(route: &Route) -> Section {
     match route {
+        Route::Login {} => Section::Dashboard,
         Route::Dashboard {} | Route::DashboardActivity {} => Section::Dashboard,
         Route::StoreProducts {} | Route::StoreOrders {} => Section::Store,
         Route::ForumCategories {} => Section::Forum,

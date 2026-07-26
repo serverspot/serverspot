@@ -1,7 +1,8 @@
 use dioxus::prelude::*;
 
-use crate::components::page::PageTransition;
+use crate::components::page::{PageTransition, PoweredByFooter};
 use crate::components::ui::*;
+use crate::gravatar::CURRENT_USER_EMAIL;
 use crate::nav::{crumb_for, section_for, Section};
 use crate::router::Route;
 
@@ -28,10 +29,13 @@ pub fn AppShell() -> Element {
 
     use_effect(move || {
         let _ = route;
-        if sheet().is_some_and(|s| s == SheetAnim::Open) {
+        if matches!(*sheet.peek(), Some(SheetAnim::Open)) {
             sheet.set(Some(SheetAnim::Closing));
         }
-        search_open.set(false);
+        if *search_open.peek() {
+            search_open.set(false);
+            search.set(String::new());
+        }
     });
 
     let sheet_anim = sheet();
@@ -80,9 +84,11 @@ pub fn AppShell() -> Element {
                         active: section == Section::Settings,
                         icon: rsx! { IconSettings {} },
                     }
-                    div {
-                        class: "h-8 w-8 rounded-full",
-                        style: "background: linear-gradient(135deg, #b1e1ff, #87d1fe, #4aaee8);",
+                    Avatar {
+                        email: CURRENT_USER_EMAIL,
+                        size: 32,
+                        alt: "Account",
+                        class: "ring-1 ring-border-subtle",
                     }
                 }
             }
@@ -104,7 +110,7 @@ pub fn AppShell() -> Element {
             }
 
             div {
-                class: "flex min-w-0 flex-1 flex-col",
+                class: "flex min-h-dvh min-w-0 flex-1 flex-col",
 
                 header {
                     class: "sticky top-0 z-30 border-b border-border-subtle/60 bg-bg/90 backdrop-blur-md",
@@ -208,8 +214,12 @@ pub fn AppShell() -> Element {
                 }
 
                 main {
-                    class: "flex-1 px-4 pb-10 sm:px-6 sm:pb-12 md:px-8",
-                    PageTransition {}
+                    class: "flex flex-1 flex-col px-4 pt-4 sm:px-6 sm:pt-6 md:px-8",
+                    div {
+                        class: "flex-1",
+                        PageTransition {}
+                    }
+                    PoweredByFooter {}
                 }
             }
 
@@ -220,7 +230,7 @@ pub fn AppShell() -> Element {
                         class: "absolute inset-0 bg-black/50 {backdrop_class}",
                         aria_label: "Close menu",
                         onclick: move |_| {
-                            if sheet() == Some(SheetAnim::Open) {
+                            if matches!(*sheet.peek(), Some(SheetAnim::Open)) {
                                 sheet.set(Some(SheetAnim::Closing));
                             }
                         },
@@ -228,7 +238,7 @@ pub fn AppShell() -> Element {
                     div {
                         class: "absolute inset-y-0 left-0 flex w-[min(100%,18.5rem)] flex-col border-r border-border-subtle bg-bg shadow-xl {panel_class}",
                         onanimationend: move |_| {
-                            if sheet() == Some(SheetAnim::Closing) {
+                            if matches!(*sheet.peek(), Some(SheetAnim::Closing)) {
                                 sheet.set(None);
                             }
                         },
@@ -245,7 +255,7 @@ pub fn AppShell() -> Element {
                             }
                             IconButton {
                                 onclick: move |_| {
-                                    if sheet() == Some(SheetAnim::Open) {
+                                    if matches!(*sheet.peek(), Some(SheetAnim::Open)) {
                                         sheet.set(Some(SheetAnim::Closing));
                                     }
                                 },

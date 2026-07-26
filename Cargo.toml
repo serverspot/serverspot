@@ -10,6 +10,7 @@ edition = "2021"
 anyhow = "1.0.104"
 dioxus = { version = "0.7.1", features = ["router", "fullstack"] }
 dotenvy = { version = "0.15.7", features = ["clap"], optional = true }
+sha2 = "0.10"
 surrealdb = { version = "3.2.3", optional = true }
 
 [features]
@@ -17,4 +18,12 @@ default = ["web"]
 web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
+# Build with `--no-default-features --features server` so `web` is not also enabled.
+# Enabling both breaks SSR hydration (dioxus#5427).
 server = ["dioxus/server", "dep:surrealdb", "dep:dotenvy"]
+
+store = []
+forum = []
+
+[package.metadata.docs.rs]
+features = ["web"]

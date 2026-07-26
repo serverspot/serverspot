@@ -1,8 +1,8 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap");
 
 @theme {
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
 
   --color-bg: #1c1c24;
   --color-bg-elevated: #22222c;
@@ -412,7 +412,40 @@
     min-height: 100%;
     background: #1c1c24;
     color: #f4f4f7;
-    font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
+    scrollbar-width: thin;
+    scrollbar-color: #454556 transparent;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #454556 transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #454556;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: #58586a;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
   }
 
   .ui-squircle {

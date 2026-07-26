@@ -53,10 +53,10 @@ pub fn StoreOrders() -> Element {
         }
         DataPanel {
             title: "Recent orders",
-            RowItem { title: "#4821 · VIP Rank", meta: "NovaCraft · Paid", trailing: "£29.99" }
-            RowItem { title: "#4818 · Crate Key Bundle", meta: "SkyBuilder · Paid", trailing: "£9.99" }
-            RowItem { title: "#4812 · Cosmetics Pack", meta: "AetherFox · Refunded", trailing: "£14.99" }
-            RowItem { title: "#4809 · Home Teleport", meta: "RedstoneRex · Paid", trailing: "£4.99" }
+            RowItem { title: "#4821 · VIP Rank", meta: "NovaCraft · Paid", trailing: "£29.99", email: "novacraft@players.serverspot.app" }
+            RowItem { title: "#4818 · Crate Key Bundle", meta: "SkyBuilder · Paid", trailing: "£9.99", email: "skybuilder@players.serverspot.app" }
+            RowItem { title: "#4812 · Cosmetics Pack", meta: "AetherFox · Refunded", trailing: "£14.99", email: "aetherfox@players.serverspot.app" }
+            RowItem { title: "#4809 · Home Teleport", meta: "RedstoneRex · Paid", trailing: "£4.99", email: "redstonerex@players.serverspot.app" }
         }
     }
 }

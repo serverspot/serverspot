@@ -7,7 +7,7 @@ use dioxus::prelude::*;
 
 use super::hugeicon::{
     ADD_01, AI_CHAT_01, ANALYTICS_UP, CANCEL_01, CHART_LINE_DATA_01, CUSTOMER_SERVICE_01,
-    DASHBOARD_SQUARE_01, DISCORD, GLOBE_02, HELP_CIRCLE, HugeIcon, MENU_01, MESSAGE_01, NEWS,
+    DASHBOARD_SQUARE_01, GLOBE_02, HELP_CIRCLE, HugeIcon, MENU_01, MESSAGE_01, NEWS,
     NOTIFICATION_03, PACKAGE_01, SEARCH_01, SETTINGS_01, STORE_01, TICKET_01, USER_GROUP,
 };
 
@@ -64,11 +64,6 @@ pub fn IconTicket(#[props(default, into)] class: String) -> Element {
 #[component]
 pub fn IconNews(#[props(default, into)] class: String) -> Element {
     rsx! { HugeIcon { icon: NEWS, class } }
-}
-
-#[component]
-pub fn IconDiscord(#[props(default, into)] class: String) -> Element {
-    rsx! { HugeIcon { icon: DISCORD, class } }
 }
 
 #[component]

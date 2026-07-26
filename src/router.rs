@@ -6,6 +6,7 @@ use crate::components::{
     content::{ContentBlog, ContentPages},
     dashboard::{Dashboard, DashboardActivity},
     forum::ForumCategories,
+    login::Login,
     settings::{SettingsGeneral, SettingsHosting, SettingsIntegrations, SettingsSecurity},
     shell::AppShell,
     store::{StoreOrders, StoreProducts},
@@ -15,6 +16,9 @@ use crate::components::{
 #[derive(Debug, Clone, Copy, Routable, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
+    #[route("/login")]
+    Login {},
+
     #[layout(AppShell)]
         #[route("/")]
         Dashboard {},

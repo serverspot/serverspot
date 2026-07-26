@@ -13,7 +13,6 @@ const selected = {
   Message01: "Message01Icon",
   Ticket01: "Ticket01Icon",
   News: "NewsIcon",
-  Discord: "DiscordIcon",
   Globe02: "Globe02Icon",
   CustomerService01: "CustomerService01Icon",
   AnalyticsUp: "AnalyticsUpIcon",

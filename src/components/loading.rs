@@ -2,25 +2,16 @@ use dioxus::prelude::*;
 
 const LOGO: Asset = asset!("/assets/logo.svg");
 
+/// Fullscreen splash. Dismissed by CSS only — do not unmount it during/after
+/// hydration or the client DOM will diverge from the SSR tree.
 #[component]
 pub fn LoadingScreen() -> Element {
-    let mut visible = use_signal(|| true);
-
-    if !visible() {
-        return rsx! {};
-    }
-
     rsx! {
         div {
             class: "splash-screen fixed inset-0 z-[100] flex flex-col items-center justify-center",
             style: "background: #1c1c24; color: #f4f4f7;",
             aria_busy: "true",
             aria_live: "polite",
-            onanimationend: move |evt| {
-                if evt.data().animation_name().contains("splash-screen-lifecycle") {
-                    visible.set(false);
-                }
-            },
 
             div {
                 class: "flex flex-col items-center gap-8 px-6",
