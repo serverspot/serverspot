@@ -1,0 +1,8 @@
+/target/
+/dev/
+/.vscode/
+.gitignore
+**/*.env
+*.md
+Dockerfile
+docker-compose.yml

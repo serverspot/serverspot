@@ -1,0 +1,13 @@
+services:
+  serverspot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # you can configure build args (features) under the `args` field here.
+    # TODO env secrets such as API keys
+    restart: unless-stopped
+    volumes:
+      - db:/data
+
+volumes:
+  db:
