@@ -19,17 +19,15 @@ pub struct SubLink {
 }
 
 impl Section {
-    pub fn all() -> &'static [Section] {
-        &[
-            Section::Dashboard,
-            Section::Store,
-            Section::Forum,
-            Section::Support,
-            Section::Content,
-            Section::Community,
-            Section::Analytics,
-        ]
-    }
+    pub const ALL: &'static [Section] = &[
+        Section::Dashboard,
+        Section::Store,
+        Section::Forum,
+        Section::Support,
+        Section::Content,
+        Section::Community,
+        Section::Analytics,
+    ];
 
     pub fn label(self) -> &'static str {
         match self {
@@ -225,7 +223,7 @@ pub fn section_for(route: &Route) -> Section {
 }
 
 pub fn crumb_for(route: &Route) -> &'static str {
-    for section in Section::all()
+    for section in Section::ALL
         .iter()
         .copied()
         .chain(std::iter::once(Section::Settings))

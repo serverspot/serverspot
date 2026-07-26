@@ -2,17 +2,14 @@ use dioxus::prelude::*;
 
 use crate::components::{
     analytics::{AnalyticsOverview, AnalyticsRevenue, AnalyticsTraffic},
-    blog::Blog,
     community::{CommunityApplications, CommunityLeaderboards, CommunityPlayers, CommunityVotes},
     content::{ContentAnnouncements, ContentBlog, ContentHelp, ContentPages},
     dashboard::{Dashboard, DashboardActivity},
     forum::{ForumAwards, ForumCategories, ForumRoles, ForumThreads},
-    home::Home,
     settings::{SettingsGeneral, SettingsHosting, SettingsIntegrations, SettingsSecurity},
     shell::AppShell,
     store::{StoreCoupons, StoreGifts, StoreOrders, StoreProducts},
-    support::{SupportAutomation, SupportDepartments, SupportTickets},
-    Navbar,
+    support::{SupportAutomation, SupportDepartments, SupportTickets}
 };
 
 #[derive(Debug, Clone, Copy, Routable, PartialEq)]
@@ -82,10 +79,4 @@ pub enum Route {
         SettingsSecurity {},
         #[route("/settings/hosting")]
         SettingsHosting {},
-    #[end_layout]
-    #[layout(Navbar)]
-        #[route("/home")]
-        Home {},
-        #[route("/blog/:id")]
-        Blog { id: i32 },
 }

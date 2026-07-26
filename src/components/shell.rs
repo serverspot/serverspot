@@ -65,7 +65,7 @@ pub fn AppShell() -> Element {
                 }
                 nav {
                     class: "flex flex-1 flex-col items-center gap-1",
-                    for main in Section::all().iter().copied() {
+                    for main in Section::ALL.iter().copied() {
                         RailNav {
                             to: main.home(),
                             active: section == main,
@@ -258,7 +258,7 @@ pub fn AppShell() -> Element {
                             p { class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted", "Sections" }
                             nav {
                                 class: "mb-6 flex flex-col gap-0.5",
-                                for main in Section::all().iter().copied().chain(std::iter::once(Section::Settings)) {
+                                for main in Section::ALL.iter().copied().chain(std::iter::once(Section::Settings)) {
                                     MobileSectionNav {
                                         section: main,
                                         active: section == main,
