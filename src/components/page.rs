@@ -19,27 +19,6 @@ pub fn PageTransition() -> Element {
 }
 
 #[component]
-pub fn StubPage(
-    title: &'static str,
-    subtitle: &'static str,
-    #[props(default)] hint: &'static str,
-) -> Element {
-    rsx! {
-        PageHeader { title, subtitle }
-        DataPanel {
-            title: "Coming together",
-            EmptyHint {
-                message: if hint.is_empty() {
-                    "This sub-page is wired up — content will land here next."
-                } else {
-                    hint
-                }
-            }
-        }
-    }
-}
-
-#[component]
 pub fn PageHeader(
     title: &'static str,
     #[props(default)] subtitle: &'static str,
@@ -88,13 +67,6 @@ pub fn DataPanel(title: &'static str, children: Element) -> Element {
             }
             div { class: "p-4", {children} }
         }
-    }
-}
-
-#[component]
-pub fn EmptyHint(message: &'static str) -> Element {
-    rsx! {
-        p { class: "text-sm text-text-muted", "{message}" }
     }
 }
 

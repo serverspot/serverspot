@@ -7,7 +7,6 @@ pub enum ButtonVariant {
     Secondary,
     Ghost,
     Outline,
-    Danger,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
@@ -15,8 +14,6 @@ pub enum ButtonSize {
     Sm,
     #[default]
     Md,
-    Lg,
-    Icon,
     IconSm,
 }
 
@@ -35,14 +32,11 @@ pub fn Button(
         ButtonVariant::Secondary => "ui-btn-secondary",
         ButtonVariant::Ghost => "ui-btn-ghost",
         ButtonVariant::Outline => "ui-btn-outline",
-        ButtonVariant::Danger => "ui-btn-danger",
     };
 
     let size_class = match size {
         ButtonSize::Sm => "h-8 px-3 text-xs gap-1.5",
         ButtonSize::Md => "h-10 px-4 text-sm gap-2",
-        ButtonSize::Lg => "h-11 px-5 text-sm gap-2.5",
-        ButtonSize::Icon => "h-10 w-10 p-0 justify-center",
         ButtonSize::IconSm => "h-9 w-9 p-0 justify-center",
     };
 

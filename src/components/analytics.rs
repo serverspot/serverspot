@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill, StubPage};
+use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill};
 use crate::components::ui::*;
 
 #[component]
@@ -53,28 +53,6 @@ pub fn AnalyticsOverview() -> Element {
                 RowItem { title: "Search", meta: "Organic", trailing: "18%" }
                 RowItem { title: "Vote sites", meta: "Reward campaigns", trailing: "17%" }
             }
-        }
-    }
-}
-
-#[component]
-pub fn AnalyticsRevenue() -> Element {
-    rsx! {
-        StubPage {
-            title: "Revenue",
-            subtitle: "Breakdown of store sales by product, coupon, and currency.",
-            hint: "Detailed revenue charts and export tools will appear here.",
-        }
-    }
-}
-
-#[component]
-pub fn AnalyticsTraffic() -> Element {
-    rsx! {
-        StubPage {
-            title: "Traffic",
-            subtitle: "Visitors, referral sources, and conversion funnels.",
-            hint: "Traffic reports and funnel views will land here.",
         }
     }
 }

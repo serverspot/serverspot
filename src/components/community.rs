@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill, StubPage};
+use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill};
 use crate::components::ui::*;
 
 #[component]
@@ -31,28 +31,6 @@ pub fn CommunityPlayers() -> Element {
             RowItem { title: "SkyBuilder", meta: "Balance · £2,140", trailing: "#2" }
             RowItem { title: "RedstoneRex", meta: "Kills · 1,902", trailing: "#3" }
             RowItem { title: "AetherFox", meta: "Votes · 128 this month", trailing: "#4" }
-        }
-    }
-}
-
-#[component]
-pub fn CommunityLeaderboards() -> Element {
-    rsx! {
-        StubPage {
-            title: "Leaderboards",
-            subtitle: "Show rankings pulled from your game database in real time.",
-            hint: "Leaderboard sources and display widgets will be configured here.",
-        }
-    }
-}
-
-#[component]
-pub fn CommunityVotes() -> Element {
-    rsx! {
-        StubPage {
-            title: "Vote rewards",
-            subtitle: "Share vote links and automatically reward players in-game.",
-            hint: "Vote sites, intervals, and reward packages will live here.",
         }
     }
 }

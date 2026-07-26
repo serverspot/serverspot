@@ -1,20 +1,19 @@
+//! App icon wrappers over Hugeicons stroke-rounded glyphs.
+//!
+//! Raw icons live in [`crate::components::ui::hugeicon`]. Regenerate with:
+//! `node scripts/gen-hugeicons.mjs` (requires `@hugeicons/core-free-icons`).
+
 use dioxus::prelude::*;
 
 use super::hugeicon::{
-    HugeIcon, ADD_01, AI_CHAT_01, ANALYTICS_UP, ARROW_DOWN_01, BOOK_OPEN_01, CANCEL_01,
-    CHART_LINE_DATA_01, CUSTOMER_SERVICE_01, DASHBOARD_SQUARE_01, DISCORD, GLOBE_02, HELP_CIRCLE,
-    LAYERS_01, MENU_01, MESSAGE_01, NEWS, NOTIFICATION_03, PACKAGE_01, SEARCH_01, SETTINGS_01,
-    SHOPPING_CART_01, STORE_01, TICKET_01, USER_GROUP, WALLET_01,
+    ADD_01, AI_CHAT_01, ANALYTICS_UP, CANCEL_01, CHART_LINE_DATA_01, CUSTOMER_SERVICE_01,
+    DASHBOARD_SQUARE_01, DISCORD, GLOBE_02, HELP_CIRCLE, HugeIcon, MENU_01, MESSAGE_01, NEWS,
+    NOTIFICATION_03, PACKAGE_01, SEARCH_01, SETTINGS_01, STORE_01, TICKET_01, USER_GROUP,
 };
 
 #[component]
 pub fn IconGrid(#[props(default, into)] class: String) -> Element {
     rsx! { HugeIcon { icon: DASHBOARD_SQUARE_01, class } }
-}
-
-#[component]
-pub fn IconLayers(#[props(default, into)] class: String) -> Element {
-    rsx! { HugeIcon { icon: LAYERS_01, class } }
 }
 
 #[component]
@@ -43,28 +42,13 @@ pub fn IconPlus(#[props(default, into)] class: String) -> Element {
 }
 
 #[component]
-pub fn IconWallet(#[props(default, into)] class: String) -> Element {
-    rsx! { HugeIcon { icon: WALLET_01, class } }
-}
-
-#[component]
 pub fn IconSearch(#[props(default, into)] class: String) -> Element {
     rsx! { HugeIcon { icon: SEARCH_01, class } }
 }
 
 #[component]
-pub fn IconChevronDown(#[props(default, into)] class: String) -> Element {
-    rsx! { HugeIcon { icon: ARROW_DOWN_01, size: 12, class } }
-}
-
-#[component]
 pub fn IconStore(#[props(default, into)] class: String) -> Element {
     rsx! { HugeIcon { icon: STORE_01, class } }
-}
-
-#[component]
-pub fn IconCart(#[props(default, into)] class: String) -> Element {
-    rsx! { HugeIcon { icon: SHOPPING_CART_01, class } }
 }
 
 #[component]
@@ -80,11 +64,6 @@ pub fn IconTicket(#[props(default, into)] class: String) -> Element {
 #[component]
 pub fn IconNews(#[props(default, into)] class: String) -> Element {
     rsx! { HugeIcon { icon: NEWS, class } }
-}
-
-#[component]
-pub fn IconWiki(#[props(default, into)] class: String) -> Element {
-    rsx! { HugeIcon { icon: BOOK_OPEN_01, class } }
 }
 
 #[component]
@@ -130,44 +109,4 @@ pub fn IconMenu(#[props(default, into)] class: String) -> Element {
 #[component]
 pub fn IconClose(#[props(default, into)] class: String) -> Element {
     rsx! { HugeIcon { icon: CANCEL_01, class } }
-}
-
-#[component]
-pub fn Sparkline(
-    #[props(default)] positive: bool,
-    #[props(default, into)] class: String,
-) -> Element {
-    let stroke = if positive { "#34d399" } else { "#f87171" };
-    let fill = if positive {
-        "rgba(52, 211, 153, 0.12)"
-    } else {
-        "rgba(248, 113, 113, 0.12)"
-    };
-    let d = if positive {
-        "M0 28 C 18 26, 28 20, 42 18 C 58 16, 70 22, 86 12 C 98 6, 110 10, 120 4 L 120 36 L 0 36 Z"
-    } else {
-        "M0 8 C 18 10, 28 16, 42 18 C 58 20, 70 14, 86 24 C 98 30, 110 26, 120 32 L 120 36 L 0 36 Z"
-    };
-    let line = if positive {
-        "M0 28 C 18 26, 28 20, 42 18 C 58 16, 70 22, 86 12 C 98 6, 110 10, 120 4"
-    } else {
-        "M0 8 C 18 10, 28 16, 42 18 C 58 20, 70 14, 86 24 C 98 30, 110 26, 120 32"
-    };
-
-    rsx! {
-        svg {
-            class: "sparkline h-10 w-full {class}",
-            view_box: "0 0 120 36",
-            preserve_aspect_ratio: "none",
-            path { d: "{d}", fill: "{fill}", stroke: "none" }
-            path {
-                d: "{line}",
-                class: "sparkline-path",
-                fill: "none",
-                stroke: "{stroke}",
-                stroke_width: "2",
-                stroke_linecap: "round",
-            }
-        }
-    }
 }

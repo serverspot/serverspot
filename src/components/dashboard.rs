@@ -37,7 +37,7 @@ pub fn Dashboard() -> Element {
             title: "Help Center",
             blurb: "Build FAQs, rules, and guides so players find answers themselves.",
             accent: "#87d1fe",
-            route: Route::ContentHelp {},
+            route: Route::ContentBlog {},
         },
         FeatureModule {
             title: "Blog & News",
@@ -55,13 +55,13 @@ pub fn Dashboard() -> Element {
             title: "Leaderboards",
             blurb: "Show player rankings pulled from your game database in real time.",
             accent: "#5eead4",
-            route: Route::CommunityLeaderboards {},
+            route: Route::CommunityPlayers {},
         },
         FeatureModule {
             title: "Vote Rewards",
             blurb: "Share vote links and automatically reward players with in-game items.",
             accent: "#fbbf24",
-            route: Route::CommunityVotes {},
+            route: Route::CommunityPlayers {},
         },
         FeatureModule {
             title: "Player Profiles",

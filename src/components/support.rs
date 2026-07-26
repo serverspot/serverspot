@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill, StubPage};
+use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill};
 use crate::components::ui::*;
 
 #[component]
@@ -31,17 +31,6 @@ pub fn SupportTickets() -> Element {
             RowItem { title: "#1839 · Can't join lobby", meta: "Gameplay · Normal", trailing: "34m" }
             RowItem { title: "#1833 · Rank missing perks", meta: "Store · Normal", trailing: "1h" }
             RowItem { title: "#1828 · Ban appeal", meta: "Moderation · Low", trailing: "3h" }
-        }
-    }
-}
-
-#[component]
-pub fn SupportDepartments() -> Element {
-    rsx! {
-        StubPage {
-            title: "Departments",
-            subtitle: "Route tickets to the right staff teams with custom fields.",
-            hint: "Department routing and form fields will be managed here.",
         }
     }
 }

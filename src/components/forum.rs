@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill, StubPage};
+use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill};
 use crate::components::ui::*;
 
 #[component]
@@ -41,39 +41,6 @@ pub fn ForumCategories() -> Element {
                 RowItem { title: "Patch notes 1.21.4", meta: "Announcements · 40 replies", trailing: "1h" }
                 RowItem { title: "Looking for builders", meta: "Off-topic · 7 replies", trailing: "3h" }
             }
-        }
-    }
-}
-
-#[component]
-pub fn ForumThreads() -> Element {
-    rsx! {
-        StubPage {
-            title: "Threads",
-            subtitle: "Moderate discussions, pin announcements, and manage replies.",
-            hint: "Thread moderation tools and filters will land here.",
-        }
-    }
-}
-
-#[component]
-pub fn ForumRoles() -> Element {
-    rsx! {
-        StubPage {
-            title: "Roles",
-            subtitle: "Control who can post, react, and moderate each category.",
-            hint: "Forum role permissions will be configured here.",
-        }
-    }
-}
-
-#[component]
-pub fn ForumAwards() -> Element {
-    rsx! {
-        StubPage {
-            title: "Awards",
-            subtitle: "Create badges and reputation awards for helpful members.",
-            hint: "Award definitions and grant history will appear here.",
         }
     }
 }

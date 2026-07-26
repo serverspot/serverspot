@@ -56,24 +56,3 @@ pub fn SearchInput(
         }
     }
 }
-
-#[component]
-pub fn TextArea(
-    #[props(default, into)] value: String,
-    #[props(default, into)] placeholder: String,
-    #[props(default, into)] class: String,
-    #[props(default)] rows: u32,
-    #[props(default)] oninput: EventHandler<FormEvent>,
-) -> Element {
-    let rows = if rows == 0 { 3 } else { rows };
-
-    rsx! {
-        textarea {
-            class: "ui-input rounded-squircle-lg w-full px-4 py-3 text-sm outline-none resize-y {class}",
-            value,
-            placeholder,
-            rows,
-            oninput: move |evt| oninput.call(evt),
-        }
-    }
-}

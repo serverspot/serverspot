@@ -11,6 +11,7 @@ pub mod util;
 pub type AppState = Arc<BackendState>;
 
 pub struct BackendState {
+    #[allow(dead_code)]
     pub db: Surreal<Db>,
 }
 

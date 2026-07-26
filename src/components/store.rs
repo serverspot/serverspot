@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill, StubPage};
+use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill};
 use crate::components::ui::*;
 
 #[component]
@@ -57,28 +57,6 @@ pub fn StoreOrders() -> Element {
             RowItem { title: "#4818 · Crate Key Bundle", meta: "SkyBuilder · Paid", trailing: "£9.99" }
             RowItem { title: "#4812 · Cosmetics Pack", meta: "AetherFox · Refunded", trailing: "£14.99" }
             RowItem { title: "#4809 · Home Teleport", meta: "RedstoneRex · Paid", trailing: "£4.99" }
-        }
-    }
-}
-
-#[component]
-pub fn StoreCoupons() -> Element {
-    rsx! {
-        StubPage {
-            title: "Coupons",
-            subtitle: "Create percentage, fixed, and creator coupon codes.",
-            hint: "Coupon rules, usage limits, and creator share settings will live here.",
-        }
-    }
-}
-
-#[component]
-pub fn StoreGifts() -> Element {
-    rsx! {
-        StubPage {
-            title: "Gift cards",
-            subtitle: "Issue store credit and gift packages players can redeem.",
-            hint: "Gift card balances and redemption history will appear here.",
         }
     }
 }

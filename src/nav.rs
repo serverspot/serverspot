@@ -76,41 +76,15 @@ impl Section {
                     label: "Orders",
                     route: Route::StoreOrders {},
                 },
-                SubLink {
-                    label: "Coupons",
-                    route: Route::StoreCoupons {},
-                },
-                SubLink {
-                    label: "Gift cards",
-                    route: Route::StoreGifts {},
-                },
             ],
-            Section::Forum => &[
-                SubLink {
-                    label: "Categories",
-                    route: Route::ForumCategories {},
-                },
-                SubLink {
-                    label: "Threads",
-                    route: Route::ForumThreads {},
-                },
-                SubLink {
-                    label: "Roles",
-                    route: Route::ForumRoles {},
-                },
-                SubLink {
-                    label: "Awards",
-                    route: Route::ForumAwards {},
-                },
-            ],
+            Section::Forum => &[SubLink {
+                label: "Categories",
+                route: Route::ForumCategories {},
+            }],
             Section::Support => &[
                 SubLink {
                     label: "Tickets",
                     route: Route::SupportTickets {},
-                },
-                SubLink {
-                    label: "Departments",
-                    route: Route::SupportDepartments {},
                 },
                 SubLink {
                     label: "Automation",
@@ -123,16 +97,8 @@ impl Section {
                     route: Route::ContentBlog {},
                 },
                 SubLink {
-                    label: "Help center",
-                    route: Route::ContentHelp {},
-                },
-                SubLink {
                     label: "Pages",
                     route: Route::ContentPages {},
-                },
-                SubLink {
-                    label: "Announcements",
-                    route: Route::ContentAnnouncements {},
                 },
             ],
             Section::Community => &[
@@ -141,32 +107,14 @@ impl Section {
                     route: Route::CommunityPlayers {},
                 },
                 SubLink {
-                    label: "Leaderboards",
-                    route: Route::CommunityLeaderboards {},
-                },
-                SubLink {
-                    label: "Vote rewards",
-                    route: Route::CommunityVotes {},
-                },
-                SubLink {
                     label: "Applications",
                     route: Route::CommunityApplications {},
                 },
             ],
-            Section::Analytics => &[
-                SubLink {
-                    label: "Overview",
-                    route: Route::AnalyticsOverview {},
-                },
-                SubLink {
-                    label: "Revenue",
-                    route: Route::AnalyticsRevenue {},
-                },
-                SubLink {
-                    label: "Traffic",
-                    route: Route::AnalyticsTraffic {},
-                },
-            ],
+            Section::Analytics => &[SubLink {
+                label: "Overview",
+                route: Route::AnalyticsOverview {},
+            }],
             Section::Settings => &[
                 SubLink {
                     label: "General",
@@ -192,33 +140,16 @@ impl Section {
 pub fn section_for(route: &Route) -> Section {
     match route {
         Route::Dashboard {} | Route::DashboardActivity {} => Section::Dashboard,
-        Route::StoreProducts {}
-        | Route::StoreOrders {}
-        | Route::StoreCoupons {}
-        | Route::StoreGifts {} => Section::Store,
-        Route::ForumCategories {}
-        | Route::ForumThreads {}
-        | Route::ForumRoles {}
-        | Route::ForumAwards {} => Section::Forum,
-        Route::SupportTickets {} | Route::SupportDepartments {} | Route::SupportAutomation {} => {
-            Section::Support
-        }
-        Route::ContentBlog {}
-        | Route::ContentHelp {}
-        | Route::ContentPages {}
-        | Route::ContentAnnouncements {} => Section::Content,
-        Route::CommunityPlayers {}
-        | Route::CommunityLeaderboards {}
-        | Route::CommunityVotes {}
-        | Route::CommunityApplications {} => Section::Community,
-        Route::AnalyticsOverview {} | Route::AnalyticsRevenue {} | Route::AnalyticsTraffic {} => {
-            Section::Analytics
-        }
+        Route::StoreProducts {} | Route::StoreOrders {} => Section::Store,
+        Route::ForumCategories {} => Section::Forum,
+        Route::SupportTickets {} | Route::SupportAutomation {} => Section::Support,
+        Route::ContentBlog {} | Route::ContentPages {} => Section::Content,
+        Route::CommunityPlayers {} | Route::CommunityApplications {} => Section::Community,
+        Route::AnalyticsOverview {} => Section::Analytics,
         Route::SettingsGeneral {}
         | Route::SettingsIntegrations {}
         | Route::SettingsSecurity {}
         | Route::SettingsHosting {} => Section::Settings,
-        _ => Section::Dashboard,
     }
 }
 
