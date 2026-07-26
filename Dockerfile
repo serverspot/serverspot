@@ -16,4 +16,6 @@ FROM debian:bookworm-slim AS runner
 WORKDIR /app
 
 COPY --from=builder /build/target/dx/serverspot/release/web/. .
+
+EXPOSE 8080
 CMD ["/app/server"]
