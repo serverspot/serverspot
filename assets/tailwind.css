@@ -26,7 +26,6 @@
     --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
-    --font-weight-bold: 700;
     --tracking-tight: -0.025em;
     --tracking-wide: 0.025em;
     --blur-md: 12px;
@@ -43,9 +42,6 @@
     --color-accent: #87d1fe;
     --color-accent-strong: #6bc0f5;
     --color-accent-muted: #4aaee8;
-    --color-accent-soft: rgba(135, 209, 254, 0.16);
-    --color-success: #3ecf8e;
-    --color-danger: #f87171;
     --color-text: #f4f4f7;
     --color-text-secondary: #b0b3c0;
     --color-text-muted: #858899;
@@ -308,6 +304,9 @@
   }
   .inline-flex {
     display: inline-flex;
+  }
+  .table {
+    display: table;
   }
   .h-7 {
     height: calc(var(--spacing) * 7);
