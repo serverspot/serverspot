@@ -7,12 +7,16 @@ use super::ui::*;
 #[component]
 pub fn PageTransition() -> Element {
     let route = use_route::<Route>();
-    let key = format!("{route:?}");
+    let theme_ide = crate::nav::is_theme_editor(&route);
 
     rsx! {
         div {
-            key: "{key}",
-            class: "page-enter",
+            key: "{route}",
+            class: if theme_ide {
+                "flex min-h-0 flex-1 flex-col"
+            } else {
+                "page-enter"
+            },
             Outlet::<Route> {}
         }
     }
@@ -100,7 +104,7 @@ pub fn RowItem(
     title: &'static str,
     meta: &'static str,
     #[props(default)] trailing: &'static str,
-    #[props(default, into)] email: String,
+    #[props(default = "")] email: &'static str,
 ) -> Element {
     rsx! {
         div {
@@ -109,7 +113,7 @@ pub fn RowItem(
                 class: "flex min-w-0 items-center gap-3",
                 if !email.is_empty() {
                     Avatar {
-                        email: email.clone(),
+                        email,
                         size: 32,
                         alt: title,
                     }
@@ -147,6 +151,48 @@ pub fn SettingRow(
                 size: ButtonSize::Sm,
                 if enabled { "On" } else { "Off" }
             }
+        }
+    }
+}
+
+#[component]
+pub fn FeatureBullet(text: &'static str) -> Element {
+    rsx! {
+        li {
+            class: "flex gap-2.5 text-sm text-text-secondary",
+            span {
+                class: "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent",
+            }
+            span { "{text}" }
+        }
+    }
+}
+
+#[component]
+pub fn FeatureBullets(children: Element) -> Element {
+    rsx! {
+        ul { class: "space-y-2.5", {children} }
+    }
+}
+
+#[component]
+pub fn StatusChip(label: &'static str, #[props(default = "#87d1fe")] tone: &'static str) -> Element {
+    rsx! {
+        span {
+            class: "inline-flex items-center rounded-squircle-sm px-2 py-0.5 text-xs font-medium",
+            style: "background: color-mix(in srgb, {tone} 16%, transparent); color: {tone};",
+            "{label}"
+        }
+    }
+}
+
+#[component]
+pub fn InfoCard(title: &'static str, body: &'static str) -> Element {
+    rsx! {
+        div {
+            class: "rounded-squircle-lg border border-border-subtle bg-surface/20 p-4",
+            p { class: "text-sm font-medium text-text", "{title}" }
+            p { class: "mt-1.5 text-sm text-text-muted", "{body}" }
         }
     }
 }

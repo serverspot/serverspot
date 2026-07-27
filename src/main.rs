@@ -31,8 +31,8 @@ fn App() -> Element {
             content: "width=device-width, initial-scale=1, viewport-fit=cover",
         }
         document::Link { rel: "icon", href: FAVICON }
-        document::Stylesheet { href: MAIN_CSS }
         document::Stylesheet { href: TAILWIND_CSS }
+        document::Stylesheet { href: MAIN_CSS }
         Router::<Route> {}
         LoadingScreen {}
     }

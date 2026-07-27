@@ -962,6 +962,7 @@ pub const PACKAGE_01: HugeIconData = HugeIconData {
     ],
 };
 
+#[allow(dead_code)]
 pub const HELP_CIRCLE: HugeIconData = HugeIconData {
     name: "HelpCircleIcon",
     nodes: &[
@@ -1148,17 +1149,27 @@ pub const CANCEL_01: HugeIconData = HugeIconData {
     ],
 };
 
+fn icon_size_px(size: u32) -> &'static str {
+    match size {
+        12 => "12",
+        14 => "14",
+        16 => "16",
+        18 => "18",
+        20 => "20",
+        24 => "24",
+        28 => "28",
+        32 => "32",
+        _ => "16",
+    }
+}
+
 #[component]
 pub fn HugeIcon(
     icon: HugeIconData,
-    #[props(default = 16)]
-    size: u32,
-    #[props(default, into)]
-    class: String,
-    #[props(default = 1.5)]
-    stroke_width: f32,
+    #[props(default = 16)] size: u32,
+    #[props(default = "")] class: &'static str,
 ) -> Element {
-    let px = size.to_string();
+    let px = icon_size_px(size);
     rsx! {
         svg {
             class: "shrink-0 {class}",
@@ -1169,12 +1180,7 @@ pub fn HugeIcon(
             xmlns: "http://www.w3.org/2000/svg",
             for node in icon.nodes {
                 {
-                    let sw = node.stroke_width.unwrap_or("1.5");
-                    let stroke_w = if (stroke_width - 1.5).abs() > f32::EPSILON {
-                        stroke_width.to_string()
-                    } else {
-                        sw.to_string()
-                    };
+                    let stroke_w = node.stroke_width.unwrap_or("1.5");
                     match node.tag {
                         "path" => rsx! {
                             path {

@@ -22,7 +22,9 @@ pub fn Button(
     children: Element,
     #[props(default)] variant: ButtonVariant,
     #[props(default)] size: ButtonSize,
-    #[props(default, into)] class: String,
+    #[props(default = "")]
+    class: &'static str,
+    #[props(default = "")] style: &'static str,
     #[props(default)] disabled: bool,
     #[props(default)] full_width: bool,
     #[props(default)] onclick: EventHandler<MouseEvent>,
@@ -45,6 +47,7 @@ pub fn Button(
     rsx! {
         button {
             class: "ui-btn ui-squircle inline-flex items-center justify-center font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer {variant_class} {size_class} {width} {class}",
+            style: "{style}",
             disabled,
             onclick: move |evt| onclick.call(evt),
             {children}
@@ -55,15 +58,13 @@ pub fn Button(
 #[component]
 pub fn IconButton(
     children: Element,
-    #[props(default, into)] class: String,
+    #[props(default = "")] class: &'static str,
     #[props(default)] onclick: EventHandler<MouseEvent>,
 ) -> Element {
     rsx! {
-        Button {
-            variant: ButtonVariant::Ghost,
-            size: ButtonSize::IconSm,
-            class: "text-text-muted {class}",
-            onclick,
+        button {
+            class: "ui-btn ui-squircle ui-btn-ghost inline-flex h-9 w-9 cursor-pointer items-center justify-center p-0 font-semibold text-text-muted disabled:cursor-not-allowed disabled:opacity-50 {class}",
+            onclick: move |evt| onclick.call(evt),
             {children}
         }
     }

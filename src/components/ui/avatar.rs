@@ -2,26 +2,31 @@ use dioxus::prelude::*;
 
 use crate::gravatar::gravatar_url;
 
-/// Circular user avatar loaded from Gravatar for the given email.
+fn avatar_px(size: u32) -> &'static str {
+    match size {
+        24 => "24",
+        28 => "28",
+        32 => "32",
+        40 => "40",
+        48 => "48",
+        _ => "32",
+    }
+}
+
 #[component]
 pub fn Avatar(
-    #[props(into)] email: String,
+    email: &'static str,
     #[props(default = 32)] size: u32,
-    #[props(default, into)] class: String,
-    #[props(default, into)] alt: String,
+    #[props(default = "")] class: &'static str,
+    #[props(default = "User avatar")] alt: &'static str,
 ) -> Element {
-    let src = gravatar_url(&email, size * 2);
-    let px = size.to_string();
-    let alt = if alt.is_empty() {
-        "User avatar".to_string()
-    } else {
-        alt
-    };
+    let src = use_memo(move || gravatar_url(email, size.saturating_mul(2)));
+    let px = avatar_px(size);
 
     rsx! {
         img {
-            src,
-            alt,
+            src: "{src}",
+            alt: "{alt}",
             width: "{px}",
             height: "{px}",
             class: "shrink-0 rounded-full object-cover bg-surface-2 {class}",

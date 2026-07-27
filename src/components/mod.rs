@@ -1,7 +1,10 @@
+pub mod accounts;
 pub mod analytics;
 pub mod community;
 pub mod content;
 pub mod dashboard;
+pub mod feature_overview;
+pub mod feature_site;
 pub mod forum;
 pub mod loading;
 pub mod login;
@@ -10,4 +13,6 @@ pub mod settings;
 pub mod shell;
 pub mod store;
 pub mod support;
+pub mod syntax;
+pub mod theme;
 pub mod ui;

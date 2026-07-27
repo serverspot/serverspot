@@ -1,6 +1,8 @@
 use dioxus::prelude::*;
 
-use crate::components::page::{DataPanel, PageHeader, SettingRow, StatPill};
+use crate::components::page::{
+    DataPanel, FeatureBullet, FeatureBullets, PageHeader, RowItem, SettingRow, StatPill, StatusChip,
+};
 use crate::components::ui::*;
 
 #[component]
@@ -8,52 +10,137 @@ pub fn SettingsGeneral() -> Element {
     rsx! {
         PageHeader {
             title: "General",
-            subtitle: "Site name, registration, localization, and branding defaults.",
+            subtitle: "Site name, registration, and branding defaults.",
             action: rsx! {
                 Button { "Save changes" }
             },
         }
 
+        DataPanel {
+            title: "Site",
+            SettingRow {
+                title: "Maintenance mode",
+                description: "Show a maintenance page to non-staff visitors.",
+                enabled: false,
+            }
+            SettingRow {
+                title: "User registration",
+                description: "Allow new players to create website accounts.",
+                enabled: true,
+            }
+            SettingRow {
+                title: "Email verification",
+                description: "Require verified email before purchases.",
+                enabled: true,
+            }
+        }
+    }
+}
+
+#[component]
+pub fn SettingsLocalisation() -> Element {
+    rsx! {
+        PageHeader {
+            title: "Localisation",
+            subtitle: "Multi-language support, formatting, and translation management.",
+            action: rsx! {
+                Button {
+                    IconPlus {}
+                    "Add language"
+                }
+            },
+        }
+
+        section {
+            class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
+            StatPill { label: "Languages", value: "12", accent: "#34d399" }
+            StatPill { label: "Translated keys", value: "94%", accent: "#3ecf8e" }
+            StatPill { label: "Currencies", value: "8", accent: "#5b9dff" }
+            StatPill { label: "RTL locales", value: "2", accent: "#87d1fe" }
+        }
+
         div {
             class: "grid gap-4 lg:grid-cols-2",
             DataPanel {
-                title: "Site",
-                SettingRow {
-                    title: "Maintenance mode",
-                    description: "Show a maintenance page to non-staff visitors.",
-                    enabled: false,
-                }
-                SettingRow {
-                    title: "User registration",
-                    description: "Allow new players to create website accounts.",
-                    enabled: true,
-                }
-                SettingRow {
-                    title: "Email verification",
-                    description: "Require verified email before purchases.",
-                    enabled: true,
+                title: "Localisation features",
+                FeatureBullets {
+                    FeatureBullet { text: "Multiple languages" }
+                    FeatureBullet { text: "Translation management" }
+                    FeatureBullet { text: "User language preferences" }
+                    FeatureBullet { text: "Date formatting" }
+                    FeatureBullet { text: "Timezone support" }
+                    FeatureBullet { text: "Currency formatting" }
+                    FeatureBullet { text: "RTL support" }
                 }
             }
             DataPanel {
-                title: "Localization",
-                SettingRow {
-                    title: "Multi-language site",
-                    description: "Serve content in 20+ languages.",
-                    enabled: true,
-                }
-                SettingRow {
-                    title: "Multi-currency store",
-                    description: "Show prices in the visitor’s preferred currency.",
-                    enabled: true,
-                }
-                div {
-                    class: "pt-2",
+                title: "Admin tools",
+                RowItem { title: "English (UK)", meta: "Default · 100% complete", trailing: "Edit" }
+                RowItem { title: "Spanish", meta: "User preference enabled · 96%", trailing: "Edit" }
+                RowItem { title: "Arabic", meta: "RTL · 88% complete", trailing: "Edit" }
+                RowItem { title: "German", meta: "Currency: EUR · 91%", trailing: "Edit" }
+                div { class: "mt-3 flex flex-wrap gap-2",
+                    StatusChip { label: "Import", tone: "#5b9dff" }
+                    StatusChip { label: "Export", tone: "#87d1fe" }
                     Button {
                         variant: ButtonVariant::Secondary,
                         size: ButtonSize::Sm,
                         IconGlobe {}
-                        "Manage languages"
+                        "Manage translations"
                     }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn SettingsDeveloper() -> Element {
+    rsx! {
+        PageHeader {
+            title: "Developer platform",
+            subtitle: "Plugins, APIs, webhooks, and tools for extending ServerSpot.",
+            action: rsx! {
+                Button {
+                    IconPlus {}
+                    "Create API key"
+                }
+            },
+        }
+
+        section {
+            class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
+            StatPill { label: "Plugins", value: "7", accent: "#5b9dff" }
+            StatPill { label: "Webhooks", value: "11", accent: "#87d1fe" }
+            StatPill { label: "API calls / day", value: "18.2k", accent: "#3ecf8e" }
+            StatPill { label: "Modules", value: "4", accent: "#f0a35e" }
+        }
+
+        div {
+            class: "grid gap-4 lg:grid-cols-2",
+            DataPanel {
+                title: "Platform features",
+                FeatureBullets {
+                    FeatureBullet { text: "Plugin system" }
+                    FeatureBullet { text: "Public API" }
+                    FeatureBullet { text: "Webhooks" }
+                    FeatureBullet { text: "Events" }
+                    FeatureBullet { text: "Custom modules" }
+                    FeatureBullet { text: "Theme marketplace" }
+                }
+            }
+            DataPanel {
+                title: "Developers can create",
+                FeatureBullets {
+                    FeatureBullet { text: "New features" }
+                    FeatureBullet { text: "Integrations" }
+                    FeatureBullet { text: "Themes" }
+                    FeatureBullet { text: "Server plugins" }
+                }
+                div { class: "mt-4 space-y-0",
+                    RowItem { title: "order.completed", meta: "Webhook · store.example.com/hooks", trailing: "Active" }
+                    RowItem { title: "ticket.created", meta: "Webhook · Discord bridge", trailing: "Active" }
+                    RowItem { title: "vote.claimed", meta: "Event listener · reward module", trailing: "Active" }
                 }
             }
         }

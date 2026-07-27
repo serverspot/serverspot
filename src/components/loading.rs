@@ -2,8 +2,6 @@ use dioxus::prelude::*;
 
 const LOGO: Asset = asset!("/assets/logo.svg");
 
-/// Fullscreen splash. Dismissed by CSS only — do not unmount it during/after
-/// hydration or the client DOM will diverge from the SSR tree.
 #[component]
 pub fn LoadingScreen() -> Element {
     rsx! {
