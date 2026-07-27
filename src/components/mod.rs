@@ -1,5 +1,7 @@
+pub mod account;
 pub mod accounts;
 pub mod analytics;
+pub mod brand;
 pub mod community;
 pub mod content;
 pub mod dashboard;

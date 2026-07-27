@@ -962,67 +962,6 @@ pub const PACKAGE_01: HugeIconData = HugeIconData {
     ],
 };
 
-#[allow(dead_code)]
-pub const HELP_CIRCLE: HugeIconData = HugeIconData {
-    name: "HelpCircleIcon",
-    nodes: &[
-    HugeIconNode {
-        tag: "circle",
-        d: None,
-        cx: Some("12"),
-        cy: Some("12"),
-        r: Some("10"),
-        x: None,
-        y: None,
-        width: None,
-        height: None,
-        x1: None,
-        y1: None,
-        x2: None,
-        y2: None,
-        points: None,
-        fill: None,
-        stroke_width: Some("1.5"),
-    },
-    HugeIconNode {
-        tag: "path",
-        d: Some("M9.5 9.5C9.5 8.11929 10.6193 7 12 7C13.3807 7 14.5 8.11929 14.5 9.5C14.5 10.3569 14.0689 11.1131 13.4117 11.5636C12.7283 12.0319 12 12.6716 12 13.5"),
-        cx: None,
-        cy: None,
-        r: None,
-        x: None,
-        y: None,
-        width: None,
-        height: None,
-        x1: None,
-        y1: None,
-        x2: None,
-        y2: None,
-        points: None,
-        fill: None,
-        stroke_width: Some("1.5"),
-    },
-    HugeIconNode {
-        tag: "path",
-        d: Some("M12.125 16.75H12M12.25 16.75C12.25 16.8881 12.1381 17 12 17C11.8619 17 11.75 16.8881 11.75 16.75C11.75 16.6119 11.8619 16.5 12 16.5C12.1381 16.5 12.25 16.6119 12.25 16.75Z"),
-        cx: None,
-        cy: None,
-        r: None,
-        x: None,
-        y: None,
-        width: None,
-        height: None,
-        x1: None,
-        y1: None,
-        x2: None,
-        y2: None,
-        points: None,
-        fill: None,
-        stroke_width: Some("1.5"),
-    },
-    ],
-};
-
 pub const AI_CHAT_01: HugeIconData = HugeIconData {
     name: "AiChat01Icon",
     nodes: &[

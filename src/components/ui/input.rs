@@ -3,25 +3,6 @@ use dioxus::prelude::*;
 use super::icons::IconSearch;
 
 #[component]
-pub fn Input(
-    #[props(default = "")] value: &'static str,
-    #[props(default = "")] placeholder: &'static str,
-    #[props(default = "")] class: &'static str,
-    #[props(default = "text")] r#type: &'static str,
-    #[props(default)] oninput: EventHandler<FormEvent>,
-) -> Element {
-    rsx! {
-        input {
-            r#type: "{r#type}",
-            class: "ui-input ui-squircle h-10 w-full px-4 text-sm outline-none {class}",
-            value: "{value}",
-            placeholder: "{placeholder}",
-            oninput: move |evt| oninput.call(evt),
-        }
-    }
-}
-
-#[component]
 pub fn SignalInput(
     mut value: Signal<String>,
     #[props(default = "")] placeholder: &'static str,

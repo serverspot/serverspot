@@ -1,10 +1,8 @@
 use std::borrow::Cow;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 use dioxus::prelude::*;
 
-use crate::components::syntax::{highlight_spans, HighlightedCode};
+use crate::components::syntax::highlighted_html;
 use crate::components::ui::*;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -352,7 +350,7 @@ impl EditorFile {
 }
 
 struct FolderEntry {
-    name: String,
+    name: Cow<'static, str>,
     open: bool,
 }
 
@@ -363,8 +361,6 @@ struct ThemeEditor {
     active: u16,
     prompt: Option<PromptKind>,
     prompt_buf: String,
-    status: StatusMsg,
-    dirty: bool,
 }
 
 impl ThemeEditor {
@@ -375,11 +371,11 @@ impl ThemeEditor {
             files,
             folders: vec![
                 FolderEntry {
-                    name: String::from("assets"),
+                    name: Cow::Borrowed("assets"),
                     open: true,
                 },
                 FolderEntry {
-                    name: String::from("partials"),
+                    name: Cow::Borrowed("partials"),
                     open: true,
                 },
             ],
@@ -387,8 +383,6 @@ impl ThemeEditor {
             active: 0,
             prompt: None,
             prompt_buf: String::new(),
-            status: StatusMsg::Ready,
-            dirty: false,
         }
     }
 
@@ -414,7 +408,7 @@ impl ThemeEditor {
             return;
         }
         self.folders.push(FolderEntry {
-            name: String::from(name),
+            name: Cow::Owned(String::from(name)),
             open,
         });
         self.folders.sort_by(|a, b| a.name.cmp(&b.name));
@@ -436,36 +430,32 @@ impl ThemeEditor {
         self.prompt_buf.clear();
     }
 
-    fn create_from_prompt(&mut self) {
+    fn create_from_prompt(&mut self) -> Option<StatusMsg> {
         let Some(kind) = self.prompt else {
-            return;
+            return None;
         };
 
         let normalized = self.prompt_buf.trim().replace('\\', "/");
         if normalized.is_empty() || normalized.contains("..") {
-            self.status = StatusMsg::InvalidName;
-            return;
+            return Some(StatusMsg::InvalidName);
         }
 
-        match kind {
+        let status = match kind {
             PromptKind::NewFolder => {
                 let path = normalized.trim_matches('/');
                 if path.is_empty() {
-                    self.status = StatusMsg::InvalidName;
-                    return;
+                    return Some(StatusMsg::InvalidName);
                 }
                 self.ensure_folder(path, true);
-                self.status = StatusMsg::CreatedFolder;
+                StatusMsg::CreatedFolder
             }
             PromptKind::NewFile => {
                 let path = normalized.trim_matches('/');
                 if path.is_empty() || path.ends_with('/') {
-                    self.status = StatusMsg::InvalidName;
-                    return;
+                    return Some(StatusMsg::InvalidName);
                 }
                 if self.files.iter().any(|file| file.path == path) {
-                    self.status = StatusMsg::Exists;
-                    return;
+                    return Some(StatusMsg::Exists);
                 }
                 if let Some(folder) = path.rsplit_once('/').map(|(folder, _)| folder) {
                     self.ensure_folder(folder, true);
@@ -482,26 +472,25 @@ impl ThemeEditor {
                     body: FileBody::Owned(content),
                 });
                 self.ensure_tab(index);
-                self.status = StatusMsg::CreatedFile;
-                self.dirty = false;
+                StatusMsg::CreatedFile
             }
-        }
+        };
 
         self.close_prompt();
+        Some(status)
     }
 
     fn mock_upload(&mut self) {
         let index = self.files.len() as u16;
         self.ensure_folder("assets", true);
         let mut path = String::from("assets/upload-");
-        path.push_str(&index.to_string());
+        push_u16(&mut path, index);
         self.files.push(EditorFile {
             path: Cow::Owned(path),
             language: "FILE",
             body: FileBody::Owned(String::from("/* Mock upload */\n")),
         });
         self.ensure_tab(index);
-        self.status = StatusMsg::Uploaded;
     }
 
     fn commit_active_body(&mut self, value: String) {
@@ -510,16 +499,33 @@ impl ThemeEditor {
         }
     }
 
-    fn mark_dirty(&mut self) {
-        if !self.dirty {
-            self.dirty = true;
-            self.status = StatusMsg::Unsaved;
-        }
+    fn active_body(&self) -> String {
+        self.files
+            .get(self.active as usize)
+            .map(|file| String::from(file.body.as_str()))
+            .unwrap_or_default()
     }
 
-    fn save_mock(&mut self) {
-        self.dirty = false;
-        self.status = StatusMsg::Saved;
+    fn active_language(&self) -> Option<&'static str> {
+        self.files.get(self.active as usize).map(|file| file.language)
+    }
+}
+
+fn push_u16(buf: &mut String, mut value: u16) {
+    if value == 0 {
+        buf.push('0');
+        return;
+    }
+    let mut digits = [0u8; 5];
+    let mut n = 0;
+    while value > 0 {
+        digits[n] = b'0' + (value % 10) as u8;
+        value /= 10;
+        n += 1;
+    }
+    while n > 0 {
+        n -= 1;
+        buf.push(digits[n] as char);
     }
 }
 
@@ -545,47 +551,19 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
     let overview = feature.overview_route();
     let navigator = use_navigator();
     let mut editor = use_signal(|| ThemeEditor::new(feature.files()));
+    let mut dirty = use_signal(|| false);
+    let mut status = use_signal(|| StatusMsg::Ready);
+    let mut draft = use_signal(|| editor.read().active_body());
 
-    let draft = use_hook(|| Rc::new(RefCell::new(String::new())));
-    let draft_save = Rc::clone(&draft);
-    let draft_input = Rc::clone(&draft);
-
-    let (active, dirty, status, prompt, tabs, root_idxs, folder_count, initial_text, active_path, active_lang) = {
-        let state = editor.read();
-        let active = state.active;
-        let initial_text = state
-            .files
-            .get(active as usize)
-            .map(|file| String::from(file.body.as_str()))
-            .unwrap_or_default();
-        let active_path = state
-            .files
-            .get(active as usize)
-            .map(|file| file.path.to_string());
-        let active_lang = state
-            .files
-            .get(active as usize)
-            .map(|file| file.language);
-        let root_idxs: Vec<u16> = state
-            .files
-            .iter()
-            .enumerate()
-            .filter(|(_, file)| file.parent().is_none())
-            .map(|(i, _)| i as u16)
-            .collect();
-        (
-            active,
-            state.dirty,
-            state.status,
-            state.prompt,
-            state.tabs.clone(),
-            root_idxs,
-            state.folders.len(),
-            initial_text,
-            active_path,
-            active_lang,
-        )
-    };
+    let active = editor.read().active;
+    let prompt = editor.read().prompt;
+    let tab_count = editor.read().tabs.len();
+    let file_count = editor.read().files.len();
+    let folder_count = editor.read().folders.len();
+    let has_file = editor.read().files.get(active as usize).is_some();
+    let active_lang = editor.read().active_language();
+    let dirty_flag = dirty();
+    let status_msg = status();
 
     rsx! {
         div {
@@ -606,13 +584,12 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                         variant: ButtonVariant::Secondary,
                         size: ButtonSize::Sm,
                         onclick: move |_| {
-                            let text = draft_save.borrow().clone();
-                            editor.with_mut(|state| {
-                                state.commit_active_body(text);
-                                state.save_mock();
-                            });
+                            let text = draft();
+                            editor.write().commit_active_body(text);
+                            dirty.set(false);
+                            status.set(StatusMsg::Saved);
                         },
-                        if dirty { "Save*" } else { "Save" }
+                        if dirty_flag { "Save*" } else { "Save" }
                     }
                 }
             }
@@ -646,22 +623,31 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                                     r#type: "file",
                                     multiple: true,
                                     class: "theme-ide-upload-input",
-                                    onchange: move |_| editor.write().mock_upload(),
+                                    onchange: move |_| {
+                                        editor.write().mock_upload();
+                                        draft.set(editor.read().active_body());
+                                        dirty.set(false);
+                                        status.set(StatusMsg::Uploaded);
+                                    },
                                 }
                             }
                         }
                     }
                     p { class: "theme-ide-folder theme-ide-folder-root", "themes/{feature_slug}" }
-                    for idx in root_idxs.iter().copied() {
-                        ThemeFileRow {
-                            editor,
-                            index: idx,
-                            nested: false,
+                    for index in 0..file_count as u16 {
+                        if editor.read().files.get(index as usize).is_some_and(|file| file.parent().is_none()) {
+                            ThemeFileRow {
+                                editor,
+                                draft,
+                                index,
+                                nested: false,
+                            }
                         }
                     }
                     for folder_i in 0..folder_count {
                         ThemeFolderBlock {
                             editor,
+                            draft,
                             folder_i,
                         }
                     }
@@ -670,28 +656,27 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                     class: "theme-ide-main",
                     div {
                         class: "theme-ide-tabs",
-                        for tab in tabs.iter().copied() {
+                        for tab_i in 0..tab_count {
                             ThemeTab {
                                 editor,
-                                index: tab,
+                                draft,
+                                index: editor.read().tabs[tab_i],
                             }
                         }
                     }
-                    if let (Some(path), Some(language)) = (active_path, active_lang) {
-                        ThemeCodePane {
-                            key: "{active}",
-                            language,
-                            initial_text,
-                            draft: draft_input.clone(),
-                            editor,
-                        }
-                        div {
-                            class: "theme-ide-status",
-                            span { "{path}" }
-                            span { "{language}" }
-                            span { "UTF-8" }
-                            span { "LF" }
-                            span { class: "theme-ide-status-msg", "{status.as_str()}" }
+                    if has_file {
+                        if let Some(language) = active_lang {
+                            ThemeCodePane {
+                                key: "{active}",
+                                language,
+                                draft,
+                                dirty,
+                                status,
+                            }
+                            ThemeStatusBar {
+                                editor,
+                                status: status_msg,
+                            }
                         }
                     } else {
                         div {
@@ -746,7 +731,17 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                             }
                             Button {
                                 size: ButtonSize::Sm,
-                                onclick: move |_| editor.write().create_from_prompt(),
+                                onclick: move |_| {
+                                    let msg = editor.write().create_from_prompt();
+                                    if let Some(msg) = msg {
+                                        let reload = matches!(msg, StatusMsg::CreatedFile);
+                                        status.set(msg);
+                                        if reload {
+                                            draft.set(editor.read().active_body());
+                                            dirty.set(false);
+                                        }
+                                    }
+                                },
                                 "Create"
                             }
                         }
@@ -758,23 +753,40 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
 }
 
 #[component]
+fn ThemeStatusBar(editor: Signal<ThemeEditor>, status: StatusMsg) -> Element {
+    let (path, language) = {
+        let state = editor.read();
+        match state.files.get(state.active as usize) {
+            Some(file) => (file.path.clone(), file.language),
+            None => (Cow::Borrowed(""), ""),
+        }
+    };
+
+    rsx! {
+        div {
+            class: "theme-ide-status",
+            span { "{path}" }
+            span { "{language}" }
+            span { "UTF-8" }
+            span { "LF" }
+            span { class: "theme-ide-status-msg", "{status.as_str()}" }
+        }
+    }
+}
+
+#[component]
 fn ThemeCodePane(
     language: &'static str,
-    initial_text: String,
-    draft: Rc<RefCell<String>>,
-    mut editor: Signal<ThemeEditor>,
+    mut draft: Signal<String>,
+    mut dirty: Signal<bool>,
+    mut status: Signal<StatusMsg>,
 ) -> Element {
-    let mut text = use_signal(|| {
-        draft.borrow_mut().clone_from(&initial_text);
-        initial_text
-    });
-
-    let spans = use_memo(move || highlight_spans(text().as_str(), language));
+    let html = use_memo(move || highlighted_html(draft.read().as_str(), language));
 
     rsx! {
         div {
             class: "theme-ide-editor",
-            div { class: "theme-ide-gutter theme-ide-gutter-plain", aria_hidden: true }
+            div { class: "theme-ide-gutter-plain", aria_hidden: true }
             div {
                 class: "theme-ide-code-stack",
                 div {
@@ -782,7 +794,7 @@ fn ThemeCodePane(
                     pre {
                         class: "theme-ide-highlight",
                         aria_hidden: true,
-                        HighlightedCode { source: text(), spans: spans() }
+                        dangerous_inner_html: "{html}",
                         "\n"
                     }
                     textarea {
@@ -791,13 +803,13 @@ fn ThemeCodePane(
                         autocomplete: "off",
                         autocorrect: "off",
                         autocapitalize: "off",
-                        value: "{text}",
+                        value: "{draft}",
                         oninput: move |evt: FormEvent| {
                             let value = evt.value();
-                            draft.borrow_mut().clone_from(&value);
-                            text.set(value);
-                            if !editor.read().dirty {
-                                editor.write().mark_dirty();
+                            draft.set(value);
+                            if !*dirty.peek() {
+                                dirty.set(true);
+                                status.set(StatusMsg::Unsaved);
                             }
                         },
                     }
@@ -808,12 +820,27 @@ fn ThemeCodePane(
 }
 
 #[component]
-fn ThemeFileRow(editor: Signal<ThemeEditor>, index: u16, nested: bool) -> Element {
-    let (active, name, language) = {
+fn ThemeFileRow(
+    mut editor: Signal<ThemeEditor>,
+    mut draft: Signal<String>,
+    index: u16,
+    nested: bool,
+) -> Element {
+    let (active, language) = {
         let state = editor.read();
-        let file = &state.files[index as usize];
-        (state.active, file.name().to_string(), file.language)
+        let language = state
+            .files
+            .get(index as usize)
+            .map(|file| file.language)
+            .unwrap_or("FILE");
+        (state.active, language)
     };
+    let name = editor
+        .read()
+        .files
+        .get(index as usize)
+        .map(|file| file.name().to_string())
+        .unwrap_or_default();
 
     rsx! {
         button {
@@ -828,7 +855,10 @@ fn ThemeFileRow(editor: Signal<ThemeEditor>, index: u16, nested: bool) -> Elemen
             } else {
                 "theme-ide-file"
             },
-            onclick: move |_| editor.write().ensure_tab(index),
+            onclick: move |_| {
+                editor.write().ensure_tab(index);
+                draft.set(editor.read().active_body());
+            },
             span { class: "theme-ide-file-ext", "{language}" }
             span { "{name}" }
         }
@@ -836,19 +866,24 @@ fn ThemeFileRow(editor: Signal<ThemeEditor>, index: u16, nested: bool) -> Elemen
 }
 
 #[component]
-fn ThemeFolderBlock(mut editor: Signal<ThemeEditor>, folder_i: usize) -> Element {
-    let (name, is_open, nested) = {
+fn ThemeFolderBlock(
+    mut editor: Signal<ThemeEditor>,
+    draft: Signal<String>,
+    folder_i: usize,
+) -> Element {
+    let (is_open, file_count) = {
         let state = editor.read();
-        let folder = &state.folders[folder_i];
-        let nested: Vec<u16> = state
-            .files
-            .iter()
-            .enumerate()
-            .filter(|(_, file)| file.parent() == Some(folder.name.as_str()))
-            .map(|(i, _)| i as u16)
-            .collect();
-        (folder.name.clone(), folder.open, nested)
+        (
+            state.folders.get(folder_i).map(|folder| folder.open).unwrap_or(false),
+            state.files.len() as u16,
+        )
     };
+    let name = editor
+        .read()
+        .folders
+        .get(folder_i)
+        .map(|folder| folder.name.clone())
+        .unwrap_or(Cow::Borrowed(""));
 
     rsx! {
         button {
@@ -858,11 +893,16 @@ fn ThemeFolderBlock(mut editor: Signal<ThemeEditor>, folder_i: usize) -> Element
             span { class: "theme-ide-folder-name", "{name}" }
         }
         if is_open {
-            for idx in nested.iter().copied() {
-                ThemeFileRow {
-                    editor,
-                    index: idx,
-                    nested: true,
+            for index in 0..file_count {
+                if editor.read().files.get(index as usize).is_some_and(|file| {
+                    file.parent() == Some(name.as_ref())
+                }) {
+                    ThemeFileRow {
+                        editor,
+                        draft,
+                        index,
+                        nested: true,
+                    }
                 }
             }
         }
@@ -870,7 +910,11 @@ fn ThemeFolderBlock(mut editor: Signal<ThemeEditor>, folder_i: usize) -> Element
 }
 
 #[component]
-fn ThemeTab(mut editor: Signal<ThemeEditor>, index: u16) -> Element {
+fn ThemeTab(
+    mut editor: Signal<ThemeEditor>,
+    mut draft: Signal<String>,
+    index: u16,
+) -> Element {
     let active = editor.read().active;
     let name = editor
         .read()
@@ -888,13 +932,19 @@ fn ThemeTab(mut editor: Signal<ThemeEditor>, index: u16) -> Element {
             },
             button {
                 class: "theme-ide-tab-label",
-                onclick: move |_| editor.write().active = index,
+                onclick: move |_| {
+                    editor.write().active = index;
+                    draft.set(editor.read().active_body());
+                },
                 "{name}"
             }
             button {
                 class: "theme-ide-tab-close",
                 title: "Close",
-                onclick: move |_| editor.write().close_tab(index),
+                onclick: move |_| {
+                    editor.write().close_tab(index);
+                    draft.set(editor.read().active_body());
+                },
                 "×"
             }
         }

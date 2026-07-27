@@ -2,16 +2,18 @@ use dioxus::prelude::*;
 
 use crate::router::Route;
 
+use super::brand::BrandMark;
 use super::ui::*;
 
 #[component]
 pub fn PageTransition() -> Element {
     let route = use_route::<Route>();
+    let section = crate::nav::section_for(&route);
     let theme_ide = crate::nav::is_theme_editor(&route);
 
     rsx! {
         div {
-            key: "{route}",
+            key: "{section.label()}",
             class: if theme_ide {
                 "flex min-h-0 flex-1 flex-col"
             } else {
@@ -22,7 +24,6 @@ pub fn PageTransition() -> Element {
     }
 }
 
-const LOGO: Asset = asset!("/assets/logo.svg");
 const REPO_URL: &str = "https://github.com/serverspot/serverspot";
 
 #[component]
@@ -36,11 +37,7 @@ pub fn PoweredByFooter() -> Element {
                 rel: "noopener noreferrer",
                 class: "inline-flex items-center gap-2 text-xs text-text-muted transition-colors hover:text-text-secondary",
                 span { "Powered by" }
-                img {
-                    src: LOGO,
-                    alt: "",
-                    class: "h-3.5 w-auto opacity-50 grayscale",
-                }
+                BrandMark { class: "h-3.5 w-3.5 opacity-50" }
                 span { class: "font-medium", "ServerSpot" }
             }
         }

@@ -1,15 +1,14 @@
 use dioxus::prelude::*;
 
+use crate::components::brand::BrandMark;
 use crate::components::page::PoweredByFooter;
 use crate::components::ui::*;
-
-const LOGO: Asset = asset!("/assets/logo.svg");
 
 #[component]
 pub fn Login() -> Element {
     rsx! {
         div {
-            class: "relative flex min-h-dvh flex-col bg-bg text-text",
+            class: "relative flex h-dvh flex-col overflow-y-auto bg-bg text-text",
 
             div {
                 class: "pointer-events-none absolute inset-0",
@@ -26,11 +25,7 @@ pub fn Login() -> Element {
 
                     div {
                         class: "mb-8 flex flex-col items-center text-center",
-                        img {
-                            src: LOGO,
-                            alt: "ServerSpot",
-                            class: "mb-5 h-12 w-auto",
-                        }
+                        BrandMark { class: "mb-5 h-12 w-12" }
                         h1 { class: "text-2xl font-semibold tracking-tight", "ServerSpot" }
                         p {
                             class: "mt-2 text-sm text-text-muted",

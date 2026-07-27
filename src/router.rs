@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::components::{
+    account::Account,
     accounts::{
         AccountsAuth, AccountsConnections, AccountsLinking, AccountsProfiles, AccountsRoles,
     },
@@ -165,4 +166,7 @@ pub enum Route {
         SettingsSecurity {},
         #[route("/settings/hosting")]
         SettingsHosting {},
+
+        #[route("/account")]
+        Account {},
 }

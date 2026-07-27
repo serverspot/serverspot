@@ -1,5 +1,3 @@
-use dioxus::prelude::*;
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TokenKind {
     Plain,
@@ -55,18 +53,32 @@ pub fn highlight_spans(source: &str, language: &str) -> Vec<Span> {
     }
 }
 
-#[component]
-pub fn HighlightedCode(source: String, spans: Vec<Span>) -> Element {
-    rsx! {
-        for span in spans.iter().copied() {
-            {
-                let start = span.start as usize;
-                let end = (span.end as usize).min(source.len());
-                let text = if start < end { &source[start..end] } else { "" };
-                rsx! {
-                    span { class: "{span.kind.class()}", "{text}" }
-                }
-            }
+pub fn highlighted_html(source: &str, language: &str) -> String {
+    let spans = highlight_spans(source, language);
+    let mut out = String::with_capacity(source.len().saturating_add(spans.len().saturating_mul(28)));
+    for span in spans {
+        let start = span.start as usize;
+        let end = (span.end as usize).min(source.len());
+        if start >= end {
+            continue;
+        }
+        out.push_str("<span class=\"");
+        out.push_str(span.kind.class());
+        out.push_str("\">");
+        push_escaped(&mut out, &source[start..end]);
+        out.push_str("</span>");
+    }
+    out
+}
+
+fn push_escaped(out: &mut String, text: &str) {
+    for ch in text.chars() {
+        match ch {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            _ => out.push(ch),
         }
     }
 }

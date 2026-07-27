@@ -12,7 +12,6 @@ use components::loading::LoadingScreen;
 use router::Route;
 
 pub const FAVICON: Asset = asset!("/assets/favicon.svg");
-pub const MAIN_CSS: Asset = asset!("/assets/main.css");
 pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
 fn main() {
@@ -30,9 +29,9 @@ fn App() -> Element {
             name: "viewport",
             content: "width=device-width, initial-scale=1, viewport-fit=cover",
         }
+        document::Title { "ServerSpot" }
         document::Link { rel: "icon", href: FAVICON }
         document::Stylesheet { href: TAILWIND_CSS }
-        document::Stylesheet { href: MAIN_CSS }
         Router::<Route> {}
         LoadingScreen {}
     }

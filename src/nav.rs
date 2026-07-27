@@ -13,6 +13,7 @@ pub enum Section {
     Applications,
     Analytics,
     Settings,
+    Account,
 }
 
 #[derive(Clone, Copy)]
@@ -48,12 +49,13 @@ impl Section {
             Section::Applications => "Applications",
             Section::Analytics => "Analytics",
             Section::Settings => "Settings",
+            Section::Account => "Account",
         }
     }
 
     pub fn accent(self) -> &'static str {
         match self {
-            Section::Dashboard => "#87d1fe",
+            Section::Dashboard | Section::Settings | Section::Account => "#87d1fe",
             Section::Store => "#3ecf8e",
             Section::Forum => "#5b9dff",
             Section::Support => "#f0a35e",
@@ -63,23 +65,58 @@ impl Section {
             Section::Votes => "#fbbf24",
             Section::Applications => "#fb7185",
             Section::Analytics => "#38bdf8",
-            Section::Settings => "#b0b3c0",
         }
     }
 
-    pub fn accent_style(self) -> &'static str {
+    pub fn document_title(self) -> &'static str {
         match self {
-            Section::Dashboard => "--rail-accent: #87d1fe;",
-            Section::Store => "--rail-accent: #3ecf8e;",
-            Section::Forum => "--rail-accent: #5b9dff;",
-            Section::Support => "--rail-accent: #f0a35e;",
-            Section::Content => "--rail-accent: #f071a5;",
-            Section::Players => "--rail-accent: #69bdf2;",
-            Section::Leaderboards => "--rail-accent: #5eead4;",
-            Section::Votes => "--rail-accent: #fbbf24;",
-            Section::Applications => "--rail-accent: #fb7185;",
-            Section::Analytics => "--rail-accent: #38bdf8;",
-            Section::Settings => "--rail-accent: #b0b3c0;",
+            Section::Dashboard => "ServerSpot | Dashboard",
+            Section::Store => "ServerSpot | Store",
+            Section::Forum => "ServerSpot | Forum",
+            Section::Support => "ServerSpot | Support",
+            Section::Content => "ServerSpot | Blog",
+            Section::Players => "ServerSpot | Players",
+            Section::Leaderboards => "ServerSpot | Leaderboards",
+            Section::Votes => "ServerSpot | Vote rewards",
+            Section::Applications => "ServerSpot | Applications",
+            Section::Analytics => "ServerSpot | Analytics",
+            Section::Settings => "ServerSpot | Settings",
+            Section::Account => "ServerSpot | Account",
+        }
+    }
+
+    pub fn theme_vars(self) -> &'static str {
+        match self {
+            Section::Dashboard | Section::Settings | Section::Account => {
+                "--color-accent:#87d1fe;--color-accent-strong:color-mix(in srgb,#87d1fe 82%,black);--color-accent-muted:color-mix(in srgb,#87d1fe 68%,black);--color-accent-soft:color-mix(in srgb,#87d1fe 16%,transparent);--rail-accent:#87d1fe;"
+            }
+            Section::Store => {
+                "--color-accent:#3ecf8e;--color-accent-strong:color-mix(in srgb,#3ecf8e 82%,black);--color-accent-muted:color-mix(in srgb,#3ecf8e 68%,black);--color-accent-soft:color-mix(in srgb,#3ecf8e 16%,transparent);--rail-accent:#3ecf8e;"
+            }
+            Section::Forum => {
+                "--color-accent:#5b9dff;--color-accent-strong:color-mix(in srgb,#5b9dff 82%,black);--color-accent-muted:color-mix(in srgb,#5b9dff 68%,black);--color-accent-soft:color-mix(in srgb,#5b9dff 16%,transparent);--rail-accent:#5b9dff;"
+            }
+            Section::Support => {
+                "--color-accent:#f0a35e;--color-accent-strong:color-mix(in srgb,#f0a35e 82%,black);--color-accent-muted:color-mix(in srgb,#f0a35e 68%,black);--color-accent-soft:color-mix(in srgb,#f0a35e 16%,transparent);--rail-accent:#f0a35e;"
+            }
+            Section::Content => {
+                "--color-accent:#f071a5;--color-accent-strong:color-mix(in srgb,#f071a5 82%,black);--color-accent-muted:color-mix(in srgb,#f071a5 68%,black);--color-accent-soft:color-mix(in srgb,#f071a5 16%,transparent);--rail-accent:#f071a5;"
+            }
+            Section::Players => {
+                "--color-accent:#69bdf2;--color-accent-strong:color-mix(in srgb,#69bdf2 82%,black);--color-accent-muted:color-mix(in srgb,#69bdf2 68%,black);--color-accent-soft:color-mix(in srgb,#69bdf2 16%,transparent);--rail-accent:#69bdf2;"
+            }
+            Section::Leaderboards => {
+                "--color-accent:#5eead4;--color-accent-strong:color-mix(in srgb,#5eead4 82%,black);--color-accent-muted:color-mix(in srgb,#5eead4 68%,black);--color-accent-soft:color-mix(in srgb,#5eead4 16%,transparent);--rail-accent:#5eead4;"
+            }
+            Section::Votes => {
+                "--color-accent:#fbbf24;--color-accent-strong:color-mix(in srgb,#fbbf24 82%,black);--color-accent-muted:color-mix(in srgb,#fbbf24 68%,black);--color-accent-soft:color-mix(in srgb,#fbbf24 16%,transparent);--rail-accent:#fbbf24;"
+            }
+            Section::Applications => {
+                "--color-accent:#fb7185;--color-accent-strong:color-mix(in srgb,#fb7185 82%,black);--color-accent-muted:color-mix(in srgb,#fb7185 68%,black);--color-accent-soft:color-mix(in srgb,#fb7185 16%,transparent);--rail-accent:#fb7185;"
+            }
+            Section::Analytics => {
+                "--color-accent:#38bdf8;--color-accent-strong:color-mix(in srgb,#38bdf8 82%,black);--color-accent-muted:color-mix(in srgb,#38bdf8 68%,black);--color-accent-soft:color-mix(in srgb,#38bdf8 16%,transparent);--rail-accent:#38bdf8;"
+            }
         }
     }
 
@@ -96,6 +133,7 @@ impl Section {
             Section::Applications => Route::ApplicationsOverview {},
             Section::Analytics => Route::AnalyticsOverview {},
             Section::Settings => Route::SettingsGeneral {},
+            Section::Account => Route::Account {},
         }
     }
 
@@ -351,6 +389,10 @@ impl Section {
                     route: Route::SettingsHosting {},
                 },
             ],
+            Section::Account => &[SubLink {
+                label: "Profile",
+                route: Route::Account {},
+            }],
         }
     }
 }
@@ -414,22 +456,72 @@ pub fn section_for(route: &Route) -> Section {
         | Route::SettingsIntegrations {}
         | Route::SettingsSecurity {}
         | Route::SettingsHosting {} => Section::Settings,
+        Route::Account {} => Section::Account,
     }
 }
 
 pub fn crumb_for(route: &Route) -> &'static str {
-    for section in Section::ALL
-        .iter()
-        .copied()
-        .chain(std::iter::once(Section::Settings))
-    {
-        for sub in section.subs() {
-            if &sub.route == route {
-                return sub.label;
-            }
-        }
+    match route {
+        Route::Login {} => "Login",
+        Route::Dashboard {} => "Overview",
+        Route::DashboardActivity {} => "Activity",
+        Route::StoreOverview {} => "Overview",
+        Route::StoreProducts {} => "Products",
+        Route::StoreOrders {} => "Orders",
+        Route::StoreSiteSettings {} => "Settings",
+        Route::StoreTheme {} => "Theme",
+        Route::ForumOverview {} => "Overview",
+        Route::ForumCategories {} => "Categories",
+        Route::ForumPosts {} => "Posts",
+        Route::ForumModeration {} => "Moderation",
+        Route::ForumSiteSettings {} => "Settings",
+        Route::ForumTheme {} => "Theme",
+        Route::SupportOverview {} => "Overview",
+        Route::SupportTickets {} => "Tickets",
+        Route::SupportHelpCentre {} => "Help centre",
+        Route::SupportAutomation {} => "Automation",
+        Route::SupportSiteSettings {} => "Settings",
+        Route::SupportTheme {} => "Theme",
+        Route::ContentOverview {} => "Overview",
+        Route::ContentBlog {} => "Posts",
+        Route::ContentPages {} => "Pages",
+        Route::ContentSiteSettings {} => "Settings",
+        Route::ContentTheme {} => "Theme",
+        Route::PlayersOverview {} => "Overview",
+        Route::CommunityPlayers {} => "Profiles",
+        Route::PlayersSiteSettings {} => "Settings",
+        Route::PlayersTheme {} => "Theme",
+        Route::LeaderboardsOverview {} => "Overview",
+        Route::CommunityLeaderboards {} => "Rankings",
+        Route::LeaderboardsSiteSettings {} => "Settings",
+        Route::LeaderboardsTheme {} => "Theme",
+        Route::VotesOverview {} => "Overview",
+        Route::CommunityVotes {} => "Rewards",
+        Route::VotesSiteSettings {} => "Settings",
+        Route::VotesTheme {} => "Theme",
+        Route::ApplicationsOverview {} => "Overview",
+        Route::CommunityApplications {} => "Inbox",
+        Route::ApplicationsSiteSettings {} => "Settings",
+        Route::ApplicationsTheme {} => "Theme",
+        Route::AnalyticsOverview {} => "Overview",
+        Route::AnalyticsWebsite {} => "Website",
+        Route::AnalyticsCommunity {} => "Community",
+        Route::AnalyticsGaming {} => "Gaming",
+        Route::AnalyticsSiteSettings {} => "Settings",
+        Route::AnalyticsTheme {} => "Theme",
+        Route::SettingsGeneral {} => "General",
+        Route::AccountsAuth {} => "Authentication",
+        Route::AccountsLinking {} => "Account linking",
+        Route::AccountsConnections {} => "Connections",
+        Route::AccountsProfiles {} => "User profiles",
+        Route::AccountsRoles {} => "Roles",
+        Route::SettingsLocalisation {} => "Localisation",
+        Route::SettingsDeveloper {} => "Developer",
+        Route::SettingsIntegrations {} => "Integrations",
+        Route::SettingsSecurity {} => "Security",
+        Route::SettingsHosting {} => "Hosting",
+        Route::Account {} => "Profile",
     }
-    "ServerSpot"
 }
 
 pub fn is_theme_editor(route: &Route) -> bool {
