@@ -136,6 +136,45 @@
     animation: nav-sheet-panel-out 0.28s cubic-bezier(0.4, 0, 1, 1) both;
   }
 
+  .side-panel {
+    width: 14rem;
+    overflow: hidden;
+    opacity: 1;
+    border-right-color: var(--color-border-subtle);
+    transition:
+      width 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.28s ease,
+      border-right-color 0.28s ease;
+  }
+
+  .side-panel-collapsed {
+    width: 0;
+    opacity: 0;
+    border-right-color: transparent;
+    pointer-events: none;
+  }
+
+  .side-panel-inner {
+    width: 14rem;
+    min-width: 14rem;
+  }
+
+  .shell-main-pad {
+    transition: padding-left 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .side-expand-btn {
+    transition:
+      opacity 0.22s ease,
+      transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .side-expand-btn-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.85);
+  }
+
   .splash-logo {
     animation: splash-logo-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
@@ -284,7 +323,10 @@
   .nav-sheet-backdrop-enter,
   .nav-sheet-backdrop-exit,
   .nav-sheet-panel-enter,
-  .nav-sheet-panel-exit {
+  .nav-sheet-panel-exit,
+  .side-panel,
+  .shell-main-pad,
+  .side-expand-btn {
     animation: none !important;
     transition: none !important;
   }

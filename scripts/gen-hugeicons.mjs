@@ -16,7 +16,7 @@ const selected = {
   Globe02: "Globe02Icon",
   CustomerService01: "CustomerService01Icon",
   AnalyticsUp: "AnalyticsUpIcon",
-  Package01: "Package01Icon",
+  Gift: "GiftIcon",
   AiChat01: "AiChat01Icon",
   Menu01: "Menu01Icon",
   Cancel01: "Cancel01Icon",

@@ -10,29 +10,54 @@ pub fn SettingsGeneral() -> Element {
     rsx! {
         PageHeader {
             title: "General",
-            subtitle: "Site name, registration, and branding defaults.",
+            subtitle: "Website domain, registration, and branding defaults.",
             action: rsx! {
                 Button { "Save changes" }
             },
         }
 
-        DataPanel {
-            title: "Site",
-            SettingRow {
-                title: "Maintenance mode",
-                description: "Show a maintenance page to non-staff visitors.",
-                enabled: false,
+        div {
+            class: "grid gap-4 lg:grid-cols-2",
+            DataPanel {
+                title: "Website",
+                SettingsField { label: "Site name", value: "NovaCraft" }
+                SettingsField { label: "Custom domain", value: "www.example.com" }
+                SettingsField { label: "Subdomain", value: "novacraft" }
+                SettingRow {
+                    title: "Force HTTPS",
+                    description: "Redirect all traffic on your website to HTTPS.",
+                    enabled: true,
+                }
             }
-            SettingRow {
-                title: "User registration",
-                description: "Allow new players to create website accounts.",
-                enabled: true,
+            DataPanel {
+                title: "Site options",
+                SettingRow {
+                    title: "Maintenance mode",
+                    description: "Show a maintenance page to non-staff visitors.",
+                    enabled: false,
+                }
+                SettingRow {
+                    title: "User registration",
+                    description: "Allow new players to create website accounts.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Email verification",
+                    description: "Require verified email before purchases.",
+                    enabled: true,
+                }
             }
-            SettingRow {
-                title: "Email verification",
-                description: "Require verified email before purchases.",
-                enabled: true,
-            }
+        }
+    }
+}
+
+#[component]
+fn SettingsField(label: &'static str, value: &'static str) -> Element {
+    rsx! {
+        div {
+            class: "border-b border-border-subtle py-3 last:border-0",
+            label { class: "mb-1.5 block text-xs font-medium text-text-muted", "{label}" }
+            StaticInput { value, class: "max-w-md" }
         }
     }
 }
@@ -138,7 +163,7 @@ pub fn SettingsDeveloper() -> Element {
                     FeatureBullet { text: "Server plugins" }
                 }
                 div { class: "mt-4 space-y-0",
-                    RowItem { title: "order.completed", meta: "Webhook · store.example.com/hooks", trailing: "Active" }
+                    RowItem { title: "order.completed", meta: "Webhook · www.example.com/hooks", trailing: "Active" }
                     RowItem { title: "ticket.created", meta: "Webhook · Discord bridge", trailing: "Active" }
                     RowItem { title: "vote.claimed", meta: "Event listener · reward module", trailing: "Active" }
                 }

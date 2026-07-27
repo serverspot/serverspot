@@ -33,81 +33,63 @@ impl FeatureSite {
 
     fn subtitle(self) -> &'static str {
         match self {
-            Self::Store => "Domain, branding, and public URL settings for the storefront.",
-            Self::Forum => "Domain and navigation settings for the community forum.",
-            Self::Support => "Domain and portal settings for tickets and the help centre.",
-            Self::Content => "Domain and homepage settings for the blog, news, and pages.",
-            Self::Players => "Domain and profile hub settings for player pages.",
-            Self::Leaderboards => "Domain and public board settings for rankings.",
-            Self::Votes => "Domain and claim-page settings for vote rewards.",
-            Self::Applications => "Domain and form settings for staff applications.",
-            Self::Analytics => "Domain and access settings for shared analytics views.",
+            Self::Store => "Path, branding, and navigation for the storefront on your website.",
+            Self::Forum => "Path and navigation settings for the community forum.",
+            Self::Support => "Path and portal settings for tickets and the help centre.",
+            Self::Content => "Path and homepage settings for the blog, news, and pages.",
+            Self::Players => "Path and profile hub settings for player pages.",
+            Self::Leaderboards => "Path and public board settings for rankings.",
+            Self::Votes => "Path and claim-page settings for vote rewards.",
+            Self::Applications => "Path and form settings for staff applications.",
+            Self::Analytics => "Path and access settings for shared analytics views.",
         }
     }
 
-    fn defaults(self) -> SiteDefaults {
+    fn defaults(self) -> FeatureDefaults {
         match self {
-            Self::Store => SiteDefaults {
-                domain: "store.example.com",
-                subdomain: "store",
-                base_path: "/",
-                site_title: "NovaCraft Store",
+            Self::Store => FeatureDefaults {
+                base_path: "/store",
+                page_title: "Store",
                 primary_nav: "Shop, Ranks, Crates, Gifts",
             },
-            Self::Forum => SiteDefaults {
-                domain: "forum.example.com",
-                subdomain: "forum",
-                base_path: "/",
-                site_title: "NovaCraft Forums",
+            Self::Forum => FeatureDefaults {
+                base_path: "/forum",
+                page_title: "Forums",
                 primary_nav: "Categories, Unread, Members",
             },
-            Self::Support => SiteDefaults {
-                domain: "support.example.com",
-                subdomain: "support",
-                base_path: "/",
-                site_title: "NovaCraft Support",
+            Self::Support => FeatureDefaults {
+                base_path: "/support",
+                page_title: "Support",
                 primary_nav: "Tickets, Help centre, Status",
             },
-            Self::Content => SiteDefaults {
-                domain: "www.example.com",
-                subdomain: "www",
+            Self::Content => FeatureDefaults {
                 base_path: "/news",
-                site_title: "NovaCraft Blog",
+                page_title: "Blog",
                 primary_nav: "News, Blog, Rules, Staff",
             },
-            Self::Players => SiteDefaults {
-                domain: "players.example.com",
-                subdomain: "players",
-                base_path: "/",
-                site_title: "NovaCraft Players",
+            Self::Players => FeatureDefaults {
+                base_path: "/players",
+                page_title: "Players",
                 primary_nav: "Profiles, Search, Badges",
             },
-            Self::Leaderboards => SiteDefaults {
-                domain: "boards.example.com",
-                subdomain: "boards",
-                base_path: "/",
-                site_title: "NovaCraft Leaderboards",
+            Self::Leaderboards => FeatureDefaults {
+                base_path: "/leaderboards",
+                page_title: "Leaderboards",
                 primary_nav: "Top players, Kills, Playtime",
             },
-            Self::Votes => SiteDefaults {
-                domain: "vote.example.com",
-                subdomain: "vote",
-                base_path: "/",
-                site_title: "NovaCraft Vote Rewards",
+            Self::Votes => FeatureDefaults {
+                base_path: "/vote",
+                page_title: "Vote rewards",
                 primary_nav: "Vote links, Streaks, Claim",
             },
-            Self::Applications => SiteDefaults {
-                domain: "apply.example.com",
-                subdomain: "apply",
-                base_path: "/",
-                site_title: "NovaCraft Applications",
+            Self::Applications => FeatureDefaults {
+                base_path: "/apply",
+                page_title: "Applications",
                 primary_nav: "Open roles, My applications",
             },
-            Self::Analytics => SiteDefaults {
-                domain: "insights.example.com",
-                subdomain: "insights",
-                base_path: "/",
-                site_title: "NovaCraft Analytics",
+            Self::Analytics => FeatureDefaults {
+                base_path: "/analytics",
+                page_title: "Analytics",
                 primary_nav: "Overview, Reports, Exports",
             },
         }
@@ -115,11 +97,9 @@ impl FeatureSite {
 }
 
 #[derive(Clone, Copy)]
-struct SiteDefaults {
-    domain: &'static str,
-    subdomain: &'static str,
+struct FeatureDefaults {
     base_path: &'static str,
-    site_title: &'static str,
+    page_title: &'static str,
     primary_nav: &'static str,
 }
 
@@ -185,40 +165,51 @@ fn FeatureSiteSettings(feature: FeatureSite) -> Element {
             class: "mb-4 flex flex-wrap items-center gap-2",
             span {
                 class: "rounded-squircle-sm border border-border-subtle bg-surface/40 px-2.5 py-1 text-xs text-text-muted",
-                "{feature.label()} site"
+                "{feature.label()} feature"
             }
             span {
                 class: "text-xs text-text-muted",
-                "Domain and branding for this feature only"
+                "Uses your main website domain · www.example.com"
             }
         }
 
         div {
             class: "grid gap-4 lg:grid-cols-2",
             DataPanel {
-                title: "Domain",
-                SettingsField { label: "Custom domain", value: defaults.domain }
-                SettingsField { label: "Subdomain", value: defaults.subdomain }
-                SettingsField { label: "Base path", value: defaults.base_path }
-                SettingRow {
-                    title: "Force HTTPS",
-                    description: "Redirect all traffic on this feature domain to HTTPS.",
-                    enabled: true,
+                title: "On your website",
+                SettingsField { label: "Public path", value: defaults.base_path }
+                SettingsField {
+                    label: "Full URL",
+                    value: match feature {
+                        FeatureSite::Store => "www.example.com/store",
+                        FeatureSite::Forum => "www.example.com/forum",
+                        FeatureSite::Support => "www.example.com/support",
+                        FeatureSite::Content => "www.example.com/news",
+                        FeatureSite::Players => "www.example.com/players",
+                        FeatureSite::Leaderboards => "www.example.com/leaderboards",
+                        FeatureSite::Votes => "www.example.com/vote",
+                        FeatureSite::Applications => "www.example.com/apply",
+                        FeatureSite::Analytics => "www.example.com/analytics",
+                    },
+                }
+                p {
+                    class: "pt-3 text-xs text-text-muted",
+                    "Domain and HTTPS are managed in Settings → General."
                 }
             }
             DataPanel {
                 title: "Branding & navigation",
-                SettingsField { label: "Site title", value: defaults.site_title }
-                SettingsField { label: "Primary navigation", value: defaults.primary_nav }
+                SettingsField { label: "Page title", value: defaults.page_title }
+                SettingsField { label: "Section navigation", value: defaults.primary_nav }
                 SettingRow {
                     title: "Custom branding",
-                    description: "Override logo, favicon, and accent colors for this feature.",
+                    description: "Override logo and accent colors for this feature’s pages.",
                     enabled: true,
                 }
                 SettingRow {
                     title: "Custom navigation",
-                    description: "Use a dedicated menu instead of the shared site nav.",
-                    enabled: true,
+                    description: "Show a feature menu instead of the default website nav.",
+                    enabled: false,
                 }
                 SettingRow {
                     title: "Custom layout",

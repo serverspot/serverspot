@@ -22,6 +22,7 @@ pub fn AppShell() -> Element {
     let crumb = crumb_for(&route);
     let theme_ide = is_theme_editor(&route);
     let mut favicon_accent = use_signal(|| Option::<&'static str>::None);
+    let mut side_open = use_signal(|| true);
 
     use_effect(move || {
         let _route = router().current::<Route>();
@@ -77,6 +78,27 @@ pub fn AppShell() -> Element {
     } else {
         "ring-1 ring-border-subtle"
     };
+    let side_open_now = side_open();
+    let side_panel_class = if side_open_now {
+        "side-panel fixed inset-y-0 left-[68px] z-20 hidden flex-col border-r bg-bg lg:flex"
+    } else {
+        "side-panel side-panel-collapsed fixed inset-y-0 left-[68px] z-20 hidden flex-col border-r bg-bg lg:flex"
+    };
+    let content_pad = if side_open_now {
+        "shell-main-pad flex h-full min-h-0 min-w-0 flex-col overflow-hidden md:pl-[68px] lg:pl-[calc(68px+14rem)]"
+    } else {
+        "shell-main-pad flex h-full min-h-0 min-w-0 flex-col overflow-hidden md:pl-[68px]"
+    };
+    let subnav_class = if side_open_now {
+        "flex gap-1 overflow-x-auto border-t border-border-subtle/50 px-3 py-2 sm:px-5 md:px-8 lg:hidden scrollbar-none"
+    } else {
+        "flex gap-1 overflow-x-auto border-t border-border-subtle/50 px-3 py-2 sm:px-5 md:px-8 scrollbar-none"
+    };
+    let expand_btn_class = if side_open_now {
+        "side-expand-btn side-expand-btn-hidden ui-btn ui-squircle ui-btn-ghost mb-3 hidden h-9 w-9 cursor-pointer items-center justify-center p-0 font-semibold text-text-muted lg:inline-flex"
+    } else {
+        "side-expand-btn ui-btn ui-squircle ui-btn-ghost mb-3 hidden h-9 w-9 cursor-pointer items-center justify-center p-0 font-semibold text-text-muted lg:inline-flex"
+    };
 
     rsx! {
         document::Title { "{section.document_title()}" }
@@ -93,6 +115,15 @@ pub fn AppShell() -> Element {
                         navigator.push(Route::Dashboard {});
                     },
                     BrandMark { class: "h-9 w-9" }
+                }
+                button {
+                    class: expand_btn_class,
+                    aria_label: "Show sidebar",
+                    title: "Show sidebar",
+                    aria_hidden: side_open_now,
+                    tabindex: if side_open_now { "-1" } else { "0" },
+                    onclick: move |_| side_open.set(true),
+                    span { class: "text-lg leading-none", "›" }
                 }
                 nav {
                     class: "flex flex-1 flex-col items-center gap-1",
@@ -129,26 +160,44 @@ pub fn AppShell() -> Element {
             }
 
             aside {
-                class: "fixed inset-y-0 left-[68px] z-20 hidden w-56 flex-col overflow-y-auto border-r border-border-subtle bg-bg px-4 py-6 lg:flex",
-                p { class: "mb-1 px-2 text-xs font-medium uppercase tracking-wide text-text-muted", "Section" }
-                p {
-                    class: "mb-5 px-2 text-lg font-semibold tracking-tight text-accent",
-                    "{section.label()}"
-                }
-                nav {
-                    class: "flex flex-col gap-0.5",
-                    for sub in section.subs().iter().copied() {
-                        SideNav {
-                            to: sub.route,
-                            label: sub.label,
-                            active: route == sub.route,
+                class: side_panel_class,
+                aria_hidden: !side_open_now,
+                div {
+                    class: "side-panel-inner flex h-full flex-col overflow-y-auto px-4 py-6",
+                    div {
+                        class: "mb-5 flex items-start justify-between gap-2",
+                        div {
+                            class: "min-w-0 px-2",
+                            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Section" }
+                            p {
+                                class: "text-lg font-semibold tracking-tight text-accent",
+                                "{section.label()}"
+                            }
+                        }
+                        button {
+                            class: "ui-btn ui-squircle ui-btn-ghost inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center p-0 font-semibold text-text-muted",
+                            aria_label: "Hide sidebar",
+                            title: "Hide sidebar",
+                            tabindex: if side_open_now { "0" } else { "-1" },
+                            onclick: move |_| side_open.set(false),
+                            span { class: "text-lg leading-none", "‹" }
+                        }
+                    }
+                    nav {
+                        class: "flex flex-col gap-0.5",
+                        for sub in section.subs().iter().copied() {
+                            SideNav {
+                                to: sub.route,
+                                label: sub.label,
+                                active: route == sub.route,
+                            }
                         }
                     }
                 }
             }
 
             div {
-                class: "flex h-full min-h-0 min-w-0 flex-col overflow-hidden md:pl-[68px] lg:pl-[calc(68px+14rem)]",
+                class: content_pad,
 
                 header {
                     class: "z-30 shrink-0 border-b border-border-subtle/60 bg-bg/90 backdrop-blur-md",
@@ -159,7 +208,7 @@ pub fn AppShell() -> Element {
                     }
 
                     nav {
-                        class: "flex gap-1 overflow-x-auto border-t border-border-subtle/50 px-3 py-2 sm:px-5 md:px-8 lg:hidden scrollbar-none",
+                        class: subnav_class,
                         for sub in section.subs().iter().copied() {
                             SubChip {
                                 to: sub.route,
@@ -411,7 +460,7 @@ fn rail_icon_data(section: Section) -> HugeIconData {
         Section::Content => NEWS,
         Section::Players => USER_GROUP,
         Section::Leaderboards => CHART_LINE_DATA_01,
-        Section::Votes => PACKAGE_01,
+        Section::Votes => GIFT,
         Section::Applications => CUSTOMER_SERVICE_01,
         Section::Analytics => ANALYTICS_UP,
         Section::Settings => SETTINGS_01,

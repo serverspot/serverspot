@@ -123,7 +123,7 @@ fn ModuleCard(module: FeatureModule) -> Element {
         "Blog" => rsx! { IconNews {} },
         "Players" => rsx! { IconUsers {} },
         "Leaderboards" | "Analytics" => rsx! { IconChart {} },
-        "Vote rewards" => rsx! { IconPackage {} },
+        "Vote rewards" => rsx! { IconGift {} },
         "Applications" => rsx! { IconSupport {} },
         _ => rsx! { IconGlobe {} },
     };

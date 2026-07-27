@@ -40,7 +40,7 @@ impl FeatureOverviewKind {
                 subtitle: "Sell ranks, crates, and packages with checkout, coupons, and stock controls.",
                 about: "The web store lets players browse packages, apply coupons, gift purchases, and receive rewards automatically across your connected game servers.",
                 accent: "#3ecf8e",
-                domain: "store.example.com",
+                domain: "www.example.com/store",
                 status: "Live",
                 stats: [
                     ("Revenue", "£4,281"),
@@ -52,7 +52,7 @@ impl FeatureOverviewKind {
                     "Product catalog with ranks, items, and bundles",
                     "Coupons, gifts, and creator codes",
                     "Order tracking and refunds",
-                    "Per-feature domain and theme",
+                    "Storefront theme on your main website",
                     "Delivery to game servers and Discord roles",
                 ],
                 activity: [
@@ -64,7 +64,7 @@ impl FeatureOverviewKind {
                 next_steps: [
                     ("Products", "Add or edit packages for the shop"),
                     ("Orders", "Review payments and delivery status"),
-                    ("Settings", "Set the store domain and branding"),
+                    ("Settings", "Configure store path and branding"),
                 ],
             },
             Self::Forum => OverviewCopy {
@@ -72,7 +72,7 @@ impl FeatureOverviewKind {
                 subtitle: "Community discussion with categories, moderation, and rich posts.",
                 about: "Forums give your players a place to share builds, suggestions, and announcements with markdown, reactions, mentions, and staff moderation tools.",
                 accent: "#5b9dff",
-                domain: "forum.example.com",
+                domain: "www.example.com/forum",
                 status: "Live",
                 stats: [
                     ("Threads", "1,204"),
@@ -104,7 +104,7 @@ impl FeatureOverviewKind {
                 subtitle: "Tickets, help centre articles, and staff automation in one portal.",
                 about: "Support combines a ticket inbox with a searchable help centre so players can get answers quickly while staff manage priorities, notes, and departments.",
                 accent: "#f0a35e",
-                domain: "support.example.com",
+                domain: "www.example.com/support",
                 status: "Live",
                 stats: [
                     ("Open tickets", "12"),
@@ -160,7 +160,7 @@ impl FeatureOverviewKind {
                 next_steps: [
                     ("Posts", "Write or schedule a post"),
                     ("Pages", "Manage custom pages and widgets"),
-                    ("Settings", "Configure the blog domain"),
+                    ("Settings", "Configure blog path and branding"),
                 ],
             },
             Self::Players => OverviewCopy {
@@ -168,7 +168,7 @@ impl FeatureOverviewKind {
                 subtitle: "Dedicated gaming profiles with stats, ranks, and linked accounts.",
                 about: "Player profiles surface playtime, achievements, ranks, and linked game identities across every server connected to the platform.",
                 accent: "#69bdf2",
-                domain: "players.example.com",
+                domain: "www.example.com/players",
                 status: "Live",
                 stats: [
                     ("Players", "1,842"),
@@ -191,7 +191,7 @@ impl FeatureOverviewKind {
                 ],
                 next_steps: [
                     ("Profiles", "Browse and search players"),
-                    ("Settings", "Set the players domain"),
+                    ("Settings", "Configure players path and branding"),
                     ("Theme", "Customize profile presentation"),
                 ],
             },
@@ -200,7 +200,7 @@ impl FeatureOverviewKind {
                 subtitle: "Rankings and statistics across games, servers, and time ranges.",
                 about: "Leaderboards pull stats from APIs, server plugins, or manual input so you can publish top players, economy boards, and seasonal contests.",
                 accent: "#5eead4",
-                domain: "boards.example.com",
+                domain: "www.example.com/leaderboards",
                 status: "Live",
                 stats: [
                     ("Boards", "4"),
@@ -223,7 +223,7 @@ impl FeatureOverviewKind {
                 ],
                 next_steps: [
                     ("Rankings", "Inspect live boards"),
-                    ("Settings", "Configure the boards domain"),
+                    ("Settings", "Configure leaderboards path and branding"),
                     ("Theme", "Style ranking presentation"),
                 ],
             },
@@ -232,7 +232,7 @@ impl FeatureOverviewKind {
                 subtitle: "Track votes, streaks, and automatic reward delivery.",
                 about: "Vote rewards connect listing sites to in-game commands, currency, roles, and badges, with streak tracking and claim flows for players.",
                 accent: "#fbbf24",
-                domain: "vote.example.com",
+                domain: "www.example.com/vote",
                 status: "Live",
                 stats: [
                     ("Votes today", "214"),
@@ -255,7 +255,7 @@ impl FeatureOverviewKind {
                 ],
                 next_steps: [
                     ("Rewards", "Manage sites and claim rules"),
-                    ("Settings", "Set the vote domain"),
+                    ("Settings", "Configure vote path and branding"),
                     ("Theme", "Customize the claim page"),
                 ],
             },
@@ -264,7 +264,7 @@ impl FeatureOverviewKind {
                 subtitle: "Staff recruitment forms, review workflows, and history.",
                 about: "Applications collect custom forms for moderator, builder, and helper roles with reviewer assignment, notes, voting, and status tracking.",
                 accent: "#fb7185",
-                domain: "apply.example.com",
+                domain: "www.example.com/apply",
                 status: "Live",
                 stats: [
                     ("Submitted", "7"),
@@ -287,7 +287,7 @@ impl FeatureOverviewKind {
                 ],
                 next_steps: [
                     ("Inbox", "Review open applications"),
-                    ("Settings", "Configure the apply domain"),
+                    ("Settings", "Configure applications path and branding"),
                     ("Theme", "Brand the application portal"),
                 ],
             },
@@ -296,7 +296,7 @@ impl FeatureOverviewKind {
                 subtitle: "Website, community, and gaming insights in one dashboard.",
                 about: "Analytics brings together traffic, engagement, revenue, tickets, votes, and server activity with graphs, reports, and exportable datasets.",
                 accent: "#38bdf8",
-                domain: "insights.example.com",
+                domain: "www.example.com/analytics",
                 status: "Live",
                 stats: [
                     ("Revenue", "£1,094"),
@@ -383,7 +383,7 @@ fn FeatureOverview(feature: FeatureOverviewKind) -> Element {
             action: rsx! {
                 Button {
                     variant: ButtonVariant::Secondary,
-                    "View public site"
+                    "View on website"
                 }
             },
         }
@@ -438,10 +438,10 @@ fn FeatureOverview(feature: FeatureOverviewKind) -> Element {
             }
             DataPanel {
                 title: "Quick status",
-                RowItem { title: "Feature domain", meta: copy.domain, trailing: "Configured" }
-                RowItem { title: "Theme", meta: "Independent from other features", trailing: "Ready" }
-                RowItem { title: "Shared accounts", meta: "Uses platform authentication", trailing: "On" }
-                RowItem { title: "Public surface", meta: "Players can visit this feature site", trailing: copy.status }
+                RowItem { title: "Public path", meta: copy.domain, trailing: "On website" }
+                RowItem { title: "Theme", meta: "Can customize independently", trailing: "Ready" }
+                RowItem { title: "Shared accounts", meta: "Uses website authentication", trailing: "On" }
+                RowItem { title: "Public surface", meta: "Players can visit this on your website", trailing: copy.status }
             }
         }
     }

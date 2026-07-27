@@ -192,7 +192,7 @@ pub fn AccountsProfiles() -> Element {
             }
             InfoCard {
                 title: "Members only",
-                body: "Visible to signed-in users across your websites.",
+                body: "Visible to signed-in users across your website.",
             }
             InfoCard {
                 title: "Private profile",

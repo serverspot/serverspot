@@ -3,8 +3,8 @@ use dioxus::prelude::*;
 
 use super::hugeicon::{
     ADD_01, AI_CHAT_01, ANALYTICS_UP, CANCEL_01, CHART_LINE_DATA_01, CUSTOMER_SERVICE_01,
-    DASHBOARD_SQUARE_01, GLOBE_02, HugeIcon, MENU_01, MESSAGE_01, NEWS, NOTIFICATION_03,
-    PACKAGE_01, SEARCH_01, SETTINGS_01, STORE_01, TICKET_01, USER_GROUP,
+    DASHBOARD_SQUARE_01, GIFT, GLOBE_02, HugeIcon, MENU_01, MESSAGE_01, NEWS, NOTIFICATION_03,
+    SEARCH_01, SETTINGS_01, STORE_01, TICKET_01, USER_GROUP,
 };
 
 #[component]
@@ -78,8 +78,8 @@ pub fn IconAnalytics(#[props(default = "")] class: &'static str) -> Element {
 }
 
 #[component]
-pub fn IconPackage(#[props(default = "")] class: &'static str) -> Element {
-    rsx! { HugeIcon { icon: PACKAGE_01, class } }
+pub fn IconGift(#[props(default = "")] class: &'static str) -> Element {
+    rsx! { HugeIcon { icon: GIFT, class } }
 }
 
 #[component]
