@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::components::page::{PageHeader, SettingRow};
+use crate::components::page::{DataPanel, PageHeader, SettingRow};
 use crate::components::ui::*;
 use crate::router::Route;
 use crate::user::CurrentUser;
@@ -2431,27 +2431,54 @@ fn ReportCard(report: Report) -> Element {
 
 #[component]
 pub fn ForumAutoModeration() -> Element {
+    let bot_name = use_signal(|| String::from("ServerSpot AutoMod"));
+    let bot_tag = use_signal(|| String::from("BOT"));
+    let bot_avatar = use_signal(String::new);
+    let bot_accent = use_signal(|| String::from("#f0a35e"));
+    let warn_message = use_signal(|| {
+        String::from(
+            "Hey {author} — your post was flagged by Auto Mod for breaking {rule}. Please edit or remove it.",
+        )
+    });
+    let mute_message = use_signal(|| {
+        String::from(
+            "You’ve been muted for {duration} minutes after repeated Auto Mod hits. Staff can review this.",
+        )
+    });
     let blocked_words = use_signal(|| String::from("buy ranks, free nitro, .gg/"));
     let max_links = use_signal(|| String::from("2"));
     let mute_minutes = use_signal(|| String::from("30"));
     let new_account_hours = use_signal(|| String::from("24"));
 
+    let preview_name = bot_name();
+    let preview_tag = bot_tag();
+    let preview_avatar = bot_avatar();
+    let preview_accent = bot_accent();
+    let preview_initial = preview_name
+        .chars()
+        .next()
+        .map(|ch| ch.to_uppercase().to_string())
+        .unwrap_or_else(|| String::from("A"));
+
     rsx! {
         PageHeader {
             title: "Auto Moderation",
-            subtitle: "Configure the bot that filters spam, enforces limits, and escalates reports.",
+            subtitle: "Give the bot an identity, then tune the filters and actions it runs.",
             action: rsx! {
                 Button { "Save changes" }
             },
         }
 
         section {
-            class: "mb-8 rounded-squircle-lg border border-border-subtle bg-surface/20 p-4 sm:p-5",
-            p { class: "text-xs font-medium uppercase tracking-wide text-text-muted", "Bot status" }
-            p { class: "mt-1 text-lg font-semibold tracking-tight", "Auto Mod is watching public boards" }
-            p { class: "mt-0.5 text-sm text-text-muted", "Actions run instantly; staff still get a queue entry for high severity." }
+            class: "mb-6 flex flex-col gap-4 rounded-squircle-lg border border-border-subtle bg-surface/20 p-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-5",
             div {
-                class: "mt-4 border-t border-border-subtle",
+                class: "min-w-0",
+                p { class: "text-xs font-medium uppercase tracking-wide text-text-muted", "Bot status" }
+                p { class: "mt-1 text-lg font-semibold tracking-tight", "Auto Mod is watching public boards" }
+                p { class: "mt-0.5 text-sm text-text-muted", "Actions run instantly; staff still get a queue entry for high severity." }
+            }
+            div {
+                class: "w-full shrink-0 sm:max-w-xs sm:border-l sm:border-border-subtle sm:pl-6",
                 SettingRow {
                     title: "Enable Auto Mod",
                     description: "Turn the bot on or off across the forum.",
@@ -2460,97 +2487,220 @@ pub fn ForumAutoModeration() -> Element {
             }
         }
 
-        section {
-            class: "mb-10",
-            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Filters" }
-            SettingRow {
-                title: "Block listed words & phrases",
-                description: "Flag or remove posts that match your blocked list.",
-                enabled: true,
-            }
-            SettingRow {
-                title: "Limit external links",
-                description: "Stop posts that exceed the max link count.",
-                enabled: true,
-            }
-            SettingRow {
-                title: "Detect duplicate spam",
-                description: "Catch near-identical replies posted in a short window.",
-                enabled: true,
-            }
-            SettingRow {
-                title: "Throttle brand-new accounts",
-                description: "Require a waiting period before new accounts can post links.",
-                enabled: false,
-            }
-        }
+        div {
+            class: "grid gap-4 sm:gap-5 lg:grid-cols-2",
 
-        section {
-            class: "mb-10 max-w-xl space-y-4",
-            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Bot thresholds" }
-            FormField {
-                label: "Blocked words",
-                hint: "Comma-separated. Matching posts are held for review.",
-                SignalTextarea {
-                    value: blocked_words,
-                    placeholder: "spam phrase, invite link…",
+            DataPanel {
+                title: "Bot identity",
+                div {
+                    class: "space-y-4",
+                    FormField {
+                        label: "Display name",
+                        hint: "Shown on every automated warning, mute, and hide notice.",
+                        SignalInput {
+                            value: bot_name,
+                            placeholder: "ServerSpot AutoMod",
+                        }
+                    }
+                    div {
+                        class: "grid gap-4 sm:grid-cols-2",
+                        FormField {
+                            label: "Badge label",
+                            hint: "Short tag next to the name.",
+                            SignalInput {
+                                value: bot_tag,
+                                placeholder: "BOT",
+                            }
+                        }
+                        FormField {
+                            label: "Accent colour",
+                            ColorPicker { value: bot_accent }
+                        }
+                    }
+                    MediaUploadField {
+                        label: "Avatar",
+                        hint: "Square image, PNG or WebP. Used in posts and DMs.",
+                        value: bot_avatar,
+                        tall: false,
+                    }
                 }
             }
-            FormField {
-                label: "Max links per post",
-                SignalInput {
-                    value: max_links,
-                    placeholder: "2",
-                }
-            }
-            FormField {
-                label: "Mute duration (minutes)",
-                hint: "Applied when the bot chooses Mute as the action.",
-                SignalInput {
-                    value: mute_minutes,
-                    placeholder: "30",
-                }
-            }
-            FormField {
-                label: "New account waiting period (hours)",
-                SignalInput {
-                    value: new_account_hours,
-                    placeholder: "24",
-                }
-            }
-        }
 
-        section {
-            class: "mb-10",
-            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Actions" }
-            SettingRow {
-                title: "Auto-hide after three unique reports",
-                description: "Hide the post from public view until a moderator reviews it.",
-                enabled: false,
+            DataPanel {
+                title: "Preview",
+                div {
+                    class: "flex items-start gap-3",
+                    if preview_avatar.trim().is_empty() {
+                        div {
+                            class: "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-text-on-accent",
+                            style: "background: {preview_accent};",
+                            "{preview_initial}"
+                        }
+                    } else {
+                        img {
+                            src: "{preview_avatar}",
+                            alt: "{preview_name}",
+                            class: "h-11 w-11 shrink-0 rounded-full object-cover",
+                        }
+                    }
+                    div {
+                        class: "min-w-0 flex-1",
+                        div {
+                            class: "flex flex-wrap items-center gap-2",
+                            p { class: "text-sm font-semibold tracking-tight", "{preview_name}" }
+                            span {
+                                class: "inline-flex items-center rounded-squircle-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                                style: "background: color-mix(in srgb, {preview_accent} 18%, transparent); color: {preview_accent};",
+                                "{preview_tag}"
+                            }
+                        }
+                        p {
+                            class: "mt-1.5 text-sm leading-relaxed text-text-secondary",
+                            "Hey NovaCraft — your post was flagged by Auto Mod for spam links. Please edit or remove it."
+                        }
+                        p { class: "mt-2 text-xs text-text-muted", "just now · automated" }
+                    }
+                }
             }
-            SettingRow {
-                title: "Warn on first offence",
-                description: "Send an automated warning before muting or hiding.",
-                enabled: true,
-            }
-            SettingRow {
-                title: "Shadow-mute repeat offenders",
-                description: "Limit posting for accounts with three upheld reports in 7 days.",
-                enabled: false,
-            }
-        }
 
-        section {
-            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Notifications" }
-            SettingRow {
-                title: "Notify staff Discord channel",
-                description: "Push high-severity auto-mod actions to your moderation webhook.",
-                enabled: true,
+            DataPanel {
+                title: "Message templates",
+                div {
+                    class: "space-y-4",
+                    FormField {
+                        label: "Warning message",
+                        hint: "Placeholders: {{author}}, {{rule}}, {{board}}.",
+                        SignalTextarea {
+                            value: warn_message,
+                            placeholder: "Your post was flagged…",
+                        }
+                    }
+                    FormField {
+                        label: "Mute message",
+                        hint: "Placeholders: {{author}}, {{duration}}, {{rule}}.",
+                        SignalTextarea {
+                            value: mute_message,
+                            placeholder: "You’ve been muted…",
+                        }
+                    }
+                }
             }
-            SettingRow {
-                title: "DM the author",
-                description: "Tell the player what rule was triggered and what happens next.",
-                enabled: true,
+
+            DataPanel {
+                title: "Bot thresholds",
+                div {
+                    class: "space-y-4",
+                    FormField {
+                        label: "Blocked words",
+                        hint: "Comma-separated. Matching posts are held for review.",
+                        SignalTextarea {
+                            value: blocked_words,
+                            placeholder: "spam phrase, invite link…",
+                        }
+                    }
+                    div {
+                        class: "grid gap-4 sm:grid-cols-3",
+                        FormField {
+                            label: "Max links",
+                            SignalInput {
+                                value: max_links,
+                                placeholder: "2",
+                            }
+                        }
+                        FormField {
+                            label: "Mute (min)",
+                            hint: "When Mute is chosen.",
+                            SignalInput {
+                                value: mute_minutes,
+                                placeholder: "30",
+                            }
+                        }
+                        FormField {
+                            label: "New acct (hrs)",
+                            SignalInput {
+                                value: new_account_hours,
+                                placeholder: "24",
+                            }
+                        }
+                    }
+                }
+            }
+
+            DataPanel {
+                title: "Filters",
+                SettingRow {
+                    title: "Block listed words & phrases",
+                    description: "Flag or remove posts that match your blocked list.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Limit external links",
+                    description: "Stop posts that exceed the max link count.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Detect duplicate spam",
+                    description: "Catch near-identical replies posted in a short window.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Throttle brand-new accounts",
+                    description: "Require a waiting period before new accounts can post links.",
+                    enabled: false,
+                }
+            }
+
+            DataPanel {
+                title: "Actions",
+                SettingRow {
+                    title: "Auto-hide after three unique reports",
+                    description: "Hide the post from public view until a moderator reviews it.",
+                    enabled: false,
+                }
+                SettingRow {
+                    title: "Warn on first offence",
+                    description: "Send an automated warning before muting or hiding.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Shadow-mute repeat offenders",
+                    description: "Limit posting for accounts with three upheld reports in 7 days.",
+                    enabled: false,
+                }
+                SettingRow {
+                    title: "Post as the bot in-thread",
+                    description: "Leave a public notice using the bot name and avatar when an action fires.",
+                    enabled: true,
+                }
+            }
+
+            div {
+                class: "lg:col-span-2",
+                DataPanel {
+                    title: "Notifications",
+                    div {
+                        class: "grid gap-x-8 lg:grid-cols-2",
+                        div {
+                            SettingRow {
+                                title: "Notify staff Discord channel",
+                                description: "Push high-severity auto-mod actions to your moderation webhook.",
+                                enabled: true,
+                            }
+                            SettingRow {
+                                title: "DM the author",
+                                description: "Tell the player what rule was triggered and what happens next.",
+                                enabled: true,
+                            }
+                        }
+                        div {
+                            SettingRow {
+                                title: "Sign DMs with bot identity",
+                                description: "Use the bot name and avatar on private warnings instead of a generic system sender.",
+                                enabled: true,
+                            }
+                        }
+                    }
+                }
             }
         }
     }
