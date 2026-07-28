@@ -101,7 +101,7 @@ pub fn RowItem(
     title: &'static str,
     meta: &'static str,
     #[props(default)] trailing: &'static str,
-    #[props(default = "")] email: &'static str,
+    #[props(default, into)] email: String,
 ) -> Element {
     rsx! {
         div {

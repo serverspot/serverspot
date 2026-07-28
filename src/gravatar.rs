@@ -11,26 +11,6 @@ pub const CURRENT_USER_AVATAR_64: &str =
 pub const CURRENT_USER_AVATAR_144: &str =
     "https://www.gravatar.com/avatar/93cd5fcda5d91c37acb38aabdf13c9b5bb7abb70d08ed55797a462d68de24269?s=144&d=identicon&r=g";
 
-const HEX: &[u8; 16] = b"0123456789abcdef";
-
-fn push_u32(buf: &mut String, mut value: u32) {
-    if value == 0 {
-        buf.push('0');
-        return;
-    }
-    let mut digits = [0u8; 10];
-    let mut n = 0;
-    while value > 0 {
-        digits[n] = b'0' + (value % 10) as u8;
-        value /= 10;
-        n += 1;
-    }
-    while n > 0 {
-        n -= 1;
-        buf.push(digits[n] as char);
-    }
-}
-
 pub fn current_user_avatar(size: u32) -> Option<&'static str> {
     match size {
         64 => Some(CURRENT_USER_AVATAR_64),
@@ -44,26 +24,39 @@ pub fn gravatar_url(email: &str, size: u32) -> String {
         if let Some(url) = current_user_avatar(size) {
             return url.to_string();
         }
-        let mut url = String::with_capacity(96);
-        url.push_str("https://www.gravatar.com/avatar/");
-        url.push_str(CURRENT_USER_HASH);
-        url.push_str("?s=");
-        push_u32(&mut url, size);
-        url.push_str("&d=identicon&r=g");
-        return url;
+        return format!("https://www.gravatar.com/avatar/{CURRENT_USER_HASH}?s={size}&d=identicon&r=g");
     }
 
     let normalized = email.trim().to_ascii_lowercase();
     let digest = Sha256::digest(normalized.as_bytes());
+    format!("https://www.gravatar.com/avatar/{digest:x}?s={size}&d=identicon&r=g")
+}
 
-    let mut url = String::with_capacity(96);
-    url.push_str("https://www.gravatar.com/avatar/");
-    for byte in digest {
-        url.push(HEX[(byte >> 4) as usize] as char);
-        url.push(HEX[(byte & 0x0f) as usize] as char);
+#[cfg(test)]
+mod tests {
+    use super::{gravatar_url, CURRENT_USER_AVATAR_64, CURRENT_USER_HASH};
+
+    #[test]
+    fn returns_prebuilt_current_user_avatar_for_known_size() {
+        assert_eq!(
+            gravatar_url("admin@serverspot.app", 64),
+            CURRENT_USER_AVATAR_64
+        );
     }
-    url.push_str("?s=");
-    push_u32(&mut url, size);
-    url.push_str("&d=identicon&r=g");
-    url
+
+    #[test]
+    fn builds_current_user_avatar_with_format_for_other_sizes() {
+        assert_eq!(
+            gravatar_url("admin@serverspot.app", 32),
+            format!("https://www.gravatar.com/avatar/{CURRENT_USER_HASH}?s=32&d=identicon&r=g")
+        );
+    }
+
+    #[test]
+    fn normalizes_email_before_hashing() {
+        assert_eq!(
+            gravatar_url("  USER@Example.COM  ", 80),
+            "https://www.gravatar.com/avatar/b4c9a289323b21a01c3e940f150eb9b8c542587f1abfd8f0e1cc1ffc5e475514?s=80&d=identicon&r=g"
+        );
+    }
 }
