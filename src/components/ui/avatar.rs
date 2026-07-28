@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::gravatar::{current_user_avatar, gravatar_url, CURRENT_USER_EMAIL};
+use crate::gravatar::gravatar_url;
 
 fn avatar_px(size: u32) -> &'static str {
     match size {
@@ -38,20 +38,6 @@ pub fn Avatar(
 ) -> Element {
     let px = avatar_px(size);
     let img_class = avatar_img_class(&class);
-
-    if email == CURRENT_USER_EMAIL {
-        if let Some(src) = current_user_avatar(size.saturating_mul(2)) {
-            return rsx! {
-                img {
-                    src,
-                    alt,
-                    width: px,
-                    height: px,
-                    class: img_class,
-                }
-            };
-        }
-    }
 
     rsx! {
         MemoAvatar {

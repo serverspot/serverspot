@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::components::brand::{favicon_svg, BrandMark};
 use crate::components::page::{PageTransition, PoweredByFooter};
 use crate::components::ui::*;
-use crate::gravatar::CURRENT_USER_EMAIL;
+use crate::gravatar::CurrentUser;
 use crate::nav::{crumb_for, is_theme_editor, section_for, Section};
 use crate::router::Route;
 
@@ -18,6 +18,8 @@ pub fn AppShell() -> Element {
     let mut sheet = use_signal(|| Option::<SheetAnim>::None);
     let route = use_route::<Route>();
     let navigator = use_navigator();
+    let current_user = use_context::<Signal<CurrentUser>>();
+    let account_email = current_user.read().email.clone();
     let section = section_for(&route);
     let crumb = crumb_for(&route);
     let theme_ide = is_theme_editor(&route);
@@ -150,7 +152,7 @@ pub fn AppShell() -> Element {
                             navigator.push(Route::Account {});
                         },
                         Avatar {
-                            email: CURRENT_USER_EMAIL,
+                            email: account_email,
                             size: 32,
                             alt: "Account",
                             class: account_avatar_class,
