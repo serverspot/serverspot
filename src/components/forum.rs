@@ -12,7 +12,6 @@ struct ForumStats {
     threads: u32,
     posts_today: u32,
     members: u32,
-    open_reports: u32,
     public_path: &'static str,
 }
 
@@ -21,14 +20,13 @@ fn placeholder_forum_stats() -> ForumStats {
         threads: 1_204,
         posts_today: 52,
         members: 3_481,
-        open_reports: 3,
         public_path: "/forum",
     }
 }
 
 fn format_count(value: u32) -> String {
     if value < 1_000 {
-        format!("{value}")
+        value.to_string()
     } else {
         format!("{},{:03}", value / 1_000, value % 1_000)
     }
@@ -339,6 +337,137 @@ fn thread_badge_line(pinned: bool, locked: bool) -> String {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ThreadStatusOption {
+    Pinned,
+    Locked,
+    Open,
+}
+
+impl ThreadStatusOption {
+    const ALL: [Self; 3] = [Self::Pinned, Self::Locked, Self::Open];
+
+    const fn label(self) -> &'static str {
+        match self {
+            Self::Pinned => "Pinned",
+            Self::Locked => "Locked",
+            Self::Open => "Open",
+        }
+    }
+
+    const fn key(self) -> &'static str {
+        match self {
+            Self::Pinned => "pinned",
+            Self::Locked => "locked",
+            Self::Open => "open",
+        }
+    }
+
+    fn from_key(key: &str) -> Option<Self> {
+        match key {
+            "pinned" => Some(Self::Pinned),
+            "locked" => Some(Self::Locked),
+            "open" => Some(Self::Open),
+            _ => None,
+        }
+    }
+
+    fn matches(self, thread: &Thread) -> bool {
+        match self {
+            Self::Pinned => thread.pinned,
+            Self::Locked => thread.locked,
+            Self::Open => !thread.locked,
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+enum ThreadSort {
+    #[default]
+    Recent,
+    Replies,
+    Title,
+}
+
+impl ThreadSort {
+    const ALL: [Self; 3] = [Self::Recent, Self::Replies, Self::Title];
+
+    const fn label(self) -> &'static str {
+        match self {
+            Self::Recent => "Recent",
+            Self::Replies => "Most replies",
+            Self::Title => "Title A–Z",
+        }
+    }
+}
+
+fn filter_threads(
+    threads: &[Thread],
+    query: &str,
+    boards: &[String],
+    statuses: &[String],
+    sort: ThreadSort,
+) -> Vec<Thread> {
+    let query = query.trim().to_ascii_lowercase();
+    let status_opts: Vec<ThreadStatusOption> = statuses
+        .iter()
+        .filter_map(|key| ThreadStatusOption::from_key(key))
+        .collect();
+
+    let mut filtered: Vec<Thread> = threads
+        .iter()
+        .filter(|thread| {
+            status_opts.is_empty() || status_opts.iter().any(|status| status.matches(thread))
+        })
+        .filter(|thread| boards.is_empty() || boards.iter().any(|board| board == &thread.category))
+        .filter(|thread| {
+            if query.is_empty() {
+                return true;
+            }
+            thread.title.to_ascii_lowercase().contains(&query)
+                || thread.preview.to_ascii_lowercase().contains(&query)
+                || thread.author.to_ascii_lowercase().contains(&query)
+                || thread.category.to_ascii_lowercase().contains(&query)
+        })
+        .cloned()
+        .collect();
+
+    filtered.sort_by(|a, b| {
+        b.pinned.cmp(&a.pinned).then_with(|| match sort {
+            ThreadSort::Recent => b.id.cmp(&a.id),
+            ThreadSort::Replies => b.replies.cmp(&a.replies).then_with(|| {
+                a.title
+                    .to_ascii_lowercase()
+                    .cmp(&b.title.to_ascii_lowercase())
+            }),
+            ThreadSort::Title => a
+                .title
+                .to_ascii_lowercase()
+                .cmp(&b.title.to_ascii_lowercase()),
+        })
+    });
+
+    filtered
+}
+
+fn toggle_selection(mut selected: Signal<Vec<String>>, value: &str) {
+    selected.with_mut(|list| {
+        if let Some(index) = list.iter().position(|item| item == value) {
+            list.remove(index);
+        } else {
+            list.push(value.to_string());
+        }
+    });
+}
+
+fn selection_summary(selected: &[String], empty: &str, singular: &str) -> String {
+    match selected.len() {
+        0 => empty.to_string(),
+        1 => selected[0].clone(),
+        n => format!("{n} {singular}"),
+    }
+}
+
 #[derive(Clone, Copy)]
 struct BoardForm {
     name: Signal<String>,
@@ -429,6 +558,12 @@ struct Report {
     severity: ReportSeverity,
 }
 
+impl Report {
+    fn meta(self) -> String {
+        format!("{} · {} · {}", self.board, self.reporter, self.when)
+    }
+}
+
 const REPORTS: &[Report] = &[
     Report {
         title: "Spam reply chain in Suggestions",
@@ -459,7 +594,6 @@ const REPORTS: &[Report] = &[
 #[component]
 pub fn ForumOverview() -> Element {
     let current_user = use_context::<Signal<CurrentUser>>();
-    let boards = use_context::<Signal<Vec<Board>>>();
     let threads = use_context::<Signal<Vec<Thread>>>();
     let user = current_user();
     let stats = placeholder_forum_stats();
@@ -470,14 +604,10 @@ pub fn ForumOverview() -> Element {
     let thread_count = format_count(stats.threads);
     let domain = format!("www.example.com{}", stats.public_path);
     let hello = format!("Signed in as {} · {}", user.name, user.role);
-    let mod_blurb = format!("{} reports need a look", stats.open_reports);
-    let featured = threads().into_iter().next();
-    let featured_meta = featured.as_ref().map(|thread| {
-        format!(
-            "{} · {} · {} replies · {}",
-            thread.category, thread.author, thread.replies, thread.when
-        )
-    });
+    let open_reports = REPORTS.len();
+    let mod_blurb = format!("{open_reports} reports need a look");
+    let reports_open = format!("{open_reports} open");
+    let featured = threads.read().first().cloned();
 
     rsx! {
         PageHeader {
@@ -517,7 +647,7 @@ pub fn ForumOverview() -> Element {
             }
         }
 
-        if let (Some(featured), Some(featured_meta)) = (featured, featured_meta) {
+        if let Some(featured) = featured {
             section {
                 class: "mb-10",
                 p { class: "mb-3 text-xs font-medium uppercase tracking-wide text-text-muted", "Hot right now" }
@@ -533,9 +663,40 @@ pub fn ForumOverview() -> Element {
                         class: "min-w-0 flex-1",
                         h2 { class: "text-xl font-semibold tracking-tight sm:text-2xl", "{featured.title}" }
                         p { class: "mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary", "{featured.preview}" }
-                        p { class: "mt-3 text-xs text-text-muted", "{featured_meta}" }
+                        p {
+                            class: "mt-3 text-xs text-text-muted",
+                            "{featured.category} · {featured.author} · {featured.replies} replies · {featured.when}"
+                        }
                     }
                 }
+            }
+        }
+
+        section {
+            class: "mb-10",
+            div {
+                class: "mb-4 flex flex-wrap items-end justify-between gap-3",
+                div {
+                    p { class: "text-xs font-medium uppercase tracking-wide text-text-muted", "For moderators" }
+                    p { class: "mt-1 text-sm text-text-secondary", "Open reports and items waiting on staff." }
+                }
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    size: ButtonSize::Sm,
+                    onclick: move |_| {
+                        navigator.push(Route::ForumModeration {});
+                    },
+                    "Open queue"
+                }
+            }
+            div {
+                class: "mb-4 grid grid-cols-3 gap-3",
+                ModStat { label: "Reports", value: reports_open, tone: "#f87171" }
+                ModStat { label: "Locked", value: "2 threads", tone: "#f0a35e" }
+                ModStat { label: "Auto-hidden", value: "1 post", tone: "#858899" }
+            }
+            for report in REPORTS.iter().copied() {
+                OverviewReportRow { report }
             }
         }
 
@@ -569,6 +730,14 @@ pub fn ForumOverview() -> Element {
                     },
                 }
                 OverviewLink {
+                    title: "Auto Moderation",
+                    blurb: "Filters, actions, and bot guardrails",
+                    accent: "#f0a35e",
+                    onclick: move |_| {
+                        navigator.push(Route::ForumAutoModeration {});
+                    },
+                }
+                OverviewLink {
                     title: "Settings",
                     blurb: "Path and community defaults",
                     accent: "#5eead4",
@@ -576,13 +745,6 @@ pub fn ForumOverview() -> Element {
                         navigator.push(Route::ForumSiteSettings {});
                     },
                 }
-            }
-        }
-
-        section {
-            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Boards" }
-            for board in boards().into_iter() {
-                BoardRow { board, on_edit: None }
             }
         }
     }
@@ -615,7 +777,51 @@ fn OverviewLink(
 }
 
 #[component]
-fn BoardRow(board: Board, #[props(default)] on_edit: Option<EventHandler<u64>>) -> Element {
+fn ModStat(label: &'static str, #[props(into)] value: String, tone: &'static str) -> Element {
+    rsx! {
+        div {
+            class: "rounded-squircle-lg border border-border-subtle bg-surface/20 px-3 py-3",
+            p {
+                class: "text-xs font-medium uppercase tracking-wide text-text-muted",
+                "{label}"
+            }
+            p {
+                class: "mt-1 text-sm font-semibold tracking-tight tabular-nums",
+                style: "color: {tone};",
+                "{value}"
+            }
+        }
+    }
+}
+
+#[component]
+fn OverviewReportRow(report: Report) -> Element {
+    let meta = report.meta();
+    let severity = report.severity;
+
+    rsx! {
+        article {
+            class: "forum-report",
+            style: "--report-tone: {severity.tone()};",
+            div {
+                class: "min-w-0 flex-1",
+                div {
+                    class: "flex flex-wrap items-center gap-2",
+                    h3 { class: "text-sm font-semibold tracking-tight", "{report.title}" }
+                    ToneChip { label: severity.label(), tone: severity.tone() }
+                }
+                p { class: "mt-1 text-xs text-text-muted", "{meta}" }
+            }
+        }
+    }
+}
+
+#[component]
+fn BoardRow(
+    board: Board,
+    #[props(default)] on_edit: Option<EventHandler<u64>>,
+    #[props(default)] on_delete: Option<EventHandler<u64>>,
+) -> Element {
     let counts = format!(
         "{} threads · {} today",
         format_count(board.threads),
@@ -627,10 +833,20 @@ fn BoardRow(board: Board, #[props(default)] on_edit: Option<EventHandler<u64>>) 
         format!("{} links", board.links.len())
     };
     let board_id = board.id;
+    let editable = on_edit.is_some();
 
     rsx! {
         article {
-            class: "forum-board-card",
+            class: if editable {
+                "forum-board-card forum-board-card-clickable"
+            } else {
+                "forum-board-card"
+            },
+            onclick: move |_| {
+                if let Some(on_edit) = on_edit {
+                    on_edit.call(board_id);
+                }
+            },
             if !board.banner.is_empty() {
                 div {
                     class: "forum-board-banner",
@@ -676,12 +892,15 @@ fn BoardRow(board: Board, #[props(default)] on_edit: Option<EventHandler<u64>>) 
                 div {
                     class: "flex shrink-0 flex-col items-end gap-2",
                     span { class: "hidden text-xs tabular-nums text-text-muted sm:block", "{counts}" }
-                    if let Some(on_edit) = on_edit {
+                    if let Some(on_delete) = on_delete {
                         Button {
-                            variant: ButtonVariant::Ghost,
+                            variant: ButtonVariant::Danger,
                             size: ButtonSize::Sm,
-                            onclick: move |_| on_edit.call(board_id),
-                            "Edit"
+                            onclick: move |evt: MouseEvent| {
+                                evt.stop_propagation();
+                                on_delete.call(board_id);
+                            },
+                            "Delete"
                         }
                     }
                 }
@@ -692,7 +911,7 @@ fn BoardRow(board: Board, #[props(default)] on_edit: Option<EventHandler<u64>>) 
 
 #[component]
 pub fn ForumBoards() -> Element {
-    let boards = use_context::<Signal<Vec<Board>>>();
+    let mut boards = use_context::<Signal<Vec<Board>>>();
     let mut open = use_signal(|| false);
     let form = BoardForm {
         name: use_signal(String::new),
@@ -733,13 +952,24 @@ pub fn ForumBoards() -> Element {
 
         div {
             class: "flex flex-col gap-3 sm:gap-4",
-            for board in boards().into_iter() {
+            for board in boards() {
                 BoardRow {
-                    board: board.clone(),
+                    board,
                     on_edit: move |id| {
-                        if let Some(existing) = boards().into_iter().find(|board| board.id == id) {
+                        if let Some(existing) =
+                            boards.read().iter().find(|board| board.id == id).cloned()
+                        {
                             form.load(&existing);
                             open.set(true);
+                        }
+                    },
+                    on_delete: move |id| {
+                        boards.with_mut(|list| {
+                            list.retain(|board| board.id != id);
+                        });
+                        if (form.editing_id)() == Some(id) {
+                            form.clear();
+                            open.set(false);
                         }
                     },
                 }
@@ -836,6 +1066,21 @@ fn BoardModal(
             title,
             description: modal_description,
             footer: rsx! {
+                if is_edit {
+                    Button {
+                        variant: ButtonVariant::Danger,
+                        onclick: move |evt| {
+                            if let Some(id) = editing_id() {
+                                boards.with_mut(|list| {
+                                    list.retain(|board| board.id != id);
+                                });
+                            }
+                            on_close.call(evt);
+                        },
+                        "Delete board"
+                    }
+                }
+                div { class: "flex-1" }
                 Button {
                     variant: ButtonVariant::Ghost,
                     onclick: move |evt| on_close.call(evt),
@@ -1205,7 +1450,11 @@ fn MediaUploadField(
 }
 
 #[component]
-fn FormField(label: &'static str, children: Element) -> Element {
+fn FormField(
+    label: &'static str,
+    #[props(default)] hint: Option<&'static str>,
+    children: Element,
+) -> Element {
     rsx! {
         div {
             label {
@@ -1213,6 +1462,9 @@ fn FormField(label: &'static str, children: Element) -> Element {
                 "{label}"
             }
             {children}
+            if let Some(hint) = hint {
+                p { class: "mt-1.5 text-xs text-text-muted", "{hint}" }
+            }
         }
     }
 }
@@ -1313,15 +1565,52 @@ pub fn ForumThreads() -> Element {
     let pinned = use_signal(|| false);
     let locked = use_signal(|| false);
 
+    let mut query = use_signal(String::new);
+    let mut statuses = use_signal(Vec::<String>::new);
+    let mut board_filters = use_signal(Vec::<String>::new);
+    let mut sort = use_signal(ThreadSort::default);
+    let mut status_menu = use_signal(|| false);
+    let mut board_menu = use_signal(|| false);
+    let mut sort_menu = use_signal(|| false);
+
     let open_create = move |_| {
         clear_thread_form(title, body, board, pinned, locked, &boards());
         open.set(true);
     };
 
+    let boards_now = boards();
+    let statuses_now = statuses();
+    let board_filters_now = board_filters();
+    let sort_now = sort();
+    let filtered = filter_threads(
+        &threads(),
+        &query(),
+        &board_filters_now,
+        &statuses_now,
+        sort_now,
+    );
+    let result_label = if filtered.len() == 1 {
+        String::from("1 thread")
+    } else {
+        format!("{} threads", filtered.len())
+    };
+    let status_summary = {
+        let labels: Vec<String> = statuses_now
+            .iter()
+            .filter_map(|key| ThreadStatusOption::from_key(key).map(|opt| opt.label().to_string()))
+            .collect();
+        selection_summary(&labels, "Any status", "statuses")
+    };
+    let board_summary = selection_summary(&board_filters_now, "All boards", "boards");
+    let filters_active = !query().trim().is_empty()
+        || !statuses_now.is_empty()
+        || !board_filters_now.is_empty()
+        || sort_now != ThreadSort::Recent;
+
     rsx! {
         PageHeader {
             title: "Threads",
-            subtitle: "Read the conversation — not a spreadsheet of titles.",
+            subtitle: "Search, filter, and open any conversation.",
             action: rsx! {
                 Button {
                     onclick: open_create,
@@ -1331,15 +1620,129 @@ pub fn ForumThreads() -> Element {
             },
         }
 
-        div {
-            class: "mb-6 flex flex-wrap gap-2",
-            ToneChip { label: "All threads", tone: FORUM_ACCENT }
-            ToneChip { label: "Pinned", tone: "#69bdf2" }
-            ToneChip { label: "Locked", tone: "#f0a35e" }
+        section {
+            class: "mb-6 space-y-3 rounded-squircle-lg border border-border-subtle bg-surface/20 p-4",
+            SearchInput {
+                value: query,
+                placeholder: "Search title, author, board…",
+                class: "w-full",
+            }
+
+            div {
+                class: "grid gap-3 sm:grid-cols-2 lg:grid-cols-4",
+
+                FilterMultiSelect {
+                    label: "Status",
+                    summary: status_summary,
+                    open: status_menu,
+                    on_toggle_menu: move |_| {
+                        let next = !status_menu();
+                        status_menu.set(next);
+                        if next {
+                            board_menu.set(false);
+                            sort_menu.set(false);
+                        }
+                    },
+                    body: rsx! {
+                        for option in ThreadStatusOption::ALL {
+                            FilterCheckOption {
+                                label: option.label().to_string(),
+                                checked: statuses_now.iter().any(|item| item == option.key()),
+                                onclick: move |_| toggle_selection(statuses, option.key()),
+                            }
+                        }
+                    },
+                }
+
+                FilterMultiSelect {
+                    label: "Boards",
+                    summary: board_summary,
+                    open: board_menu,
+                    on_toggle_menu: move |_| {
+                        let next = !board_menu();
+                        board_menu.set(next);
+                        if next {
+                            status_menu.set(false);
+                            sort_menu.set(false);
+                        }
+                    },
+                    body: rsx! {
+                        if boards_now.is_empty() {
+                            p { class: "px-3 py-2 text-xs text-text-muted", "No boards yet." }
+                        } else {
+                            for option in boards_now.iter() {
+                                FilterCheckOption {
+                                    key: "{option.id}",
+                                    label: option.name.clone(),
+                                    checked: board_filters_now.iter().any(|item| item == &option.name),
+                                    onclick: {
+                                        let name = option.name.clone();
+                                        move |_| toggle_selection(board_filters, &name)
+                                    },
+                                }
+                            }
+                        }
+                    },
+                }
+
+                FilterMultiSelect {
+                    label: "Sort",
+                    summary: sort_now.label().to_string(),
+                    open: sort_menu,
+                    on_toggle_menu: move |_| {
+                        let next = !sort_menu();
+                        sort_menu.set(next);
+                        if next {
+                            status_menu.set(false);
+                            board_menu.set(false);
+                        }
+                    },
+                    body: rsx! {
+                        for option in ThreadSort::ALL {
+                            FilterCheckOption {
+                                label: option.label().to_string(),
+                                checked: sort_now == option,
+                                onclick: move |_| {
+                                    sort.set(option);
+                                    sort_menu.set(false);
+                                },
+                            }
+                        }
+                    },
+                }
+
+                div {
+                    class: "flex items-end",
+                    Button {
+                        variant: ButtonVariant::Ghost,
+                        full_width: true,
+                        disabled: !filters_active,
+                        onclick: move |_| {
+                            query.set(String::new());
+                            statuses.set(Vec::new());
+                            board_filters.set(Vec::new());
+                            sort.set(ThreadSort::Recent);
+                            status_menu.set(false);
+                            board_menu.set(false);
+                            sort_menu.set(false);
+                        },
+                        "Clear filters"
+                    }
+                }
+            }
+
+            p { class: "text-xs text-text-secondary", "{result_label}" }
         }
 
-        for thread in threads().into_iter() {
-            ThreadCard { thread }
+        if filtered.is_empty() {
+            p {
+                class: "rounded-squircle-lg border border-dashed border-border-subtle px-4 py-10 text-center text-sm text-text-muted",
+                "No threads match these filters."
+            }
+        } else {
+            for thread in filtered.into_iter() {
+                ThreadCard { thread }
+            }
         }
 
         ThreadModal {
@@ -1356,6 +1759,66 @@ pub fn ForumThreads() -> Element {
                 clear_thread_form(title, body, board, pinned, locked, &boards());
                 open.set(false);
             },
+        }
+    }
+}
+
+#[component]
+fn FilterMultiSelect(
+    label: &'static str,
+    #[props(into)] summary: String,
+    open: Signal<bool>,
+    on_toggle_menu: EventHandler<MouseEvent>,
+    body: Element,
+) -> Element {
+    let is_open = open();
+
+    rsx! {
+        div {
+            class: "relative space-y-1.5",
+            label { class: "block text-xs font-medium text-text-muted", "{label}" }
+            button {
+                r#type: "button",
+                class: "ui-input ui-squircle flex h-10 w-full items-center justify-between gap-2 px-3 text-left text-sm outline-none",
+                onclick: move |evt| on_toggle_menu.call(evt),
+                span { class: "min-w-0 truncate text-text", "{summary}" }
+                span { class: "shrink-0 text-xs text-text-muted", if is_open { "▴" } else { "▾" } }
+            }
+            if is_open {
+                div {
+                    class: "absolute left-0 right-0 z-20 mt-1 max-h-56 overflow-y-auto rounded-squircle-sm border border-border-subtle bg-bg-elevated p-1 shadow-lg",
+                    {body}
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn FilterCheckOption(
+    #[props(into)] label: String,
+    checked: bool,
+    onclick: EventHandler<MouseEvent>,
+) -> Element {
+    rsx! {
+        button {
+            r#type: "button",
+            class: "flex w-full items-center gap-2.5 rounded-squircle-sm px-2.5 py-2 text-left text-sm transition-colors hover:bg-surface/40",
+            onclick: move |evt| onclick.call(evt),
+            span {
+                class: if checked {
+                    "flex h-4 w-4 shrink-0 items-center justify-center rounded-[0.35rem] text-[10px] font-bold text-text-on-accent"
+                } else {
+                    "flex h-4 w-4 shrink-0 items-center justify-center rounded-[0.35rem] border border-border-subtle bg-surface/30 text-[10px]"
+                },
+                style: if checked {
+                    format!("background: {FORUM_ACCENT};")
+                } else {
+                    String::new()
+                },
+                if checked { "✓" } else { "" }
+            }
+            span { class: "min-w-0 truncate text-text", "{label}" }
         }
     }
 }
@@ -1524,7 +1987,7 @@ fn ThreadModal(
                             "Preview"
                         }
                         article {
-                            class: "forum-thread pointer-events-none border-b-0",
+                            class: "forum-thread forum-thread-static pointer-events-none border-b-0",
                             Avatar {
                                 email: user.email.clone(),
                                 size: 40,
@@ -1564,12 +2027,18 @@ fn ThreadModal(
 
 #[component]
 fn ThreadCard(thread: Thread) -> Element {
+    let navigator = use_navigator();
+    let thread_id = thread.id;
     let replies = format!("{} replies", thread.replies);
     let badge_line = thread_badge_line(thread.pinned, thread.locked);
 
     rsx! {
-        article {
+        button {
+            r#type: "button",
             class: "forum-thread",
+            onclick: move |_| {
+                navigator.push(Route::ForumThread { id: thread_id });
+            },
             Avatar {
                 email: thread.author_email.clone(),
                 size: 40,
@@ -1607,6 +2076,282 @@ fn ThreadCard(thread: Thread) -> Element {
 }
 
 #[component]
+pub fn ForumThread(id: u64) -> Element {
+    let mut threads = use_context::<Signal<Vec<Thread>>>();
+    let boards = use_context::<Signal<Vec<Board>>>();
+    let navigator = use_navigator();
+    let mut move_open = use_signal(|| false);
+
+    let thread = threads
+        .read()
+        .iter()
+        .find(|thread| thread.id == id)
+        .cloned();
+
+    let Some(thread) = thread else {
+        return rsx! {
+            PageHeader {
+                title: "Thread not found",
+                subtitle: "This conversation may have been removed.",
+                action: rsx! {
+                    Button {
+                        variant: ButtonVariant::Secondary,
+                        onclick: move |_| {
+                            navigator.push(Route::ForumThreads {});
+                        },
+                        "Back to threads"
+                    }
+                },
+            }
+        };
+    };
+
+    let meta = {
+        let mut parts = vec![thread.category.clone()];
+        let badges = thread_badge_line(thread.pinned, thread.locked);
+        if !badges.is_empty() {
+            parts.push(badges);
+        }
+        parts.push(format!("{} replies", thread.replies));
+        parts.push(thread.when.clone());
+        parts.join(" · ")
+    };
+    let reply_samples = placeholder_replies(&thread);
+    let pin_label = if thread.pinned { "Unpin" } else { "Pin" };
+    let lock_label = if thread.locked { "Unlock" } else { "Lock" };
+    let boards_now = boards();
+    let thread_board = thread.category.clone();
+    let move_menu_open = move_open();
+
+    rsx! {
+        div {
+            class: "mb-8 flex flex-wrap items-center justify-between gap-3",
+            Button {
+                variant: ButtonVariant::Ghost,
+                size: ButtonSize::Sm,
+                onclick: move |_| {
+                    navigator.push(Route::ForumThreads {});
+                },
+                "← Threads"
+            }
+            div {
+                class: "relative flex flex-wrap items-center justify-end gap-2",
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    size: ButtonSize::Sm,
+                    onclick: move |_| {
+                        threads.with_mut(|list| {
+                            if let Some(item) = list.iter_mut().find(|item| item.id == id) {
+                                item.pinned = !item.pinned;
+                            }
+                        });
+                    },
+                    "{pin_label}"
+                }
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    size: ButtonSize::Sm,
+                    onclick: move |_| {
+                        threads.with_mut(|list| {
+                            if let Some(item) = list.iter_mut().find(|item| item.id == id) {
+                                item.locked = !item.locked;
+                            }
+                        });
+                    },
+                    "{lock_label}"
+                }
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    size: ButtonSize::Sm,
+                    onclick: move |_| move_open.set(!move_open()),
+                    "Move"
+                }
+                Button {
+                    variant: ButtonVariant::Danger,
+                    size: ButtonSize::Sm,
+                    onclick: move |_| {
+                        threads.with_mut(|list| {
+                            list.retain(|item| item.id != id);
+                        });
+                        navigator.push(Route::ForumThreads {});
+                    },
+                    "Delete"
+                }
+                if move_menu_open && !boards_now.is_empty() {
+                    div {
+                        class: "absolute right-0 top-full z-20 mt-2 w-56 rounded-squircle-sm border border-border-subtle bg-bg-elevated p-1 shadow-lg",
+                        p {
+                            class: "px-2.5 py-1.5 text-[11px] font-medium uppercase tracking-wide text-text-muted",
+                            "Move to board"
+                        }
+                        for option in boards_now.into_iter() {
+                            button {
+                                r#type: "button",
+                                class: if thread_board == option.name {
+                                    "flex w-full items-center gap-2 rounded-squircle-sm px-2.5 py-2 text-left text-sm font-medium text-text"
+                                } else {
+                                    "flex w-full items-center gap-2 rounded-squircle-sm px-2.5 py-2 text-left text-sm text-text-muted hover:bg-surface/40 hover:text-text"
+                                },
+                                onclick: {
+                                    let name = option.name.clone();
+                                    move |_| {
+                                        threads.with_mut(|list| {
+                                            if let Some(item) =
+                                                list.iter_mut().find(|item| item.id == id)
+                                            {
+                                                item.category = name.clone();
+                                            }
+                                        });
+                                        move_open.set(false);
+                                    }
+                                },
+                                span {
+                                    class: "h-2.5 w-2.5 shrink-0 rounded-full",
+                                    style: "background: {option.accent};",
+                                }
+                                "{option.name}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        header {
+            class: "mb-8 max-w-3xl",
+            h1 {
+                class: "text-3xl font-semibold tracking-tight sm:text-4xl",
+                "{thread.title}"
+            }
+            p { class: "mt-2 text-sm text-text-muted", "{meta}" }
+        }
+
+        article {
+            class: "forum-post",
+            Avatar {
+                email: thread.author_email.clone(),
+                size: 44,
+                alt: thread.author.clone(),
+            }
+            div {
+                class: "min-w-0 flex-1",
+                div {
+                    class: "flex flex-wrap items-baseline gap-x-2 gap-y-1",
+                    p { class: "text-sm font-semibold text-text", "{thread.author}" }
+                    span { class: "text-xs text-text-muted", "Original post · {thread.when}" }
+                }
+                p {
+                    class: "mt-3 text-[0.95rem] leading-relaxed text-text-secondary whitespace-pre-wrap",
+                    "{thread.preview}"
+                }
+            }
+        }
+
+        section {
+            class: "mt-2 mb-4 flex items-baseline justify-between gap-3 border-t border-border-subtle pt-6",
+            p { class: "text-xs font-medium uppercase tracking-wide text-text-muted", "Replies" }
+            span { class: "text-xs text-text-secondary", "{thread.replies}" }
+        }
+
+        if thread.locked {
+            p {
+                class: "mb-4 text-sm text-text-muted",
+                "This thread is locked — new replies are disabled."
+            }
+        }
+
+        if reply_samples.is_empty() {
+            p {
+                class: "py-8 text-sm text-text-muted",
+                "No replies yet."
+            }
+        } else {
+            for reply in reply_samples.into_iter() {
+                article {
+                    class: "forum-post",
+                    Avatar {
+                        email: reply.email.clone(),
+                        size: 36,
+                        alt: reply.author.clone(),
+                    }
+                    div {
+                        class: "min-w-0 flex-1",
+                        div {
+                            class: "flex flex-wrap items-baseline gap-x-2 gap-y-1",
+                            p { class: "text-sm font-semibold text-text", "{reply.author}" }
+                            span { class: "text-xs text-text-muted", "{reply.when}" }
+                        }
+                        p {
+                            class: "mt-2 text-sm leading-relaxed text-text-secondary",
+                            "{reply.body}"
+                        }
+                    }
+                }
+            }
+        }
+
+        if !thread.locked {
+            section {
+                class: "mt-8 max-w-2xl border-t border-border-subtle pt-6",
+                p { class: "mb-3 text-xs font-medium text-text-muted", "Reply" }
+                textarea {
+                    class: "ui-input ui-squircle min-h-28 w-full resize-y px-4 py-3 text-sm outline-none",
+                    placeholder: "Write a reply…",
+                }
+                div {
+                    class: "mt-3",
+                    Button { "Post reply" }
+                }
+            }
+        }
+    }
+}
+
+#[derive(Clone, PartialEq)]
+struct ThreadReply {
+    author: String,
+    email: String,
+    body: String,
+    when: String,
+}
+
+fn placeholder_replies(thread: &Thread) -> Vec<ThreadReply> {
+    if thread.replies == 0 {
+        return Vec::new();
+    }
+
+    let mut replies = vec![
+        ThreadReply {
+            author: String::from("NovaCraft"),
+            email: String::from("nova@players.local"),
+            body: String::from(
+                "Looks solid — I’d push the main path a bit wider before we lock the palette.",
+            ),
+            when: String::from("1h"),
+        },
+        ThreadReply {
+            author: String::from("QuietLeaf"),
+            email: String::from("quiet@players.local"),
+            body: String::from(
+                "Agreed on the lighting. Happy to mock a darker atrium variant this weekend.",
+            ),
+            when: String::from("42m"),
+        },
+    ];
+
+    if thread.replies > 20 {
+        replies.push(ThreadReply {
+            author: String::from("AshRidge"),
+            email: String::from("ash@players.local"),
+            body: String::from("Dropping screenshots in Discord too so staff can compare angles."),
+            when: String::from("18m"),
+        });
+    }
+
+    replies
+}
+
+#[component]
 pub fn ForumModeration() -> Element {
     let current_user = use_context::<Signal<CurrentUser>>();
     let user = current_user();
@@ -1616,7 +2361,7 @@ pub fn ForumModeration() -> Element {
     rsx! {
         PageHeader {
             title: "Moderation",
-            subtitle: "Clear the queue — then tweak the guardrails underneath.",
+            subtitle: "Clear the queue. Configure the bot under Auto Moderation.",
             action: rsx! {
                 span {
                     class: "rounded-squircle-sm border border-border-subtle bg-surface/40 px-3 py-2 text-xs text-text-secondary",
@@ -1640,42 +2385,24 @@ pub fn ForumModeration() -> Element {
                 ReportCard { report }
             }
         }
-
-        section {
-            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Automation" }
-            SettingRow {
-                title: "Auto-hide after three unique reports",
-                description: "Hide the post from public view until a moderator reviews it.",
-                enabled: false,
-            }
-            SettingRow {
-                title: "Notify staff Discord channel",
-                description: "Push high-severity reports to your moderation webhook.",
-                enabled: true,
-            }
-            SettingRow {
-                title: "Shadow-mute repeat offenders",
-                description: "Limit posting for accounts with three upheld reports in 7 days.",
-                enabled: false,
-            }
-        }
     }
 }
 
 #[component]
 fn ReportCard(report: Report) -> Element {
-    let meta = format!("{} · {} · {}", report.board, report.reporter, report.when);
+    let meta = report.meta();
+    let severity = report.severity;
 
     rsx! {
         article {
             class: "forum-report",
-            style: "--report-tone: {report.severity.tone()};",
+            style: "--report-tone: {severity.tone()};",
             div {
                 class: "min-w-0 flex-1",
                 div {
                     class: "flex flex-wrap items-center gap-2",
                     h3 { class: "text-sm font-semibold tracking-tight sm:text-base", "{report.title}" }
-                    ToneChip { label: report.severity.label(), tone: report.severity.tone() }
+                    ToneChip { label: severity.label(), tone: severity.tone() }
                 }
                 p { class: "mt-1.5 text-sm leading-relaxed text-text-muted", "{report.detail}" }
                 p { class: "mt-2 text-xs text-text-secondary", "{meta}" }
@@ -1703,9 +2430,138 @@ fn ReportCard(report: Report) -> Element {
 }
 
 #[component]
+pub fn ForumAutoModeration() -> Element {
+    let blocked_words = use_signal(|| String::from("buy ranks, free nitro, .gg/"));
+    let max_links = use_signal(|| String::from("2"));
+    let mute_minutes = use_signal(|| String::from("30"));
+    let new_account_hours = use_signal(|| String::from("24"));
+
+    rsx! {
+        PageHeader {
+            title: "Auto Moderation",
+            subtitle: "Configure the bot that filters spam, enforces limits, and escalates reports.",
+            action: rsx! {
+                Button { "Save changes" }
+            },
+        }
+
+        section {
+            class: "mb-8 rounded-squircle-lg border border-border-subtle bg-surface/20 p-4 sm:p-5",
+            p { class: "text-xs font-medium uppercase tracking-wide text-text-muted", "Bot status" }
+            p { class: "mt-1 text-lg font-semibold tracking-tight", "Auto Mod is watching public boards" }
+            p { class: "mt-0.5 text-sm text-text-muted", "Actions run instantly; staff still get a queue entry for high severity." }
+            div {
+                class: "mt-4 border-t border-border-subtle",
+                SettingRow {
+                    title: "Enable Auto Mod",
+                    description: "Turn the bot on or off across the forum.",
+                    enabled: true,
+                }
+            }
+        }
+
+        section {
+            class: "mb-10",
+            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Filters" }
+            SettingRow {
+                title: "Block listed words & phrases",
+                description: "Flag or remove posts that match your blocked list.",
+                enabled: true,
+            }
+            SettingRow {
+                title: "Limit external links",
+                description: "Stop posts that exceed the max link count.",
+                enabled: true,
+            }
+            SettingRow {
+                title: "Detect duplicate spam",
+                description: "Catch near-identical replies posted in a short window.",
+                enabled: true,
+            }
+            SettingRow {
+                title: "Throttle brand-new accounts",
+                description: "Require a waiting period before new accounts can post links.",
+                enabled: false,
+            }
+        }
+
+        section {
+            class: "mb-10 max-w-xl space-y-4",
+            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Bot thresholds" }
+            FormField {
+                label: "Blocked words",
+                hint: "Comma-separated. Matching posts are held for review.",
+                SignalTextarea {
+                    value: blocked_words,
+                    placeholder: "spam phrase, invite link…",
+                }
+            }
+            FormField {
+                label: "Max links per post",
+                SignalInput {
+                    value: max_links,
+                    placeholder: "2",
+                }
+            }
+            FormField {
+                label: "Mute duration (minutes)",
+                hint: "Applied when the bot chooses Mute as the action.",
+                SignalInput {
+                    value: mute_minutes,
+                    placeholder: "30",
+                }
+            }
+            FormField {
+                label: "New account waiting period (hours)",
+                SignalInput {
+                    value: new_account_hours,
+                    placeholder: "24",
+                }
+            }
+        }
+
+        section {
+            class: "mb-10",
+            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Actions" }
+            SettingRow {
+                title: "Auto-hide after three unique reports",
+                description: "Hide the post from public view until a moderator reviews it.",
+                enabled: false,
+            }
+            SettingRow {
+                title: "Warn on first offence",
+                description: "Send an automated warning before muting or hiding.",
+                enabled: true,
+            }
+            SettingRow {
+                title: "Shadow-mute repeat offenders",
+                description: "Limit posting for accounts with three upheld reports in 7 days.",
+                enabled: false,
+            }
+        }
+
+        section {
+            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Notifications" }
+            SettingRow {
+                title: "Notify staff Discord channel",
+                description: "Push high-severity auto-mod actions to your moderation webhook.",
+                enabled: true,
+            }
+            SettingRow {
+                title: "DM the author",
+                description: "Tell the player what rule was triggered and what happens next.",
+                enabled: true,
+            }
+        }
+    }
+}
+
+#[component]
 pub fn ForumSiteSettings() -> Element {
     let stats = placeholder_forum_stats();
-    let full_url = format!("www.example.com{}", stats.public_path);
+    let public_path = use_signal(|| String::from(stats.public_path));
+    let page_title = use_signal(|| String::from("Forums"));
+    let full_url = format!("www.example.com{}", public_path());
 
     rsx! {
         PageHeader {
@@ -1727,15 +2583,17 @@ pub fn ForumSiteSettings() -> Element {
             class: "mb-8 max-w-xl space-y-4",
             FormField {
                 label: "Public path",
-                StaticInput { value: stats.public_path }
+                SignalInput {
+                    value: public_path,
+                    placeholder: "/forum",
+                }
             }
             FormField {
                 label: "Page title",
-                StaticInput { value: "Forums" }
-            }
-            FormField {
-                label: "Section navigation",
-                StaticInput { value: "Boards, Unread, Members" }
+                SignalInput {
+                    value: page_title,
+                    placeholder: "Forums",
+                }
             }
         }
 

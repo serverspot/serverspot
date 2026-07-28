@@ -189,6 +189,10 @@ impl Section {
                     route: Route::ForumModeration {},
                 },
                 SubLink {
+                    label: "Auto Moderation",
+                    route: Route::ForumAutoModeration {},
+                },
+                SubLink {
                     label: "Settings",
                     route: Route::ForumSiteSettings {},
                 },
@@ -409,7 +413,9 @@ pub fn section_for(route: &Route) -> Section {
         Route::ForumOverview {}
         | Route::ForumBoards {}
         | Route::ForumThreads {}
+        | Route::ForumThread { .. }
         | Route::ForumModeration {}
+        | Route::ForumAutoModeration {}
         | Route::ForumSiteSettings {}
         | Route::ForumTheme {} => Section::Forum,
         Route::SupportOverview {}
@@ -460,6 +466,13 @@ pub fn section_for(route: &Route) -> Section {
     }
 }
 
+pub fn subnav_active(current: &Route, target: Route) -> bool {
+    match (current, target) {
+        (Route::ForumThread { .. }, Route::ForumThreads {}) => true,
+        (current, target) => *current == target,
+    }
+}
+
 pub fn crumb_for(route: &Route) -> &'static str {
     match route {
         Route::Login {} => "Login",
@@ -473,7 +486,9 @@ pub fn crumb_for(route: &Route) -> &'static str {
         Route::ForumOverview {} => "Overview",
         Route::ForumBoards {} => "Boards",
         Route::ForumThreads {} => "Threads",
+        Route::ForumThread { .. } => "Thread",
         Route::ForumModeration {} => "Moderation",
+        Route::ForumAutoModeration {} => "Auto Moderation",
         Route::ForumSiteSettings {} => "Settings",
         Route::ForumTheme {} => "Theme",
         Route::SupportOverview {} => "Overview",

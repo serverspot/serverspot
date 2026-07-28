@@ -18,7 +18,10 @@ use crate::components::{
         LeaderboardsSiteSettings, PlayersSiteSettings, StoreSiteSettings, SupportSiteSettings,
         VotesSiteSettings,
     },
-    forum::{ForumBoards, ForumModeration, ForumOverview, ForumSiteSettings, ForumThreads},
+    forum::{
+        ForumAutoModeration, ForumBoards, ForumModeration, ForumOverview, ForumSiteSettings,
+        ForumThread, ForumThreads,
+    },
     login::Login,
     settings::{
         SettingsDeveloper, SettingsGeneral, SettingsHosting, SettingsIntegrations,
@@ -62,8 +65,12 @@ pub enum Route {
         ForumBoards {},
         #[route("/forum/threads")]
         ForumThreads {},
+        #[route("/forum/threads/:id")]
+        ForumThread { id: u64 },
         #[route("/forum/moderation")]
         ForumModeration {},
+        #[route("/forum/auto-moderation")]
+        ForumAutoModeration {},
         #[route("/forum/settings")]
         ForumSiteSettings {},
         #[route("/forum/theme")]

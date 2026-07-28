@@ -137,6 +137,10 @@
     background: color-mix(in srgb, var(--color-surface) 38%, transparent);
   }
 
+  .forum-board-card-clickable {
+    cursor: pointer;
+  }
+
   .forum-board-banner {
     height: 4.5rem;
     overflow: hidden;
@@ -154,13 +158,34 @@
     display: flex;
     align-items: flex-start;
     gap: 0.9rem;
+    width: 100%;
     padding: 1.15rem 0.75rem;
+    border: none;
     border-bottom: 1px solid var(--color-border-subtle);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
     transition: background-color 0.18s ease;
   }
 
   .forum-thread:hover {
     background: color-mix(in srgb, #5b9dff 7%, transparent);
+  }
+
+  .forum-thread-static {
+    cursor: default;
+  }
+
+  .forum-thread-static:hover {
+    background: transparent;
+  }
+
+  .forum-post {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 1.25rem 0.15rem;
+    border-bottom: 1px solid var(--color-border-subtle);
   }
 
   .forum-report {
@@ -744,6 +769,30 @@
 
   .ui-input:focus::placeholder {
     opacity: 0.55;
+  }
+
+  .ui-select {
+    appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--color-text-muted) 50%),
+      linear-gradient(135deg, var(--color-text-muted) 50%, transparent 50%),
+      linear-gradient(180deg, #323240 0%, #282834 100%);
+    background-position:
+      calc(100% - 1.15rem) calc(50% - 0.15rem),
+      calc(100% - 0.85rem) calc(50% - 0.15rem),
+      0 0;
+    background-size:
+      0.3rem 0.3rem,
+      0.3rem 0.3rem,
+      auto;
+    background-repeat: no-repeat;
+    padding-right: 2.25rem;
+    cursor: pointer;
+  }
+
+  .ui-select option {
+    background: var(--color-bg-elevated);
+    color: var(--color-text);
   }
 
 }
