@@ -9,6 +9,7 @@ mod server_funcs;
 use dioxus::prelude::*;
 
 use components::loading::LoadingScreen;
+use gravatar::placeholder_current_user;
 use router::Route;
 
 pub const FAVICON: Asset = asset!("/assets/favicon.svg");
@@ -24,6 +25,9 @@ fn main() {
 
 #[component]
 fn App() -> Element {
+    let current_user = use_signal(placeholder_current_user);
+    use_context_provider(|| current_user);
+
     rsx! {
         document::Meta {
             name: "viewport",

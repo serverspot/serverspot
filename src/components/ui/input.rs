@@ -5,9 +5,9 @@ use super::icons::IconSearch;
 #[component]
 pub fn SignalInput(
     mut value: Signal<String>,
-    #[props(default = "")] placeholder: &'static str,
-    #[props(default = "")] class: &'static str,
-    #[props(default = "text")] r#type: &'static str,
+    #[props(default, into)] placeholder: String,
+    #[props(default, into)] class: String,
+    #[props(default = "text".to_string(), into)] r#type: String,
 ) -> Element {
     rsx! {
         input {
@@ -25,8 +25,8 @@ pub fn SignalInput(
 
 #[component]
 pub fn StaticInput(
-    value: &'static str,
-    #[props(default = "")] class: &'static str,
+    #[props(into)] value: String,
+    #[props(default, into)] class: String,
 ) -> Element {
     rsx! {
         input {
@@ -41,8 +41,8 @@ pub fn StaticInput(
 #[component]
 pub fn SearchInput(
     mut value: Signal<String>,
-    #[props(default = "Search...")] placeholder: &'static str,
-    #[props(default = "")] class: &'static str,
+    #[props(default = "Search...".to_string(), into)] placeholder: String,
+    #[props(default, into)] class: String,
 ) -> Element {
     rsx! {
         div {
