@@ -2,8 +2,8 @@ use dioxus::prelude::*;
 
 use crate::components::page::{DataPanel, PageHeader, RowItem, SettingRow};
 use crate::components::ui::*;
-use crate::gravatar::CurrentUser;
 use crate::router::Route;
+use crate::user::CurrentUser;
 
 const BIO: &str = "Owner at ServerSpot. Building tools for game server communities.";
 
@@ -14,6 +14,7 @@ pub fn Account() -> Element {
     let user = current_user.read();
     let user_email = user.email.clone();
     let user_name = user.name.clone();
+    let user_role = user.role.clone();
 
     rsx! {
         PageHeader {
@@ -48,7 +49,7 @@ pub fn Account() -> Element {
                 div { class: "mt-3 flex flex-wrap gap-2",
                     span {
                         class: "inline-flex items-center rounded-squircle-sm bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent",
-                        "Owner"
+                        "{user_role}"
                     }
                     span {
                         class: "inline-flex items-center rounded-squircle-sm bg-surface-2 px-2 py-0.5 text-xs font-medium text-text-secondary",

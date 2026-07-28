@@ -55,7 +55,8 @@ pub fn highlight_spans(source: &str, language: &str) -> Vec<Span> {
 
 pub fn highlighted_html(source: &str, language: &str) -> String {
     let spans = highlight_spans(source, language);
-    let mut out = String::with_capacity(source.len().saturating_add(spans.len().saturating_mul(28)));
+    let mut out =
+        String::with_capacity(source.len().saturating_add(spans.len().saturating_mul(28)));
     for span in spans {
         let start = span.start as usize;
         let end = (span.end as usize).min(source.len());
@@ -231,7 +232,11 @@ fn highlight_css(source: &str) -> Vec<Span> {
             continue;
         }
 
-        i += source[i..].chars().next().map(|c| c.len_utf8()).unwrap_or(1);
+        i += source[i..]
+            .chars()
+            .next()
+            .map(|c| c.len_utf8())
+            .unwrap_or(1);
     }
 
     flush_plain(&mut out, &mut plain, i);
@@ -332,7 +337,11 @@ fn highlight_html(source: &str) -> Vec<Span> {
             continue;
         }
 
-        i += source[i..].chars().next().map(|c| c.len_utf8()).unwrap_or(1);
+        i += source[i..]
+            .chars()
+            .next()
+            .map(|c| c.len_utf8())
+            .unwrap_or(1);
     }
 
     flush_plain(&mut out, &mut plain, i);
@@ -341,9 +350,29 @@ fn highlight_html(source: &str) -> Vec<Span> {
 
 fn highlight_js_like(source: &str) -> Vec<Span> {
     const KEYWORDS: &[&str] = &[
-        "const", "let", "var", "function", "return", "if", "else", "for", "while", "class",
-        "import", "export", "from", "async", "await", "new", "this", "true", "false", "null",
-        "undefined", "typeof", "instanceof",
+        "const",
+        "let",
+        "var",
+        "function",
+        "return",
+        "if",
+        "else",
+        "for",
+        "while",
+        "class",
+        "import",
+        "export",
+        "from",
+        "async",
+        "await",
+        "new",
+        "this",
+        "true",
+        "false",
+        "null",
+        "undefined",
+        "typeof",
+        "instanceof",
     ];
 
     let bytes = source.as_bytes();
@@ -438,7 +467,11 @@ fn highlight_js_like(source: &str) -> Vec<Span> {
             continue;
         }
 
-        i += source[i..].chars().next().map(|c| c.len_utf8()).unwrap_or(1);
+        i += source[i..]
+            .chars()
+            .next()
+            .map(|c| c.len_utf8())
+            .unwrap_or(1);
     }
 
     flush_plain(&mut out, &mut plain, i);

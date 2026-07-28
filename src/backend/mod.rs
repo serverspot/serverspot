@@ -2,7 +2,9 @@ use std::sync::Arc;
 
 use dioxus::{prelude::*, server::axum::Extension};
 use surrealdb::{
-    Surreal, engine::remote::ws::{Client, Ws}, opt::auth::Root,
+    engine::remote::ws::{Client, Ws},
+    opt::auth::Root,
+    Surreal,
 };
 
 pub mod util;
@@ -26,7 +28,8 @@ impl BackendState {
         db.signin(Root {
             username: surreal_user,
             password: surreal_pass,
-        }).await?;
+        })
+        .await?;
 
         db.use_ns(surreal_ns).use_db("serverspot").await?;
 

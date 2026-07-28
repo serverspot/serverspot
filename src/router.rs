@@ -6,21 +6,19 @@ use crate::components::{
         AccountsAuth, AccountsConnections, AccountsLinking, AccountsProfiles, AccountsRoles,
     },
     analytics::{AnalyticsCommunity, AnalyticsGaming, AnalyticsWebsite},
-    community::{
-        CommunityApplications, CommunityLeaderboards, CommunityPlayers, CommunityVotes,
-    },
+    community::{CommunityApplications, CommunityLeaderboards, CommunityPlayers, CommunityVotes},
     content::{ContentBlog, ContentPages},
     dashboard::{Dashboard, DashboardActivity},
     feature_overview::{
-        AnalyticsOverview, ApplicationsOverview, ContentOverview, ForumOverview,
-        LeaderboardsOverview, PlayersOverview, StoreOverview, SupportOverview, VotesOverview,
+        AnalyticsOverview, ApplicationsOverview, ContentOverview, LeaderboardsOverview,
+        PlayersOverview, StoreOverview, SupportOverview, VotesOverview,
     },
     feature_site::{
-        AnalyticsSiteSettings, ApplicationsSiteSettings, ContentSiteSettings, ForumSiteSettings,
+        AnalyticsSiteSettings, ApplicationsSiteSettings, ContentSiteSettings,
         LeaderboardsSiteSettings, PlayersSiteSettings, StoreSiteSettings, SupportSiteSettings,
         VotesSiteSettings,
     },
-    forum::{ForumCategories, ForumModeration, ForumPosts},
+    forum::{ForumBoards, ForumModeration, ForumOverview, ForumSiteSettings, ForumThreads},
     login::Login,
     settings::{
         SettingsDeveloper, SettingsGeneral, SettingsHosting, SettingsIntegrations,
@@ -60,10 +58,10 @@ pub enum Route {
 
         #[route("/forum")]
         ForumOverview {},
-        #[route("/forum/categories")]
-        ForumCategories {},
-        #[route("/forum/posts")]
-        ForumPosts {},
+        #[route("/forum/boards")]
+        ForumBoards {},
+        #[route("/forum/threads")]
+        ForumThreads {},
         #[route("/forum/moderation")]
         ForumModeration {},
         #[route("/forum/settings")]

@@ -177,12 +177,12 @@ impl Section {
                     route: Route::ForumOverview {},
                 },
                 SubLink {
-                    label: "Categories",
-                    route: Route::ForumCategories {},
+                    label: "Boards",
+                    route: Route::ForumBoards {},
                 },
                 SubLink {
-                    label: "Posts",
-                    route: Route::ForumPosts {},
+                    label: "Threads",
+                    route: Route::ForumThreads {},
                 },
                 SubLink {
                     label: "Moderation",
@@ -407,8 +407,8 @@ pub fn section_for(route: &Route) -> Section {
         | Route::StoreSiteSettings {}
         | Route::StoreTheme {} => Section::Store,
         Route::ForumOverview {}
-        | Route::ForumCategories {}
-        | Route::ForumPosts {}
+        | Route::ForumBoards {}
+        | Route::ForumThreads {}
         | Route::ForumModeration {}
         | Route::ForumSiteSettings {}
         | Route::ForumTheme {} => Section::Forum,
@@ -471,8 +471,8 @@ pub fn crumb_for(route: &Route) -> &'static str {
         Route::StoreSiteSettings {} => "Settings",
         Route::StoreTheme {} => "Theme",
         Route::ForumOverview {} => "Overview",
-        Route::ForumCategories {} => "Categories",
-        Route::ForumPosts {} => "Posts",
+        Route::ForumBoards {} => "Boards",
+        Route::ForumThreads {} => "Threads",
         Route::ForumModeration {} => "Moderation",
         Route::ForumSiteSettings {} => "Settings",
         Route::ForumTheme {} => "Theme",

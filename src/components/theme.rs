@@ -366,7 +366,11 @@ struct ThemeEditor {
 impl ThemeEditor {
     fn new(seed: &'static [ThemeFile]) -> Self {
         let files: Vec<EditorFile> = seed.iter().copied().map(EditorFile::from_seed).collect();
-        let tabs = if files.is_empty() { Vec::new() } else { vec![0] };
+        let tabs = if files.is_empty() {
+            Vec::new()
+        } else {
+            vec![0]
+        };
         Self {
             files,
             folders: vec![
@@ -431,9 +435,7 @@ impl ThemeEditor {
     }
 
     fn create_from_prompt(&mut self) -> Option<StatusMsg> {
-        let Some(kind) = self.prompt else {
-            return None;
-        };
+        let kind = self.prompt?;
 
         let normalized = self.prompt_buf.trim().replace('\\', "/");
         if normalized.is_empty() || normalized.contains("..") {
@@ -507,7 +509,9 @@ impl ThemeEditor {
     }
 
     fn active_language(&self) -> Option<&'static str> {
-        self.files.get(self.active as usize).map(|file| file.language)
+        self.files
+            .get(self.active as usize)
+            .map(|file| file.language)
     }
 }
 
@@ -874,7 +878,11 @@ fn ThemeFolderBlock(
     let (is_open, file_count) = {
         let state = editor.read();
         (
-            state.folders.get(folder_i).map(|folder| folder.open).unwrap_or(false),
+            state
+                .folders
+                .get(folder_i)
+                .map(|folder| folder.open)
+                .unwrap_or(false),
             state.files.len() as u16,
         )
     };
@@ -910,11 +918,7 @@ fn ThemeFolderBlock(
 }
 
 #[component]
-fn ThemeTab(
-    mut editor: Signal<ThemeEditor>,
-    mut draft: Signal<String>,
-    index: u16,
-) -> Element {
+fn ThemeTab(mut editor: Signal<ThemeEditor>, mut draft: Signal<String>, index: u16) -> Element {
     let active = editor.read().active;
     let name = editor
         .read()
@@ -950,7 +954,6 @@ fn ThemeTab(
         }
     }
 }
-
 
 const STORE_THEME_CSS: &str = r#":root {
   --store-primary: #3ecf8e;

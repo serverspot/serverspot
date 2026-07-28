@@ -1,14 +1,11 @@
 use dioxus::prelude::*;
 
-use crate::components::page::{
-    DataPanel, InfoCard, PageHeader, RowItem, StatPill, StatusChip,
-};
+use crate::components::page::{DataPanel, InfoCard, PageHeader, RowItem, StatPill, StatusChip};
 use crate::components::ui::*;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum FeatureOverviewKind {
     Store,
-    Forum,
     Support,
     Content,
     Players,
@@ -65,38 +62,6 @@ impl FeatureOverviewKind {
                     ("Products", "Add or edit packages for the shop"),
                     ("Orders", "Review payments and delivery status"),
                     ("Settings", "Configure store path and branding"),
-                ],
-            },
-            Self::Forum => OverviewCopy {
-                title: "Forum",
-                subtitle: "Community discussion with categories, moderation, and rich posts.",
-                about: "Forums give your players a place to share builds, suggestions, and announcements with markdown, reactions, mentions, and staff moderation tools.",
-                accent: "#5b9dff",
-                domain: "www.example.com/forum",
-                status: "Live",
-                stats: [
-                    ("Threads", "1,204"),
-                    ("Posts today", "52"),
-                    ("Members", "3,481"),
-                    ("Open reports", "3"),
-                ],
-                highlights: [
-                    "Categories, posts, and comments",
-                    "Markdown, reactions, and mentions",
-                    "Attachments, tags, pinning, and locking",
-                    "Reports and moderation workflows",
-                    "Permission-aware category visibility",
-                ],
-                activity: [
-                    ("Season 4 spawn redesign", "Survival · 24 replies", "2m"),
-                    ("Rank perks feedback", "Suggestions · 11 replies", "18m"),
-                    ("Spam report opened", "Suggestions · Review queue", "New"),
-                    ("Patch notes 1.21.4", "Announcements · Pinned", "1h"),
-                ],
-                next_steps: [
-                    ("Categories", "Organize boards and visibility"),
-                    ("Posts", "Browse recent threads"),
-                    ("Moderation", "Clear reports and bans"),
                 ],
             },
             Self::Support => OverviewCopy {
@@ -330,11 +295,6 @@ impl FeatureOverviewKind {
 #[component]
 pub fn StoreOverview() -> Element {
     rsx! { FeatureOverview { feature: FeatureOverviewKind::Store } }
-}
-
-#[component]
-pub fn ForumOverview() -> Element {
-    rsx! { FeatureOverview { feature: FeatureOverviewKind::Forum } }
 }
 
 #[component]

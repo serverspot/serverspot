@@ -38,7 +38,9 @@ pub fn BrandMark(#[props(default = "")] class: &'static str) -> Element {
 pub fn favicon_svg(accent: &'static str) -> &'static str {
     static CACHE: OnceLock<Mutex<HashMap<&'static str, &'static str>>> = OnceLock::new();
     let cache = CACHE.get_or_init(|| Mutex::new(HashMap::with_capacity(12)));
-    let mut map = cache.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut map = cache
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     if let Some(svg) = map.get(accent).copied() {
         return svg;
     }

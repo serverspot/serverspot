@@ -3,9 +3,9 @@ use dioxus::prelude::*;
 use crate::components::brand::{favicon_svg, BrandMark};
 use crate::components::page::{PageTransition, PoweredByFooter};
 use crate::components::ui::*;
-use crate::gravatar::CurrentUser;
 use crate::nav::{crumb_for, is_theme_editor, section_for, Section};
 use crate::router::Route;
+use crate::user::CurrentUser;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum SheetAnim {
@@ -471,11 +471,7 @@ fn rail_icon_data(section: Section) -> HugeIconData {
 }
 
 #[component]
-fn RailNav(
-    to: Route,
-    active: bool,
-    icon: HugeIconData,
-) -> Element {
+fn RailNav(to: Route, active: bool, icon: HugeIconData) -> Element {
     let navigator = use_navigator();
     let dest = to;
     let class = if active {
@@ -498,11 +494,7 @@ fn RailNav(
 }
 
 #[component]
-fn SideNav(
-    to: Route,
-    label: &'static str,
-    active: bool,
-) -> Element {
+fn SideNav(to: Route, label: &'static str, active: bool) -> Element {
     let navigator = use_navigator();
     let dest = to;
     let class = if active {
@@ -526,11 +518,7 @@ fn SideNav(
 }
 
 #[component]
-fn SubChip(
-    to: Route,
-    label: &'static str,
-    active: bool,
-) -> Element {
+fn SubChip(to: Route, label: &'static str, active: bool) -> Element {
     let navigator = use_navigator();
     let dest = to;
     let class = if active {

@@ -68,7 +68,11 @@ pub fn PageHeader(
 }
 
 #[component]
-pub fn StatPill(label: &'static str, value: &'static str, accent: &'static str) -> Element {
+pub fn StatPill(
+    #[props(into)] label: String,
+    #[props(into)] value: String,
+    accent: &'static str,
+) -> Element {
     rsx! {
         div {
             class: "rounded-squircle-lg border border-border-subtle bg-surface/30 px-3 py-2.5 sm:px-4 sm:py-3",
@@ -98,9 +102,9 @@ pub fn DataPanel(title: &'static str, children: Element) -> Element {
 
 #[component]
 pub fn RowItem(
-    title: &'static str,
-    meta: &'static str,
-    #[props(default)] trailing: &'static str,
+    #[props(into)] title: String,
+    #[props(into)] meta: String,
+    #[props(default, into)] trailing: String,
     #[props(default, into)] email: String,
 ) -> Element {
     rsx! {
@@ -112,7 +116,7 @@ pub fn RowItem(
                     Avatar {
                         email,
                         size: 32,
-                        alt: title,
+                        alt: title.clone(),
                     }
                 }
                 div {
@@ -173,7 +177,10 @@ pub fn FeatureBullets(children: Element) -> Element {
 }
 
 #[component]
-pub fn StatusChip(label: &'static str, #[props(default = "#87d1fe")] tone: &'static str) -> Element {
+pub fn StatusChip(
+    label: &'static str,
+    #[props(default = "#87d1fe")] tone: &'static str,
+) -> Element {
     rsx! {
         span {
             class: "inline-flex items-center rounded-squircle-sm px-2 py-0.5 text-xs font-medium",

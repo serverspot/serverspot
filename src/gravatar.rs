@@ -1,21 +1,5 @@
 use sha2::{Digest, Sha256};
 
-const PLACEHOLDER_USER_EMAIL: &str = "admin@serverspot.app";
-const PLACEHOLDER_USER_NAME: &str = "Charlie Admin";
-
-#[derive(Clone, PartialEq)]
-pub struct CurrentUser {
-    pub email: String,
-    pub name: String,
-}
-
-pub fn placeholder_current_user() -> CurrentUser {
-    CurrentUser {
-        email: PLACEHOLDER_USER_EMAIL.to_string(),
-        name: PLACEHOLDER_USER_NAME.to_string(),
-    }
-}
-
 pub fn gravatar_url(email: &str, size: u32) -> String {
     let normalized = email.trim().to_ascii_lowercase();
     let digest = Sha256::digest(normalized.as_bytes());
@@ -24,12 +8,7 @@ pub fn gravatar_url(email: &str, size: u32) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{gravatar_url, placeholder_current_user};
-
-    #[test]
-    fn uses_placeholder_email_value_for_default_state() {
-        assert_eq!(placeholder_current_user().email, "admin@serverspot.app");
-    }
+    use super::gravatar_url;
 
     #[test]
     fn hashes_email_for_url() {

@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap");
 
 @theme {
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
@@ -109,6 +108,132 @@
     font-size: 0.875rem;
     line-height: 1.5;
     color: var(--color-text-muted);
+  }
+
+  .forum-live-dot {
+    animation: forum-pulse 1.8s ease-in-out infinite;
+  }
+
+  .forum-spotlight {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 0.75rem 1.5rem;
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  .forum-board-card {
+    overflow: hidden;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-squircle-lg);
+    background: color-mix(in srgb, var(--color-surface) 22%, transparent);
+  }
+
+  .forum-board-card .module-index-row {
+    border-bottom: none;
+  }
+
+  .forum-board-card:hover {
+    background: color-mix(in srgb, var(--color-surface) 38%, transparent);
+  }
+
+  .forum-board-banner {
+    height: 4.5rem;
+    overflow: hidden;
+    border-bottom: 1px solid var(--color-border-subtle);
+    background: var(--color-surface-2);
+  }
+
+  @media (min-width: 640px) {
+    .forum-board-banner {
+      height: 5.5rem;
+    }
+  }
+
+  .forum-thread {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 1.15rem 0.75rem;
+    border-bottom: 1px solid var(--color-border-subtle);
+    transition: background-color 0.18s ease;
+  }
+
+  .forum-thread:hover {
+    background: color-mix(in srgb, #5b9dff 7%, transparent);
+  }
+
+  .forum-report {
+    --report-tone: #f87171;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    padding: 1rem 1rem 1rem 0.9rem;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-squircle-lg);
+    border-left: 3px solid var(--report-tone);
+    background: color-mix(in srgb, var(--color-surface) 22%, transparent);
+  }
+
+  .ui-modal-root {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+  }
+
+  @media (min-width: 640px) {
+    .ui-modal-root {
+      padding: 1.25rem;
+    }
+  }
+
+  .ui-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    cursor: pointer;
+    background: rgba(12, 12, 18, 0.68);
+    animation: ui-modal-backdrop-in 0.22s ease both;
+  }
+
+  .ui-modal-panel {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: min(100%, 32rem);
+    max-height: min(92vh, 42rem);
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-squircle-lg);
+    background: var(--color-bg-elevated);
+    box-shadow: 0 28px 72px rgba(0, 0, 0, 0.5);
+    animation: ui-modal-panel-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .ui-modal-panel-lg {
+    width: min(100%, calc(100vw - 1.5rem));
+    height: min(100%, calc(100vh - 1.5rem));
+    max-height: calc(100vh - 1.5rem);
+  }
+
+  @media (min-width: 640px) {
+    .ui-modal-panel-lg {
+      width: min(100%, calc(100vw - 2.5rem));
+      height: min(100%, calc(100vh - 2.5rem));
+      max-height: calc(100vh - 2.5rem);
+    }
+  }
+
+  .ui-modal-panel > :nth-child(2) {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
   }
 
   .scrollbar-none {
@@ -233,6 +358,38 @@
   }
 }
 
+@keyframes forum-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.82);
+  }
+}
+
+@keyframes ui-modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ui-modal-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes nav-sheet-backdrop-in {
   from {
     opacity: 0;
@@ -326,7 +483,11 @@
   .nav-sheet-panel-exit,
   .side-panel,
   .shell-main-pad,
-  .side-expand-btn {
+  .side-expand-btn,
+  .forum-live-dot,
+  .forum-thread,
+  .ui-modal-backdrop,
+  .ui-modal-panel {
     animation: none !important;
     transition: none !important;
   }
@@ -468,6 +629,25 @@
   }
 
   .ui-btn-primary:hover:not(:disabled) {
+    filter: brightness(1.06);
+  }
+
+  .ui-btn-danger {
+    color: #fff;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.22) 0%,
+        rgba(255, 255, 255, 0) 42%,
+        rgba(0, 0, 0, 0.22) 100%
+      ),
+      #e5484d;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.16);
+  }
+
+  .ui-btn-danger:hover:not(:disabled) {
     filter: brightness(1.06);
   }
 

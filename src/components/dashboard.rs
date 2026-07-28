@@ -21,7 +21,7 @@ const MODULES: &[FeatureModule] = &[
     },
     FeatureModule {
         title: "Forum",
-        blurb: "Categories, posts, reactions, and moderation tools for your community.",
+        blurb: "Boards, posts, reactions, and moderation tools for your community.",
         accent: "#5b9dff",
         route: Route::ForumOverview {},
     },

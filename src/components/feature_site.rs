@@ -6,7 +6,6 @@ use crate::components::ui::*;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum FeatureSite {
     Store,
-    Forum,
     Support,
     Content,
     Players,
@@ -20,7 +19,6 @@ impl FeatureSite {
     fn label(self) -> &'static str {
         match self {
             Self::Store => "Store",
-            Self::Forum => "Forum",
             Self::Support => "Support",
             Self::Content => "Blog",
             Self::Players => "Players",
@@ -34,7 +32,6 @@ impl FeatureSite {
     fn subtitle(self) -> &'static str {
         match self {
             Self::Store => "Path, branding, and navigation for the storefront on your website.",
-            Self::Forum => "Path and navigation settings for the community forum.",
             Self::Support => "Path and portal settings for tickets and the help centre.",
             Self::Content => "Path and homepage settings for the blog, news, and pages.",
             Self::Players => "Path and profile hub settings for player pages.",
@@ -51,11 +48,6 @@ impl FeatureSite {
                 base_path: "/store",
                 page_title: "Store",
                 primary_nav: "Shop, Ranks, Crates, Gifts",
-            },
-            Self::Forum => FeatureDefaults {
-                base_path: "/forum",
-                page_title: "Forums",
-                primary_nav: "Categories, Unread, Members",
             },
             Self::Support => FeatureDefaults {
                 base_path: "/support",
@@ -106,11 +98,6 @@ struct FeatureDefaults {
 #[component]
 pub fn StoreSiteSettings() -> Element {
     rsx! { FeatureSiteSettings { feature: FeatureSite::Store } }
-}
-
-#[component]
-pub fn ForumSiteSettings() -> Element {
-    rsx! { FeatureSiteSettings { feature: FeatureSite::Forum } }
 }
 
 #[component]
@@ -182,7 +169,6 @@ fn FeatureSiteSettings(feature: FeatureSite) -> Element {
                     label: "Full URL",
                     value: match feature {
                         FeatureSite::Store => "www.example.com/store",
-                        FeatureSite::Forum => "www.example.com/forum",
                         FeatureSite::Support => "www.example.com/support",
                         FeatureSite::Content => "www.example.com/news",
                         FeatureSite::Players => "www.example.com/players",
@@ -201,11 +187,6 @@ fn FeatureSiteSettings(feature: FeatureSite) -> Element {
                 title: "Branding & navigation",
                 SettingsField { label: "Page title", value: defaults.page_title }
                 SettingsField { label: "Section navigation", value: defaults.primary_nav }
-                SettingRow {
-                    title: "Custom branding",
-                    description: "Override logo and accent colors for this feature’s pages.",
-                    enabled: true,
-                }
                 SettingRow {
                     title: "Custom navigation",
                     description: "Show a feature menu instead of the default website nav.",
