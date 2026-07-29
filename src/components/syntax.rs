@@ -10,7 +10,6 @@ pub enum TokenKind {
     Attribute,
     Punctuation,
 }
-
 impl TokenKind {
     pub const fn class(self) -> &'static str {
         match self {
@@ -26,14 +25,12 @@ impl TokenKind {
         }
     }
 }
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Span {
     pub kind: TokenKind,
     pub start: u32,
     pub end: u32,
 }
-
 pub fn highlight_spans(source: &str, language: &str) -> Vec<Span> {
     match language {
         "HTML" | "SVG" => highlight_html(source),
@@ -43,19 +40,22 @@ pub fn highlight_spans(source: &str, language: &str) -> Vec<Span> {
             if source.is_empty() {
                 Vec::new()
             } else {
-                vec![Span {
-                    kind: TokenKind::Plain,
-                    start: 0,
-                    end: source.len() as u32,
-                }]
+                vec![
+                    Span {
+                        kind: TokenKind::Plain,
+                        start: 0,
+                        end: source.len() as u32,
+                    },
+                ]
             }
         }
     }
 }
-
 pub fn highlighted_html(source: &str, language: &str) -> String {
     let spans = highlight_spans(source, language);
-    let mut out = String::with_capacity(source.len().saturating_add(spans.len().saturating_mul(28)));
+    let mut out = String::with_capacity(
+        source.len().saturating_add(spans.len().saturating_mul(28)),
+    );
     for span in spans {
         let start = span.start as usize;
         let end = (span.end as usize).min(source.len());
@@ -70,7 +70,6 @@ pub fn highlighted_html(source: &str, language: &str) -> String {
     }
     out
 }
-
 fn push_escaped(out: &mut String, text: &str) {
     for ch in text.chars() {
         match ch {
@@ -82,7 +81,6 @@ fn push_escaped(out: &mut String, text: &str) {
         }
     }
 }
-
 fn push_span(out: &mut Vec<Span>, kind: TokenKind, start: usize, end: usize) {
     if start < end {
         out.push(Span {
@@ -92,21 +90,18 @@ fn push_span(out: &mut Vec<Span>, kind: TokenKind, start: usize, end: usize) {
         });
     }
 }
-
 fn highlight_css(source: &str) -> Vec<Span> {
     let bytes = source.as_bytes();
     let mut out = Vec::with_capacity(bytes.len() / 8 + 8);
     let mut i = 0;
     let mut plain = 0usize;
     let mut in_block = false;
-
     let flush_plain = |out: &mut Vec<Span>, plain: &mut usize, i: usize| {
         if *plain < i {
             push_span(out, TokenKind::Plain, *plain, i);
             *plain = i;
         }
     };
-
     while i < bytes.len() {
         if bytes[i] == b'/' && bytes.get(i + 1) == Some(&b'*') {
             flush_plain(&mut out, &mut plain, i);
@@ -120,7 +115,6 @@ fn highlight_css(source: &str) -> Vec<Span> {
             plain = i;
             continue;
         }
-
         if bytes[i] == b'"' || bytes[i] == b'\'' {
             flush_plain(&mut out, &mut plain, i);
             let quote = bytes[i];
@@ -141,21 +135,22 @@ fn highlight_css(source: &str) -> Vec<Span> {
             plain = i;
             continue;
         }
-
         if bytes[i] == b'@' {
             flush_plain(&mut out, &mut plain, i);
             let start = i;
             i += 1;
-            while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-') {
+            while i < bytes.len()
+                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-')
+            {
                 i += 1;
             }
             push_span(&mut out, TokenKind::Keyword, start, i);
             plain = i;
             continue;
         }
-
         if bytes[i].is_ascii_digit()
-            || (bytes[i] == b'#' && bytes.get(i + 1).is_some_and(|b| b.is_ascii_hexdigit()))
+            || (bytes[i] == b'#'
+                && bytes.get(i + 1).is_some_and(|b| b.is_ascii_hexdigit()))
         {
             flush_plain(&mut out, &mut plain, i);
             let start = i;
@@ -166,7 +161,8 @@ fn highlight_css(source: &str) -> Vec<Span> {
                 }
             } else {
                 while i < bytes.len()
-                    && (bytes[i].is_ascii_digit() || bytes[i] == b'.' || bytes[i] == b'%')
+                    && (bytes[i].is_ascii_digit() || bytes[i] == b'.'
+                        || bytes[i] == b'%')
                 {
                     i += 1;
                 }
@@ -175,12 +171,12 @@ fn highlight_css(source: &str) -> Vec<Span> {
             plain = i;
             continue;
         }
-
         if bytes[i].is_ascii_alphabetic() || bytes[i] == b'_' || bytes[i] == b'-' {
             let start = i;
             i += 1;
             while i < bytes.len()
-                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-' || bytes[i] == b'_')
+                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-'
+                    || bytes[i] == b'_')
             {
                 i += 1;
             }
@@ -193,7 +189,8 @@ fn highlight_css(source: &str) -> Vec<Span> {
                 Some(TokenKind::Property)
             } else if matches!(
                 word,
-                "important" | "from" | "to" | "and" | "or" | "not" | "only" | "screen" | "print"
+                "important" | "from" | "to" | "and" | "or" | "not" | "only" | "screen"
+                | "print"
             ) {
                 Some(TokenKind::Keyword)
             } else {
@@ -206,7 +203,6 @@ fn highlight_css(source: &str) -> Vec<Span> {
             }
             continue;
         }
-
         if bytes[i] == b'{' {
             flush_plain(&mut out, &mut plain, i);
             in_block = true;
@@ -230,27 +226,22 @@ fn highlight_css(source: &str) -> Vec<Span> {
             plain = i;
             continue;
         }
-
         i += source[i..].chars().next().map(|c| c.len_utf8()).unwrap_or(1);
     }
-
     flush_plain(&mut out, &mut plain, i);
     out
 }
-
 fn highlight_html(source: &str) -> Vec<Span> {
     let bytes = source.as_bytes();
     let mut out = Vec::with_capacity(bytes.len() / 8 + 8);
     let mut i = 0;
     let mut plain = 0usize;
-
     let flush_plain = |out: &mut Vec<Span>, plain: &mut usize, i: usize| {
         if *plain < i {
             push_span(out, TokenKind::Plain, *plain, i);
             *plain = i;
         }
     };
-
     while i < bytes.len() {
         if bytes[i..].starts_with(b"<!--") {
             flush_plain(&mut out, &mut plain, i);
@@ -264,24 +255,19 @@ fn highlight_html(source: &str) -> Vec<Span> {
             plain = i;
             continue;
         }
-
         if bytes[i] == b'<' {
             flush_plain(&mut out, &mut plain, i);
-            let punct_end = if bytes.get(i + 1) == Some(&b'/') {
-                i + 2
-            } else {
-                i + 1
-            };
+            let punct_end = if bytes.get(i + 1) == Some(&b'/') { i + 2 } else { i + 1 };
             push_span(&mut out, TokenKind::Punctuation, i, punct_end);
             i = punct_end;
             let tag_start = i;
             while i < bytes.len()
-                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-' || bytes[i] == b':')
+                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-'
+                    || bytes[i] == b':')
             {
                 i += 1;
             }
             push_span(&mut out, TokenKind::Tag, tag_start, i);
-
             while i < bytes.len() && bytes[i] != b'>' {
                 if bytes[i].is_ascii_whitespace() {
                     let ws = i;
@@ -291,7 +277,6 @@ fn highlight_html(source: &str) -> Vec<Span> {
                     push_span(&mut out, TokenKind::Plain, ws, i);
                     continue;
                 }
-
                 if bytes[i] == b'"' || bytes[i] == b'\'' {
                     let quote = bytes[i];
                     let s = i;
@@ -305,25 +290,19 @@ fn highlight_html(source: &str) -> Vec<Span> {
                     push_span(&mut out, TokenKind::String, s, i);
                     continue;
                 }
-
                 if bytes[i] == b'=' || bytes[i] == b'/' {
                     push_span(&mut out, TokenKind::Punctuation, i, i + 1);
                     i += 1;
                     continue;
                 }
-
                 let attr_start = i;
-                while i < bytes.len()
-                    && !bytes[i].is_ascii_whitespace()
-                    && bytes[i] != b'='
-                    && bytes[i] != b'>'
-                    && bytes[i] != b'/'
+                while i < bytes.len() && !bytes[i].is_ascii_whitespace()
+                    && bytes[i] != b'=' && bytes[i] != b'>' && bytes[i] != b'/'
                 {
                     i += 1;
                 }
                 push_span(&mut out, TokenKind::Attribute, attr_start, i);
             }
-
             if i < bytes.len() && bytes[i] == b'>' {
                 push_span(&mut out, TokenKind::Punctuation, i, i + 1);
                 i += 1;
@@ -331,33 +310,47 @@ fn highlight_html(source: &str) -> Vec<Span> {
             plain = i;
             continue;
         }
-
         i += source[i..].chars().next().map(|c| c.len_utf8()).unwrap_or(1);
     }
-
     flush_plain(&mut out, &mut plain, i);
     out
 }
-
 fn highlight_js_like(source: &str) -> Vec<Span> {
     const KEYWORDS: &[&str] = &[
-        "const", "let", "var", "function", "return", "if", "else", "for", "while", "class",
-        "import", "export", "from", "async", "await", "new", "this", "true", "false", "null",
-        "undefined", "typeof", "instanceof",
+        "const",
+        "let",
+        "var",
+        "function",
+        "return",
+        "if",
+        "else",
+        "for",
+        "while",
+        "class",
+        "import",
+        "export",
+        "from",
+        "async",
+        "await",
+        "new",
+        "this",
+        "true",
+        "false",
+        "null",
+        "undefined",
+        "typeof",
+        "instanceof",
     ];
-
     let bytes = source.as_bytes();
     let mut out = Vec::with_capacity(bytes.len() / 8 + 8);
     let mut i = 0;
     let mut plain = 0usize;
-
     let flush_plain = |out: &mut Vec<Span>, plain: &mut usize, i: usize| {
         if *plain < i {
             push_span(out, TokenKind::Plain, *plain, i);
             *plain = i;
         }
     };
-
     while i < bytes.len() {
         if bytes[i] == b'/' && bytes.get(i + 1) == Some(&b'/') {
             flush_plain(&mut out, &mut plain, i);
@@ -415,7 +408,8 @@ fn highlight_js_like(source: &str) -> Vec<Span> {
             let start = i;
             i += 1;
             while i < bytes.len()
-                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_' || bytes[i] == b'$')
+                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_'
+                    || bytes[i] == b'$')
             {
                 i += 1;
             }
@@ -437,10 +431,8 @@ fn highlight_js_like(source: &str) -> Vec<Span> {
             plain = i;
             continue;
         }
-
         i += source[i..].chars().next().map(|c| c.len_utf8()).unwrap_or(1);
     }
-
     flush_plain(&mut out, &mut plain, i);
     out
 }

@@ -1,12 +1,9 @@
 use dioxus::prelude::*;
-
 use crate::components::page::{DataPanel, PageHeader, RowItem, SettingRow};
 use crate::components::ui::*;
 use crate::gravatar::CurrentUser;
 use crate::router::Route;
-
 const BIO: &str = "Owner at ServerSpot. Building tools for game server communities.";
-
 #[component]
 pub fn Account() -> Element {
     let navigator = use_navigator();
@@ -14,7 +11,6 @@ pub fn Account() -> Element {
     let user = current_user.read();
     let user_email = user.email.clone();
     let user_name = user.name.clone();
-
     rsx! {
         PageHeader {
             title: "Account",
@@ -32,54 +28,41 @@ pub fn Account() -> Element {
                 }
             },
         }
-
-        section {
-            class: "mb-6 flex flex-col gap-4 rounded-squircle-lg border border-border-subtle bg-surface/20 p-4 sm:mb-8 sm:flex-row sm:items-center sm:gap-5 sm:p-5",
+        section { class: "mb-6 flex flex-col gap-4 rounded-squircle-lg border border-border-subtle bg-surface/20 p-4 sm:mb-8 sm:flex-row sm:items-center sm:gap-5 sm:p-5",
             Avatar {
                 email: user_email.clone(),
                 size: 72,
                 alt: user_name.clone(),
                 class: "ring-2 ring-border-subtle",
             }
-            div {
-                class: "min-w-0 flex-1",
+            div { class: "min-w-0 flex-1",
                 p { class: "text-lg font-semibold tracking-tight", "{user_name}" }
                 p { class: "mt-0.5 text-sm text-text-muted", "{user_email}" }
                 div { class: "mt-3 flex flex-wrap gap-2",
-                    span {
-                        class: "inline-flex items-center rounded-squircle-sm bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent",
+                    span { class: "inline-flex items-center rounded-squircle-sm bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent",
                         "Owner"
                     }
-                    span {
-                        class: "inline-flex items-center rounded-squircle-sm bg-surface-2 px-2 py-0.5 text-xs font-medium text-text-secondary",
+                    span { class: "inline-flex items-center rounded-squircle-sm bg-surface-2 px-2 py-0.5 text-xs font-medium text-text-secondary",
                         "2FA on"
                     }
                 }
             }
         }
-
-        div {
-            class: "grid gap-4 lg:grid-cols-2",
-            DataPanel {
-                title: "Profile",
+        div { class: "grid gap-4 lg:grid-cols-2",
+            DataPanel { title: "Profile",
                 div { class: "flex flex-col gap-4",
-                    Field {
-                        label: "Display name",
+                    Field { label: "Display name",
                         StaticInput { value: user_name.clone() }
                     }
-                    Field {
-                        label: "Email",
+                    Field { label: "Email",
                         StaticInput { value: user_email.clone() }
                     }
-                    Field {
-                        label: "Bio",
+                    Field { label: "Bio",
                         StaticInput { value: BIO }
                     }
                 }
             }
-
-            DataPanel {
-                title: "Preferences",
+            DataPanel { title: "Preferences",
                 SettingRow {
                     title: "Product emails",
                     description: "Updates about new features and platform changes.",
@@ -97,11 +80,8 @@ pub fn Account() -> Element {
                 }
             }
         }
-
-        div {
-            class: "mt-4 grid gap-4 lg:grid-cols-2",
-            DataPanel {
-                title: "Security",
+        div { class: "mt-4 grid gap-4 lg:grid-cols-2",
+            DataPanel { title: "Security",
                 SettingRow {
                     title: "Two-factor authentication",
                     description: "Authenticator app required for staff actions.",
@@ -125,9 +105,7 @@ pub fn Account() -> Element {
                     }
                 }
             }
-
-            DataPanel {
-                title: "Active sessions",
+            DataPanel { title: "Active sessions",
                 RowItem {
                     title: "Chrome · Windows",
                     meta: "London, UK · This device",
@@ -147,12 +125,10 @@ pub fn Account() -> Element {
         }
     }
 }
-
 #[component]
 fn Field(label: &'static str, children: Element) -> Element {
     rsx! {
-        div {
-            class: "flex flex-col gap-1.5",
+        div { class: "flex flex-col gap-1.5",
             label { class: "text-xs font-medium text-text-muted", "{label}" }
             {children}
         }
