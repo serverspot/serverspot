@@ -1,0 +1,50 @@
+name: Post-merge Code Cleanup
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+      - run: cargo binstall -y dioxus-cli
+      - name: Format Code
+        run: dx fmt --all-code
+      - name: Commit formatting changes
+        uses: EndBug/add-and-commit@v10
+        with:
+          message: Auto-format Code
+          default_author: github-actions[bot]
+          committer_name: Github Actions
+          committer_email: 41898282+github-actions[bot]@users.noreply.github.com
+
+  clippy:
+    runs-on: ubuntu-latest
+    needs: format
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Solve Trivial Clippy Warnings
+        run: cargo clippy --fix
+      - name: Commit formatting changes
+        uses: EndBug/add-and-commit@v10
+        with:
+          message: Auto-solve Trivial Clippy Warnings
+          default_author: github-actions[bot]
+          committer_name: Github Actions
+          committer_email: 41898282+github-actions[bot]@users.noreply.github.com
+
+
