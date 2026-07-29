@@ -33,9 +33,6 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Run web unit tests
-        run: cargo test
-      - name: Run server unit tests
-        run: cargo test --no-default-features --features server
+      - run: cargo test --features web,server
   
   # TODO fmt with dioxus
