@@ -16,6 +16,7 @@ jobs:
         with:
           add-job-id-key: "false"
           add-rust-environment-hash-key: "false"
+          lookup-only: "true" # test should have more detailed cache from actually building
       - run: cargo check --features web,server
   
   test:
