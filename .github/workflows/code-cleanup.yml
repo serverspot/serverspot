@@ -39,7 +39,7 @@ jobs:
           ref: main
           fetch-depth: 0
       - name: Solve Trivial Clippy Warnings
-        run: cargo clippy --fix
+        run: cargo clippy --fix --allow-dirty --allow-staged --all-targets --features server,web
       - name: Commit formatting changes
         uses: EndBug/add-and-commit@v10
         with:
