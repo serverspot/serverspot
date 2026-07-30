@@ -5,6 +5,13 @@ pub const DEFAULT_COLOR_PRESETS: &[&str] = &[
     "#69bdf2", "#5b9dff", "#3ecf8e", "#5eead4", "#f5c14a", "#f0a35e", "#f071a5", "#fb7185",
 ];
 
+fn default_color_presets() -> Vec<String> {
+    DEFAULT_COLOR_PRESETS
+        .iter()
+        .map(|preset| (*preset).to_string())
+        .collect()
+}
+
 fn normalize_hex(raw: &str) -> String {
     let trimmed = raw.trim();
     if trimmed.is_empty() {
@@ -42,7 +49,7 @@ fn colors_match(a: &str, b: &str) -> bool {
 #[component]
 pub fn ColorPicker(
     mut value: Signal<String>,
-    #[props(default = DEFAULT_COLOR_PRESETS)] presets: &'static [&'static str],
+    #[props(default = default_color_presets())] presets: Vec<String>,
     #[props(default = true)] show_hex: bool,
 ) -> Element {
     let current = value();
@@ -54,10 +61,10 @@ pub fn ColorPicker(
             class: "space-y-2",
             div {
                 class: "flex flex-wrap items-center gap-2",
-                for preset in presets {
+                for preset in presets.iter().cloned() {
                     button {
                         r#type: "button",
-                        class: if colors_match(&current, preset) {
+                        class: if colors_match(&current, &preset) {
                             "h-8 w-8 shrink-0 cursor-pointer rounded-squircle-sm outline outline-2 outline-offset-2 outline-white/70"
                         } else {
                             "h-8 w-8 shrink-0 cursor-pointer rounded-squircle-sm outline outline-1 outline-offset-1 outline-white/10 hover:outline-white/30"
@@ -66,7 +73,7 @@ pub fn ColorPicker(
                         title: "{preset}",
                         "aria-label": "Select {preset}",
                         onclick: {
-                            let color = (*preset).to_string();
+                            let color = preset.clone();
                             move |_| value.set(color.clone())
                         },
                     }

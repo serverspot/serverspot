@@ -139,7 +139,6 @@ pub fn SettingRow(
     #[props(default)] enabled: bool,
 ) -> Element {
     let mut on = use_signal(|| enabled);
-    let active = on();
 
     rsx! {
         div {
@@ -151,7 +150,7 @@ pub fn SettingRow(
             }
             Button {
                 class: "self-start",
-                variant: if active {
+                variant: if on() {
                     ButtonVariant::Primary
                 } else {
                     ButtonVariant::Secondary
@@ -161,7 +160,7 @@ pub fn SettingRow(
                     let next = !*on.peek();
                     on.set(next);
                 },
-                if active { "On" } else { "Off" }
+                if on() { "On" } else { "Off" }
             }
         }
     }
@@ -189,8 +188,8 @@ pub fn FeatureBullets(children: Element) -> Element {
 
 #[component]
 pub fn StatusChip(
-    label: &'static str,
-    #[props(default = "#87d1fe")] tone: &'static str,
+    #[props(into)] label: String,
+    #[props(default = "#87d1fe".to_string(), into)] tone: String,
 ) -> Element {
     rsx! {
         span {

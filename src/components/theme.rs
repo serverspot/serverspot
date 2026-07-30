@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use dioxus::prelude::*;
 
 use crate::components::syntax::highlighted_html;
@@ -62,170 +60,70 @@ impl ThemeFeature {
         }
     }
 
-    fn files(self) -> &'static [ThemeFile] {
+    fn files(self) -> Vec<ThemeFile> {
         match self {
-            Self::Store => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: STORE_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "product-card.css",
-                    language: "CSS",
-                    content: STORE_CARD_CSS,
-                },
-                ThemeFile {
-                    path: "checkout.html",
-                    language: "HTML",
-                    content: STORE_CHECKOUT_HTML,
-                },
+            Self::Store => vec![
+                theme_file("theme.css", "CSS", STORE_THEME_CSS),
+                theme_file("product-card.css", "CSS", STORE_CARD_CSS),
+                theme_file("checkout.html", "HTML", STORE_CHECKOUT_HTML),
             ],
-            Self::Forum => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: FORUM_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "thread.html",
-                    language: "HTML",
-                    content: FORUM_THREAD_HTML,
-                },
-                ThemeFile {
-                    path: "category.css",
-                    language: "CSS",
-                    content: FORUM_CATEGORY_CSS,
-                },
+            Self::Forum => vec![
+                theme_file("theme.css", "CSS", FORUM_THEME_CSS),
+                theme_file("thread.html", "HTML", FORUM_THREAD_HTML),
+                theme_file("category.css", "CSS", FORUM_CATEGORY_CSS),
             ],
-            Self::Support => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: SUPPORT_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "ticket-portal.html",
-                    language: "HTML",
-                    content: SUPPORT_PORTAL_HTML,
-                },
-                ThemeFile {
-                    path: "reply.css",
-                    language: "CSS",
-                    content: SUPPORT_REPLY_CSS,
-                },
+            Self::Support => vec![
+                theme_file("theme.css", "CSS", SUPPORT_THEME_CSS),
+                theme_file("ticket-portal.html", "HTML", SUPPORT_PORTAL_HTML),
+                theme_file("reply.css", "CSS", SUPPORT_REPLY_CSS),
             ],
-            Self::Content => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: CONTENT_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "article.html",
-                    language: "HTML",
-                    content: CONTENT_ARTICLE_HTML,
-                },
-                ThemeFile {
-                    path: "page-hero.css",
-                    language: "CSS",
-                    content: CONTENT_HERO_CSS,
-                },
+            Self::Content => vec![
+                theme_file("theme.css", "CSS", CONTENT_THEME_CSS),
+                theme_file("article.html", "HTML", CONTENT_ARTICLE_HTML),
+                theme_file("page-hero.css", "CSS", CONTENT_HERO_CSS),
             ],
-            Self::Players => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: COMMUNITY_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "profile.html",
-                    language: "HTML",
-                    content: COMMUNITY_PROFILE_HTML,
-                },
-                ThemeFile {
-                    path: "stats.css",
-                    language: "CSS",
-                    content: PLAYERS_STATS_CSS,
-                },
+            Self::Players => vec![
+                theme_file("theme.css", "CSS", COMMUNITY_THEME_CSS),
+                theme_file("profile.html", "HTML", COMMUNITY_PROFILE_HTML),
+                theme_file("stats.css", "CSS", PLAYERS_STATS_CSS),
             ],
-            Self::Leaderboards => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: LEADERBOARDS_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "board.html",
-                    language: "HTML",
-                    content: LEADERBOARDS_BOARD_HTML,
-                },
-                ThemeFile {
-                    path: "rank-row.css",
-                    language: "CSS",
-                    content: LEADERBOARDS_ROW_CSS,
-                },
+            Self::Leaderboards => vec![
+                theme_file("theme.css", "CSS", LEADERBOARDS_THEME_CSS),
+                theme_file("board.html", "HTML", LEADERBOARDS_BOARD_HTML),
+                theme_file("rank-row.css", "CSS", LEADERBOARDS_ROW_CSS),
             ],
-            Self::Votes => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: VOTES_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "claim.html",
-                    language: "HTML",
-                    content: VOTES_CLAIM_HTML,
-                },
-                ThemeFile {
-                    path: "streak.css",
-                    language: "CSS",
-                    content: VOTES_STREAK_CSS,
-                },
+            Self::Votes => vec![
+                theme_file("theme.css", "CSS", VOTES_THEME_CSS),
+                theme_file("claim.html", "HTML", VOTES_CLAIM_HTML),
+                theme_file("streak.css", "CSS", VOTES_STREAK_CSS),
             ],
-            Self::Applications => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: APPLICATIONS_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "form.html",
-                    language: "HTML",
-                    content: APPLICATIONS_FORM_HTML,
-                },
-                ThemeFile {
-                    path: "application.css",
-                    language: "CSS",
-                    content: COMMUNITY_APP_CSS,
-                },
+            Self::Applications => vec![
+                theme_file("theme.css", "CSS", APPLICATIONS_THEME_CSS),
+                theme_file("form.html", "HTML", APPLICATIONS_FORM_HTML),
+                theme_file("application.css", "CSS", COMMUNITY_APP_CSS),
             ],
-            Self::Analytics => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: ANALYTICS_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "report.html",
-                    language: "HTML",
-                    content: ANALYTICS_REPORT_HTML,
-                },
-                ThemeFile {
-                    path: "charts.css",
-                    language: "CSS",
-                    content: ANALYTICS_CHARTS_CSS,
-                },
+            Self::Analytics => vec![
+                theme_file("theme.css", "CSS", ANALYTICS_THEME_CSS),
+                theme_file("report.html", "HTML", ANALYTICS_REPORT_HTML),
+                theme_file("charts.css", "CSS", ANALYTICS_CHARTS_CSS),
             ],
         }
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 struct ThemeFile {
-    path: &'static str,
-    language: &'static str,
-    content: &'static str,
+    path: String,
+    language: String,
+    content: String,
+}
+
+fn theme_file(path: &str, language: &str, content: &str) -> ThemeFile {
+    ThemeFile {
+        path: path.to_owned(),
+        language: language.to_owned(),
+        content: content.to_owned(),
+    }
 }
 
 #[component]
@@ -311,32 +209,18 @@ impl StatusMsg {
     }
 }
 
-enum FileBody {
-    Static(&'static str),
-    Owned(String),
-}
-
-impl FileBody {
-    fn as_str(&self) -> &str {
-        match self {
-            Self::Static(s) => s,
-            Self::Owned(s) => s,
-        }
-    }
-}
-
 struct EditorFile {
-    path: Cow<'static, str>,
-    language: &'static str,
-    body: FileBody,
+    path: String,
+    language: String,
+    body: String,
 }
 
 impl EditorFile {
     fn from_seed(file: ThemeFile) -> Self {
         Self {
-            path: Cow::Borrowed(file.path),
+            path: file.path,
             language: file.language,
-            body: FileBody::Static(file.content),
+            body: file.content,
         }
     }
 
@@ -345,12 +229,12 @@ impl EditorFile {
     }
 
     fn name(&self) -> &str {
-        self.path.rsplit('/').next().unwrap_or(self.path.as_ref())
+        self.path.rsplit('/').next().unwrap_or(self.path.as_str())
     }
 }
 
 struct FolderEntry {
-    name: Cow<'static, str>,
+    name: String,
     open: bool,
 }
 
@@ -364,8 +248,8 @@ struct ThemeEditor {
 }
 
 impl ThemeEditor {
-    fn new(seed: &'static [ThemeFile]) -> Self {
-        let files: Vec<EditorFile> = seed.iter().copied().map(EditorFile::from_seed).collect();
+    fn new(seed: Vec<ThemeFile>) -> Self {
+        let files: Vec<EditorFile> = seed.into_iter().map(EditorFile::from_seed).collect();
         let tabs = if files.is_empty() {
             Vec::new()
         } else {
@@ -375,11 +259,11 @@ impl ThemeEditor {
             files,
             folders: vec![
                 FolderEntry {
-                    name: Cow::Borrowed("assets"),
+                    name: String::from("assets"),
                     open: true,
                 },
                 FolderEntry {
-                    name: Cow::Borrowed("partials"),
+                    name: String::from("partials"),
                     open: true,
                 },
             ],
@@ -412,7 +296,7 @@ impl ThemeEditor {
             return;
         }
         self.folders.push(FolderEntry {
-            name: Cow::Owned(String::from(name)),
+            name: String::from(name),
             open,
         });
         self.folders.sort_by(|a, b| a.name.cmp(&b.name));
@@ -469,9 +353,9 @@ impl ThemeEditor {
                 content.push_str(path);
                 content.push_str(" */\n");
                 self.files.push(EditorFile {
-                    path: Cow::Owned(String::from(path)),
+                    path: String::from(path),
                     language,
-                    body: FileBody::Owned(content),
+                    body: content,
                 });
                 self.ensure_tab(index);
                 StatusMsg::CreatedFile
@@ -488,30 +372,30 @@ impl ThemeEditor {
         let mut path = String::from("assets/upload-");
         push_u16(&mut path, index);
         self.files.push(EditorFile {
-            path: Cow::Owned(path),
-            language: "FILE",
-            body: FileBody::Owned(String::from("/* Mock upload */\n")),
+            path,
+            language: String::from("FILE"),
+            body: String::from("/* Mock upload */\n"),
         });
         self.ensure_tab(index);
     }
 
     fn commit_active_body(&mut self, value: String) {
         if let Some(file) = self.files.get_mut(self.active as usize) {
-            file.body = FileBody::Owned(value);
+            file.body = value;
         }
     }
 
     fn active_body(&self) -> String {
         self.files
             .get(self.active as usize)
-            .map(|file| String::from(file.body.as_str()))
+            .map(|file| file.body.clone())
             .unwrap_or_default()
     }
 
-    fn active_language(&self) -> Option<&'static str> {
+    fn active_language(&self) -> Option<String> {
         self.files
             .get(self.active as usize)
-            .map(|file| file.language)
+            .map(|file| file.language.clone())
     }
 }
 
@@ -533,8 +417,8 @@ fn push_u16(buf: &mut String, mut value: u16) {
     }
 }
 
-fn language_from_path(path: &str) -> &'static str {
-    match path.rsplit('.').next().unwrap_or("") {
+fn language_from_path(path: &str) -> String {
+    let language = match path.rsplit('.').next().unwrap_or("") {
         "html" | "htm" => "HTML",
         "css" => "CSS",
         "js" | "mjs" => "JS",
@@ -545,7 +429,8 @@ fn language_from_path(path: &str) -> &'static str {
         "woff" | "woff2" | "ttf" | "otf" => "FONT",
         "png" | "jpg" | "jpeg" | "webp" | "gif" => "IMG",
         _ => "FILE",
-    }
+    };
+    String::from(language)
 }
 
 #[component]
@@ -761,8 +646,8 @@ fn ThemeStatusBar(editor: Signal<ThemeEditor>, status: StatusMsg) -> Element {
     let (path, language) = {
         let state = editor.read();
         match state.files.get(state.active as usize) {
-            Some(file) => (file.path.clone(), file.language),
-            None => (Cow::Borrowed(""), ""),
+            Some(file) => (file.path.clone(), file.language.clone()),
+            None => (String::new(), String::new()),
         }
     };
 
@@ -780,12 +665,12 @@ fn ThemeStatusBar(editor: Signal<ThemeEditor>, status: StatusMsg) -> Element {
 
 #[component]
 fn ThemeCodePane(
-    language: &'static str,
+    #[props(into)] language: String,
     mut draft: Signal<String>,
     mut dirty: Signal<bool>,
     mut status: Signal<StatusMsg>,
 ) -> Element {
-    let html = use_memo(move || highlighted_html(draft.read().as_str(), language));
+    let html = use_memo(move || highlighted_html(draft.read().as_str(), language.as_str()));
 
     rsx! {
         div {
@@ -835,8 +720,8 @@ fn ThemeFileRow(
         let language = state
             .files
             .get(index as usize)
-            .map(|file| file.language)
-            .unwrap_or("FILE");
+            .map(|file| file.language.clone())
+            .unwrap_or_else(|| String::from("FILE"));
         (state.active, language)
     };
     let name = editor
@@ -891,7 +776,7 @@ fn ThemeFolderBlock(
         .folders
         .get(folder_i)
         .map(|folder| folder.name.clone())
-        .unwrap_or(Cow::Borrowed(""));
+        .unwrap_or_default();
 
     rsx! {
         button {
@@ -903,7 +788,7 @@ fn ThemeFolderBlock(
         if is_open {
             for index in 0..file_count {
                 if editor.read().files.get(index as usize).is_some_and(|file| {
-                    file.parent() == Some(name.as_ref())
+                    file.parent() == Some(name.as_str())
                 }) {
                     ThemeFileRow {
                         editor,
