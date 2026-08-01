@@ -6,6 +6,7 @@ use crate::components::ui::*;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum FeatureOverviewKind {
     Store,
+    Forum,
     Support,
     Content,
     Players,

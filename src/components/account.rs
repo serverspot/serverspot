@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 use crate::components::page::{DataPanel, PageHeader, RowItem, SettingRow};
 use crate::components::ui::*;
 use crate::router::Route;
+use crate::user::CurrentUser;
 const BIO: &str = "Owner at ServerSpot. Building tools for game server communities.";
 #[component]
 pub fn Account() -> Element {

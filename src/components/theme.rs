@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use dioxus::prelude::*;
 use crate::components::syntax::highlighted_html;
 use crate::components::ui::*;
@@ -233,17 +232,9 @@ impl ThemeFeature {
 }
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct ThemeFile {
-    path: String,
-    language: String,
-    content: String,
-}
-
-fn theme_file(path: &str, language: &str, content: &str) -> ThemeFile {
-    ThemeFile {
-        path: path.to_owned(),
-        language: language.to_owned(),
-        content: content.to_owned(),
-    }
+    path: &'static str,
+    language: &'static str,
+    content: &'static str,
 }
 #[component]
 pub fn StoreTheme() -> Element {
@@ -335,18 +326,6 @@ impl StatusMsg {
         }
     }
 }
-enum FileBody {
-    Static(&'static str),
-    Owned(String),
-}
-impl FileBody {
-    fn as_str(&self) -> &str {
-        match self {
-            Self::Static(s) => s,
-            Self::Owned(s) => s,
-        }
-    }
-}
 struct EditorFile {
     path: String,
     language: String,
@@ -355,9 +334,9 @@ struct EditorFile {
 impl EditorFile {
     fn from_seed(file: ThemeFile) -> Self {
         Self {
-            path: file.path,
-            language: file.language,
-            body: file.content,
+            path: file.path.to_owned(),
+            language: file.language.to_owned(),
+            body: file.content.to_owned(),
         }
     }
     fn parent(&self) -> Option<&str> {
@@ -427,7 +406,7 @@ impl ThemeEditor {
         }
         self.folders
             .push(FolderEntry {
-                name: Cow::Owned(String::from(name)),
+                name: String::from(name),
                 open,
             });
         self.folders.sort_by(|a, b| a.name.cmp(&b.name));
@@ -481,9 +460,9 @@ impl ThemeEditor {
                 content.push_str(" */\n");
                 self.files
                     .push(EditorFile {
-                        path: Cow::Owned(String::from(path)),
-                        language,
-                        body: FileBody::Owned(content),
+                        path: String::from(path),
+                        language: language.to_string(),
+                        body: content,
                     });
                 self.ensure_tab(index);
                 StatusMsg::CreatedFile
@@ -499,9 +478,9 @@ impl ThemeEditor {
         push_u16(&mut path, index);
         self.files
             .push(EditorFile {
-                path: Cow::Owned(path),
-                language: "FILE",
-                body: FileBody::Owned(String::from("/* Mock upload */\n")),
+                path,
+                language: String::from("FILE"),
+                body: String::from("/* Mock upload */\n"),
             });
         self.ensure_tab(index);
     }
@@ -516,8 +495,8 @@ impl ThemeEditor {
             .map(|file| file.body.clone())
             .unwrap_or_default()
     }
-    fn active_language(&self) -> Option<&'static str> {
-        self.files.get(self.active as usize).map(|file| file.language)
+    fn active_language(&self) -> Option<String> {
+        self.files.get(self.active as usize).map(|file| file.language.clone())
     }
 }
 fn push_u16(buf: &mut String, mut value: u16) {
@@ -549,8 +528,7 @@ fn language_from_path(path: &str) -> &'static str {
         "woff" | "woff2" | "ttf" | "otf" => "FONT",
         "png" | "jpg" | "jpeg" | "webp" | "gif" => "IMG",
         _ => "FILE",
-    };
-    String::from(language)
+    }
 }
 #[component]
 fn ThemeFileEditor(feature: ThemeFeature) -> Element {
@@ -774,7 +752,7 @@ fn ThemeCodePane(
     mut dirty: Signal<bool>,
     mut status: Signal<StatusMsg>,
 ) -> Element {
-    let html = use_memo(move || highlighted_html(draft.read().as_str(), language));
+    let html = use_memo(move || highlighted_html(draft.read().as_str(), language.as_str()));
     rsx! {
         div { class: "theme-ide-editor",
             div { class: "theme-ide-gutter-plain", aria_hidden: true }
@@ -867,7 +845,7 @@ fn ThemeFolderBlock(
         .folders
         .get(folder_i)
         .map(|folder| folder.name.clone())
-        .unwrap_or(Cow::Borrowed(""));
+        .unwrap_or_default();
     rsx! {
         button {
             class: "theme-ide-folder-row",

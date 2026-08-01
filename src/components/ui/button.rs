@@ -93,6 +93,9 @@ fn button_base_class(
         (ButtonVariant::Outline, ButtonSize::IconSm, true) => {
             "ui-btn ui-squircle inline-flex items-center justify-center font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ui-btn-outline h-9 w-9 p-0 justify-center w-full"
         }
+        (ButtonVariant::Danger, size, full_width) => {
+            button_base_class(ButtonVariant::Secondary, size, full_width)
+        }
     }
 }
 #[component]

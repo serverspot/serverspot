@@ -4,6 +4,7 @@ use crate::components::ui::*;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum FeatureSite {
     Store,
+    Forum,
     Support,
     Content,
     Players,
@@ -16,6 +17,7 @@ impl FeatureSite {
     fn label(self) -> &'static str {
         match self {
             Self::Store => "Store",
+            Self::Forum => "Forum",
             Self::Support => "Support",
             Self::Content => "Blog",
             Self::Players => "Players",
@@ -190,6 +192,7 @@ fn FeatureSiteSettings(feature: FeatureSite) -> Element {
                     label: "Full URL",
                     value: match feature {
                         FeatureSite::Store => "www.example.com/store",
+                        FeatureSite::Forum => "www.example.com/forum",
                         FeatureSite::Support => "www.example.com/support",
                         FeatureSite::Content => "www.example.com/news",
                         FeatureSite::Players => "www.example.com/players",

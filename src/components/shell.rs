@@ -4,6 +4,7 @@ use crate::components::page::{PageTransition, PoweredByFooter};
 use crate::components::ui::*;
 use crate::nav::{crumb_for, is_theme_editor, section_for, subnav_active, Section};
 use crate::router::Route;
+use crate::user::CurrentUser;
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum SheetAnim {
     Open,
