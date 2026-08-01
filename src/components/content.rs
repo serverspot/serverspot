@@ -10,12 +10,10 @@ pub fn ContentBlog() -> Element {
         PageHeader {
             title: "Posts",
             subtitle: "Publish blog posts, news articles, and scheduled updates.",
-            children: rsx! {
-                Button {
-                    IconPlus {}
-                    "New post"
-                }
-            },
+            Button {
+                IconPlus {}
+                "New post"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Published", value: "48", accent: "#f071a5" }
@@ -65,12 +63,10 @@ pub fn ContentPages() -> Element {
         PageHeader {
             title: "Pages",
             subtitle: "Custom pages, homepage placement, and site widgets.",
-            children: rsx! {
-                Button {
-                    IconPlus {}
-                    "New page"
-                }
-            },
+            Button {
+                IconPlus {}
+                "New page"
+            }
         }
         div { class: "grid gap-4 lg:grid-cols-2",
             DataPanel { title: "Admin features",

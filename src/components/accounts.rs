@@ -10,12 +10,10 @@ pub fn AccountsAuth() -> Element {
         PageHeader {
             title: "Authentication",
             subtitle: "Shared account system used across all platform features.",
-            children: rsx! {
-                Button {
-                    IconPlus {}
-                    "Invite user"
-                }
-            },
+            Button {
+                IconPlus {}
+                "Invite user"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Accounts", value: "3,481", accent: "#5b9dff" }
@@ -61,7 +59,6 @@ pub fn AccountsLinking() -> Element {
         PageHeader {
             title: "Account linking",
             subtitle: "Connect website accounts with in-game identities across servers.",
-            Button { variant: ButtonVariant::Secondary, "Generate codes" }
             Button { variant: ButtonVariant::Secondary, "Generate codes" }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
@@ -109,10 +106,6 @@ pub fn AccountsConnections() -> Element {
         PageHeader {
             title: "Connections",
             subtitle: "External service integrations through OAuth for login and sync.",
-            Button {
-                IconPlus {}
-                "Add provider"
-            }
             Button {
                 IconPlus {}
                 "Add provider"
@@ -175,9 +168,7 @@ pub fn AccountsProfiles() -> Element {
         PageHeader {
             title: "User profiles",
             subtitle: "Public profiles shared across the platform with privacy controls.",
-            children: rsx! {
-                Button { variant: ButtonVariant::Secondary, "Preview profile" }
-            },
+            Button { variant: ButtonVariant::Secondary, "Preview profile" }
         }
         div { class: "mb-6 grid gap-3 sm:grid-cols-3",
             InfoCard {
@@ -236,10 +227,6 @@ pub fn AccountsRoles() -> Element {
         PageHeader {
             title: "Permissions & roles",
             subtitle: "Fully configurable permission system with hierarchy and groups.",
-            Button {
-                IconPlus {}
-                "Create role"
-            }
             Button {
                 IconPlus {}
                 "Create role"

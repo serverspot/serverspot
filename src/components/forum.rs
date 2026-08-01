@@ -9,12 +9,10 @@ pub fn ForumCategories() -> Element {
         PageHeader {
             title: "Categories",
             subtitle: "Organize discussion boards, roles, and visibility for your forum.",
-            children: rsx! {
-                Button {
-                    IconPlus {}
-                    "New category"
-                }
-            },
+            Button {
+                IconPlus {}
+                "New category"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Threads", value: "1,204", accent: "#5b9dff" }
@@ -64,10 +62,6 @@ pub fn ForumPosts() -> Element {
         PageHeader {
             title: "Posts",
             subtitle: "Browse threads, replies, and media across every forum category.",
-            Button {
-                IconPlus {}
-                "New thread"
-            }
             Button {
                 IconPlus {}
                 "New thread"

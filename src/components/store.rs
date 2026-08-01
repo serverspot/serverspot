@@ -7,12 +7,10 @@ pub fn StoreProducts() -> Element {
         PageHeader {
             title: "Products",
             subtitle: "Manage products, stock, and checkout packages for your server shop.",
-            children: rsx! {
-                Button {
-                    IconPlus {}
-                    "Add product"
-                }
-            },
+            Button {
+                IconPlus {}
+                "Add product"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Revenue", value: "£4,281", accent: "#3ecf8e" }

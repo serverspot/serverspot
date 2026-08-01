@@ -177,9 +177,7 @@ fn FeatureSiteSettings(feature: FeatureSite) -> Element {
         PageHeader {
             title: "Settings",
             subtitle: feature.subtitle(),
-            children: rsx! {
-                Button { "Save changes" }
-            },
+            Button { "Save changes" }
         }
         div { class: "mb-4 flex flex-wrap items-center gap-2",
             span { class: "rounded-squircle-sm border border-border-subtle bg-surface/40 px-2.5 py-1 text-xs text-text-muted",

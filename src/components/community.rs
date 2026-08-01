@@ -10,9 +10,7 @@ pub fn CommunityPlayers() -> Element {
         PageHeader {
             title: "Player profiles",
             subtitle: "Dedicated gaming profiles with stats, ranks, and linked accounts.",
-            children: rsx! {
-                Button { variant: ButtonVariant::Secondary, "Export players" }
-            },
+            Button { variant: ButtonVariant::Secondary, "Export players" }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Players", value: "1,842", accent: "#69bdf2" }
@@ -66,12 +64,10 @@ pub fn CommunityLeaderboards() -> Element {
         PageHeader {
             title: "Leaderboards",
             subtitle: "Player ranking and statistics across games, servers, and time ranges.",
-            children: rsx! {
-                Button {
-                    IconPlus {}
-                    "New board"
-                }
-            },
+            Button {
+                IconPlus {}
+                "New board"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Boards", value: "4", accent: "#5eead4" }
@@ -126,12 +122,10 @@ pub fn CommunityVotes() -> Element {
         PageHeader {
             title: "Vote rewards",
             subtitle: "Track votes, claim rewards, and sync streaks across voting sites.",
-            children: rsx! {
-                Button {
-                    IconPlus {}
-                    "Add vote site"
-                }
-            },
+            Button {
+                IconPlus {}
+                "Add vote site"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Votes today", value: "214", accent: "#fbbf24" }
@@ -190,12 +184,7 @@ pub fn CommunityApplications() -> Element {
         PageHeader {
             title: "Staff applications",
             subtitle: "Recruitment forms, review workflows, and application history.",
-            children: rsx! {
-                Button {
-                    IconPlus {}
-                    "New form"
-                }
-            },
+            Button { IconPlus {} "New form" }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Submitted", value: "7", accent: "#fb7185" }
