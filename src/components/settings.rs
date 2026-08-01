@@ -10,7 +10,7 @@ pub fn SettingsGeneral() -> Element {
         PageHeader {
             title: "General",
             subtitle: "Website domain, registration, and branding defaults.",
-            action: rsx! {
+            children: rsx! {
                 Button { "Save changes" }
             },
         }
@@ -60,13 +60,14 @@ pub fn SettingsLocalisation() -> Element {
         PageHeader {
             title: "Localisation",
             subtitle: "Multi-language support, formatting, and translation management.",
-            action: rsx!
-                    { Button { IconPlus {} "Add language" } }
-                Button {
-                    IconPlus {}
-                    "Add language"
-                }
-            },
+            Button {
+                IconPlus {}
+                "Add language"
+            }
+            Button {
+                IconPlus {}
+                "Add language"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Languages", value: "12", accent: "#34d399" }
@@ -127,7 +128,7 @@ pub fn SettingsDeveloper() -> Element {
         PageHeader {
             title: "Developer platform",
             subtitle: "Plugins, APIs, webhooks, and tools for extending ServerSpot.",
-            action: rsx! {
+            children: rsx! {
                 Button {
                     IconPlus {}
                     "Create API key"
@@ -185,7 +186,7 @@ pub fn SettingsIntegrations() -> Element {
         PageHeader {
             title: "Integrations",
             subtitle: "Connect Discord, Tebex, payment providers, and third-party tools.",
-            action: rsx! {
+            children: rsx! {
                 Button {
                     IconPlus {}
                     "Add integration"

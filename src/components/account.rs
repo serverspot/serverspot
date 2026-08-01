@@ -15,7 +15,7 @@ pub fn Account() -> Element {
         PageHeader {
             title: "Account",
             subtitle: "Your profile, security, and session preferences.",
-            action: rsx! {
+            children: rsx! {
                 div { class: "flex flex-wrap gap-2",
                     Button {
                         variant: ButtonVariant::Secondary,

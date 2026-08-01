@@ -10,7 +10,7 @@ pub fn ContentBlog() -> Element {
         PageHeader {
             title: "Posts",
             subtitle: "Publish blog posts, news articles, and scheduled updates.",
-            action: rsx! {
+            children: rsx! {
                 Button {
                     IconPlus {}
                     "New post"
@@ -65,7 +65,7 @@ pub fn ContentPages() -> Element {
         PageHeader {
             title: "Pages",
             subtitle: "Custom pages, homepage placement, and site widgets.",
-            action: rsx! {
+            children: rsx! {
                 Button {
                     IconPlus {}
                     "New page"

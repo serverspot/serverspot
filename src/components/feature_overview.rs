@@ -413,7 +413,7 @@ fn FeatureOverview(feature: FeatureOverviewKind) -> Element {
         PageHeader {
             title: copy.title,
             subtitle: copy.subtitle,
-            action: rsx! {
+            children: rsx! {
                 Button { variant: ButtonVariant::Secondary, "View on website" }
             },
         }

@@ -7,7 +7,7 @@ pub fn StoreProducts() -> Element {
         PageHeader {
             title: "Products",
             subtitle: "Manage products, stock, and checkout packages for your server shop.",
-            action: rsx! {
+            children: rsx! {
                 Button {
                     IconPlus {}
                     "Add product"

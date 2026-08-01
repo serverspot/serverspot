@@ -9,7 +9,7 @@ pub fn ForumCategories() -> Element {
         PageHeader {
             title: "Categories",
             subtitle: "Organize discussion boards, roles, and visibility for your forum.",
-            action: rsx! {
+            children: rsx! {
                 Button {
                     IconPlus {}
                     "New category"
@@ -64,13 +64,14 @@ pub fn ForumPosts() -> Element {
         PageHeader {
             title: "Posts",
             subtitle: "Browse threads, replies, and media across every forum category.",
-            action: rsx!
-                    { Button { IconPlus {} "New thread" } }
-                Button {
-                    IconPlus {}
-                    "New thread"
-                }
-            },
+            Button {
+                IconPlus {}
+                "New thread"
+            }
+            Button {
+                IconPlus {}
+                "New thread"
+            }
         }
         DataPanel { title: "Recent threads",
             RowItem {

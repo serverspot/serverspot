@@ -10,7 +10,7 @@ pub fn SupportTickets() -> Element {
         PageHeader {
             title: "Tickets",
             subtitle: "Customer support management with queues, notes, and history.",
-            action: rsx! {
+            children: rsx! {
                 Button { variant: ButtonVariant::Secondary, "View departments" }
             },
         }
@@ -78,13 +78,11 @@ pub fn SupportHelpCentre() -> Element {
         PageHeader {
             title: "Help centre",
             subtitle: "Knowledge base and documentation so players can help themselves.",
-            action: rsx!
-                    { Button { IconPlus {} "New article" } }
-                Button {
-                    IconPlus {}
-                    "New article"
-                }
-            },
+            Button { IconPlus {} "New article" }
+            Button {
+                IconPlus {}
+                "New article"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Articles", value: "32", accent: "#87d1fe" }

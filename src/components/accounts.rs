@@ -10,7 +10,7 @@ pub fn AccountsAuth() -> Element {
         PageHeader {
             title: "Authentication",
             subtitle: "Shared account system used across all platform features.",
-            action: rsx! {
+            children: rsx! {
                 Button {
                     IconPlus {}
                     "Invite user"
@@ -61,10 +61,8 @@ pub fn AccountsLinking() -> Element {
         PageHeader {
             title: "Account linking",
             subtitle: "Connect website accounts with in-game identities across servers.",
-            action: rsx!
-                    { Button { variant : ButtonVariant::Secondary, "Generate codes" } }
-                Button { variant: ButtonVariant::Secondary, "Generate codes" }
-            },
+            Button { variant: ButtonVariant::Secondary, "Generate codes" }
+            Button { variant: ButtonVariant::Secondary, "Generate codes" }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Linked players", value: "1,204", accent: "#3ecf8e" }
@@ -111,13 +109,14 @@ pub fn AccountsConnections() -> Element {
         PageHeader {
             title: "Connections",
             subtitle: "External service integrations through OAuth for login and sync.",
-            action: rsx!
-                    { Button { IconPlus {} "Add provider" } }
-                Button {
-                    IconPlus {}
-                    "Add provider"
-                }
-            },
+            Button {
+                IconPlus {}
+                "Add provider"
+            }
+            Button {
+                IconPlus {}
+                "Add provider"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Providers", value: "6", accent: "#7b8cff" }
@@ -176,7 +175,7 @@ pub fn AccountsProfiles() -> Element {
         PageHeader {
             title: "User profiles",
             subtitle: "Public profiles shared across the platform with privacy controls.",
-            action: rsx! {
+            children: rsx! {
                 Button { variant: ButtonVariant::Secondary, "Preview profile" }
             },
         }
@@ -237,13 +236,14 @@ pub fn AccountsRoles() -> Element {
         PageHeader {
             title: "Permissions & roles",
             subtitle: "Fully configurable permission system with hierarchy and groups.",
-            action: rsx!
-                    { Button { IconPlus {} "Create role" } }
-                Button {
-                    IconPlus {}
-                    "Create role"
-                }
-            },
+            Button {
+                IconPlus {}
+                "Create role"
+            }
+            Button {
+                IconPlus {}
+                "Create role"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Roles", value: "12", accent: "#5b9dff" }

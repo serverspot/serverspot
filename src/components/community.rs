@@ -10,7 +10,7 @@ pub fn CommunityPlayers() -> Element {
         PageHeader {
             title: "Player profiles",
             subtitle: "Dedicated gaming profiles with stats, ranks, and linked accounts.",
-            action: rsx! {
+            children: rsx! {
                 Button { variant: ButtonVariant::Secondary, "Export players" }
             },
         }
@@ -66,7 +66,7 @@ pub fn CommunityLeaderboards() -> Element {
         PageHeader {
             title: "Leaderboards",
             subtitle: "Player ranking and statistics across games, servers, and time ranges.",
-            action: rsx! {
+            children: rsx! {
                 Button {
                     IconPlus {}
                     "New board"
@@ -126,7 +126,7 @@ pub fn CommunityVotes() -> Element {
         PageHeader {
             title: "Vote rewards",
             subtitle: "Track votes, claim rewards, and sync streaks across voting sites.",
-            action: rsx! {
+            children: rsx! {
                 Button {
                     IconPlus {}
                     "Add vote site"
@@ -190,7 +190,7 @@ pub fn CommunityApplications() -> Element {
         PageHeader {
             title: "Staff applications",
             subtitle: "Recruitment forms, review workflows, and application history.",
-            action: rsx! {
+            children: rsx! {
                 Button {
                     IconPlus {}
                     "New form"

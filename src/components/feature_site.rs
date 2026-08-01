@@ -177,7 +177,7 @@ fn FeatureSiteSettings(feature: FeatureSite) -> Element {
         PageHeader {
             title: "Settings",
             subtitle: feature.subtitle(),
-            action: rsx! {
+            children: rsx! {
                 Button { "Save changes" }
             },
         }
