@@ -1,13 +1,14 @@
 use dioxus::prelude::*;
-
 use super::icons::IconSearch;
-
 #[component]
 pub fn SignalInput(
     mut value: Signal<String>,
-    #[props(default, into)] placeholder: String,
-    #[props(default, into)] class: String,
-    #[props(default = "text".to_string(), into)] r#type: String,
+    #[props(default, into)]
+    placeholder: String,
+    #[props(default, into)]
+    class: String,
+    #[props(default = "text".to_string(), into)]
+    r#type: String,
 ) -> Element {
     rsx! {
         input {
@@ -22,9 +23,13 @@ pub fn SignalInput(
         }
     }
 }
-
 #[component]
-pub fn StaticInput(#[props(into)] value: String, #[props(default, into)] class: String) -> Element {
+pub fn StaticInput(
+    #[props(into)]
+    value: String,
+    #[props(default, into)]
+    class: String,
+) -> Element {
     rsx! {
         input {
             r#type: "text",
@@ -34,7 +39,6 @@ pub fn StaticInput(#[props(into)] value: String, #[props(default, into)] class: 
         }
     }
 }
-
 #[component]
 pub fn SignalTextarea(
     mut value: Signal<String>,
@@ -57,21 +61,17 @@ pub fn SignalTextarea(
 #[component]
 pub fn SearchInput(
     mut value: Signal<String>,
-    #[props(default = "Search...".to_string(), into)] placeholder: String,
-    #[props(default, into)] class: String,
+    #[props(default = "Search...".to_string(), into)]
+    placeholder: String,
+    #[props(default, into)]
+    class: String,
 ) -> Element {
     rsx! {
-        div {
-            class: "relative flex min-w-0 {class}",
-            span {
-                class: "pointer-events-none absolute inset-y-0 left-3.5 z-10 flex items-center text-text-muted",
+        div { class: "relative flex min-w-0 {class}",
+            span { class: "pointer-events-none absolute inset-y-0 left-3.5 z-10 flex items-center text-text-muted",
                 IconSearch {}
             }
-            SignalInput {
-                value,
-                placeholder,
-                class: "h-9 pl-10",
-            }
+            SignalInput { value, placeholder, class: "h-9 pl-10" }
         }
     }
 }

@@ -1,18 +1,14 @@
 use dioxus::prelude::*;
-
 use crate::components::brand::{favicon_svg, BrandMark};
 use crate::components::page::{PageTransition, PoweredByFooter};
 use crate::components::ui::*;
 use crate::nav::{crumb_for, is_theme_editor, section_for, subnav_active, Section};
 use crate::router::Route;
-use crate::user::CurrentUser;
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum SheetAnim {
     Open,
     Closing,
 }
-
 #[component]
 pub fn AppShell() -> Element {
     let mut sheet = use_signal(|| Option::<SheetAnim>::None);
@@ -25,14 +21,12 @@ pub fn AppShell() -> Element {
     let theme_ide = is_theme_editor(&route);
     let mut favicon_accent = use_signal(|| Option::<&'static str>::None);
     let mut side_open = use_signal(|| true);
-
     use_effect(move || {
         let _route = router().current::<Route>();
         if matches!(*sheet.peek(), Some(SheetAnim::Open)) {
             sheet.set(Some(SheetAnim::Closing));
         }
     });
-
     use_effect(move || {
         let route = router().current::<Route>();
         let accent = section_for(&route).accent();
@@ -40,7 +34,6 @@ pub fn AppShell() -> Element {
             return;
         }
         favicon_accent.set(Some(accent));
-
         let svg = favicon_svg(accent);
         let eval = document::eval(
             r#"
@@ -63,7 +56,6 @@ pub fn AppShell() -> Element {
         );
         let _ = eval.send(svg);
     });
-
     let sheet_anim = sheet();
     let backdrop_class = match sheet_anim {
         Some(SheetAnim::Open) => "nav-sheet-backdrop-enter",
@@ -101,16 +93,12 @@ pub fn AppShell() -> Element {
     } else {
         "side-expand-btn ui-btn ui-squircle ui-btn-ghost mb-3 hidden h-9 w-9 cursor-pointer items-center justify-center p-0 font-semibold text-text-muted lg:inline-flex"
     };
-
     rsx! {
         document::Title { "{section.document_title()}" }
-
         div {
             class: "relative h-dvh overflow-hidden bg-bg text-text",
             style: section.theme_vars(),
-
-            aside {
-                class: "fixed inset-y-0 left-0 z-20 hidden w-[68px] flex-col items-center overflow-y-auto border-r border-border-subtle bg-bg py-5 md:flex",
+            aside { class: "fixed inset-y-0 left-0 z-20 hidden w-[68px] flex-col items-center overflow-y-auto border-r border-border-subtle bg-bg py-5 md:flex",
                 button {
                     class: "mb-8 flex h-9 w-9 items-center justify-center rounded-squircle-sm transition-opacity hover:opacity-80",
                     onclick: move |_| {
@@ -127,21 +115,21 @@ pub fn AppShell() -> Element {
                     onclick: move |_| side_open.set(true),
                     span { class: "text-lg leading-none", "›" }
                 }
-                nav {
-                    class: "flex flex-1 flex-col items-center gap-1",
+                nav { class: "flex flex-1 flex-col items-center gap-1",
                     for main in Section::ALL.iter().copied() {
                         RailNav {
                             key: "{main.label()}",
                             to: main.home(),
-                            active: section == main,
+                            active: section
+                                    == main,
                             icon: rail_icon_data(main),
                         }
                     }
                 }
-                div {
-                    class: "mt-auto flex flex-col items-center gap-3 pb-1",
+                div { class: "mt-auto flex flex-col items-center gap-3 pb-1",
                     RailNav {
-                        to: Section::Settings.home(),
+                        to: Section::Settings
+                                .home(),
                         active: section == Section::Settings,
                         icon: rail_icon_data(Section::Settings),
                     }
@@ -160,19 +148,14 @@ pub fn AppShell() -> Element {
                     }
                 }
             }
-
-            aside {
-                class: side_panel_class,
-                aria_hidden: !side_open_now,
-                div {
-                    class: "side-panel-inner flex h-full flex-col overflow-y-auto px-4 py-6",
-                    div {
-                        class: "mb-5 flex items-start justify-between gap-2",
-                        div {
-                            class: "min-w-0 px-2",
-                            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Section" }
-                            p {
-                                class: "text-lg font-semibold tracking-tight text-accent",
+            aside { class: side_panel_class, aria_hidden: !side_open_now,
+                div { class: "side-panel-inner flex h-full flex-col overflow-y-auto px-4 py-6",
+                    div { class: "mb-5 flex items-start justify-between gap-2",
+                        div { class: "min-w-0 px-2",
+                            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted",
+                                "Section"
+                            }
+                            p { class: "text-lg font-semibold tracking-tight text-accent",
                                 "{section.label()}"
                             }
                         }
@@ -185,32 +168,22 @@ pub fn AppShell() -> Element {
                             span { class: "text-lg leading-none", "‹" }
                         }
                     }
-                    nav {
-                        class: "flex flex-col gap-0.5",
+                    nav { class: "flex flex-col gap-0.5",
                         for sub in section.subs().iter().copied() {
                             SideNav {
                                 to: sub.route,
-                                label: sub.label,
-                                active: subnav_active(&route, sub.route),
+                                label: sub
+                                        .label,
+                                active: route == sub.route,
                             }
                         }
                     }
                 }
             }
-
-            div {
-                class: content_pad,
-
-                header {
-                    class: "z-30 shrink-0 border-b border-border-subtle/60 bg-bg/90 backdrop-blur-md",
-                    ShellHeaderBar {
-                        section,
-                        crumb,
-                        sheet,
-                    }
-
-                    nav {
-                        class: subnav_class,
+            div { class: content_pad,
+                header { class: "z-30 shrink-0 border-b border-border-subtle/60 bg-bg/90 backdrop-blur-md",
+                    ShellHeaderBar { section, crumb, sheet }
+                    nav { class: subnav_class,
                         for sub in section.subs().iter().copied() {
                             SubChip {
                                 to: sub.route,
@@ -220,19 +193,8 @@ pub fn AppShell() -> Element {
                         }
                     }
                 }
-
-                main {
-                    class: if theme_ide {
-                        "flex min-h-0 flex-1 flex-col overflow-hidden p-0"
-                    } else {
-                        "flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-4 sm:px-6 sm:pt-6 md:px-8"
-                    },
-                    div {
-                        class: if theme_ide {
-                            "flex min-h-0 flex-1 flex-col"
-                        } else {
-                            "flex-1"
-                        },
+                main { class: if theme_ide { "flex min-h-0 flex-1 flex-col overflow-hidden p-0" } else { "flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-4 sm:px-6 sm:pt-6 md:px-8" },
+                    div { class: if theme_ide { "flex min-h-0 flex-1 flex-col" } else { "flex-1" },
                         PageTransition {}
                     }
                     if !theme_ide {
@@ -240,7 +202,6 @@ pub fn AppShell() -> Element {
                     }
                 }
             }
-
             if sheet_anim.is_some() {
                 MobileNavSheet {
                     section,
@@ -253,7 +214,6 @@ pub fn AppShell() -> Element {
         }
     }
 }
-
 #[component]
 fn MobileNavSheet(
     section: Section,
@@ -263,8 +223,12 @@ fn MobileNavSheet(
     panel_class: &'static str,
 ) -> Element {
     let backdrop = match backdrop_class {
-        "nav-sheet-backdrop-enter" => "absolute inset-0 bg-black/50 nav-sheet-backdrop-enter",
-        "nav-sheet-backdrop-exit" => "absolute inset-0 bg-black/50 nav-sheet-backdrop-exit",
+        "nav-sheet-backdrop-enter" => {
+            "absolute inset-0 bg-black/50 nav-sheet-backdrop-enter"
+        }
+        "nav-sheet-backdrop-exit" => {
+            "absolute inset-0 bg-black/50 nav-sheet-backdrop-exit"
+        }
         _ => "absolute inset-0 bg-black/50",
     };
     let panel = match panel_class {
@@ -278,10 +242,8 @@ fn MobileNavSheet(
             "absolute inset-y-0 left-0 flex w-[min(100%,18.5rem)] flex-col border-r border-border-subtle bg-bg shadow-xl"
         }
     };
-
     rsx! {
-        div {
-            class: "fixed inset-0 z-40 md:hidden",
+        div { class: "fixed inset-0 z-40 md:hidden",
             button {
                 class: backdrop,
                 aria_label: "Close menu",
@@ -298,10 +260,8 @@ fn MobileNavSheet(
                         sheet.set(None);
                     }
                 },
-                div {
-                    class: "flex h-14 items-center justify-between gap-3 border-b border-border-subtle px-4",
-                    div {
-                        class: "flex items-center gap-3",
+                div { class: "flex h-14 items-center justify-between gap-3 border-b border-border-subtle px-4",
+                    div { class: "flex items-center gap-3",
                         BrandMark { class: "h-7 w-7" }
                         span { class: "text-base font-semibold tracking-tight", "ServerSpot" }
                     }
@@ -314,26 +274,19 @@ fn MobileNavSheet(
                         IconClose {}
                     }
                 }
-
-                div {
-                    class: "flex-1 overflow-y-auto px-3 py-4",
-                    p { class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted", "Sections" }
-                    nav {
-                        class: "mb-6 flex flex-col gap-0.5",
+                div { class: "flex-1 overflow-y-auto px-3 py-4",
+                    p { class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted",
+                        "Sections"
+                    }
+                    nav { class: "mb-6 flex flex-col gap-0.5",
                         for main in Section::ALL.iter().copied().chain(std::iter::once(Section::Settings)) {
-                            MobileSectionNav {
-                                section: main,
-                                active: section == main,
-                            }
+                            MobileSectionNav { section: main, active: section == main }
                         }
                     }
-
-                    p {
-                        class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted",
+                    p { class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted",
                         "{section.label()}"
                     }
-                    nav {
-                        class: "flex flex-col gap-0.5",
+                    nav { class: "flex flex-col gap-0.5",
                         for sub in section.subs().iter().copied() {
                             SideNav {
                                 to: sub.route,
@@ -347,7 +300,6 @@ fn MobileNavSheet(
         }
     }
 }
-
 #[component]
 fn ShellHeaderBar(
     section: Section,
@@ -358,7 +310,6 @@ fn ShellHeaderBar(
     let mut search = use_signal(String::new);
     let navigator = use_navigator();
     let route = use_route::<Route>();
-
     use_effect(move || {
         let _ = route;
         if *search_open.peek() {
@@ -366,11 +317,8 @@ fn ShellHeaderBar(
             search.write().clear();
         }
     });
-
     rsx! {
-        div {
-            class: "flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-5 md:px-8",
-
+        div { class: "flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-5 md:px-8",
             if search_open() {
                 IconButton {
                     class: "shrink-0",
@@ -388,27 +336,27 @@ fn ShellHeaderBar(
             } else {
                 IconButton {
                     class: "shrink-0 md:hidden",
-                    onclick: move |_| sheet.set(Some(SheetAnim::Open)),
+                    onclick: move | _ | sheet
+                            .set(Some(SheetAnim::Open)),
                     IconMenu {}
                 }
-
                 button {
                     class: "flex h-8 w-8 shrink-0 items-center justify-center md:hidden",
-                    onclick: move |_| {
+                    onclick: move | _
+                            | { navigator.push(Route::Dashboard {}); navigator.push(Route::Dashboard {});
+                        navigator.push(Route::Dashboard {});
+                        navigator.push(Route::Dashboard {});
+                        navigator.push(Route::Dashboard {});
                         navigator.push(Route::Dashboard {});
                     },
                     BrandMark { class: "h-7 w-7" }
                 }
-
-                div {
-                    class: "min-w-0 flex-1",
-                    p {
-                        class: "truncate text-sm font-medium text-text md:hidden",
+                div { class: "min-w-0 flex-1",
+                    p { class: "truncate text-sm font-medium text-text md:hidden",
                         "{section.label()}"
                         span { class: "font-normal text-text-muted", " / {crumb}" }
                     }
-                    div {
-                        class: "hidden min-w-0 items-center gap-2 text-sm text-text-muted md:flex",
+                    div { class: "hidden min-w-0 items-center gap-2 text-sm text-text-muted md:flex",
                         Link {
                             to: section.home(),
                             class: "truncate opacity-70 transition-opacity hover:opacity-100 text-text-muted",
@@ -418,17 +366,10 @@ fn ShellHeaderBar(
                         span { class: "truncate text-text-secondary", "{crumb}" }
                     }
                 }
-
-                div {
-                    class: "flex shrink-0 items-center gap-0.5 sm:gap-1",
-                    IconButton {
-                        onclick: move |_| search_open.set(true),
-                        IconSearch {}
-                    }
-                    IconButton {
-                        class: "max-lg:hidden",
-                        IconBell {}
-                    }
+                div { class: "flex shrink-0 items-center gap-0.5 sm:gap-1",
+                    IconButton { onclick: move | _ |
+                                search_open.set(true), IconSearch {} }
+                    IconButton { class: "max-lg:hidden", IconBell {} }
                     IconButton {
                         class: "max-lg:hidden",
                         onclick: move |_| {
@@ -436,22 +377,16 @@ fn ShellHeaderBar(
                         },
                         IconGlobe {}
                     }
-                    Button {
-                        class: "ml-1 max-sm:hidden",
-                        size: ButtonSize::Sm,
+                    Button { class: "ml-1 max-sm:hidden", size: ButtonSize::Sm,
                         IconPlus {}
                         "New"
                     }
-                    IconButton {
-                        class: "sm:hidden",
-                        IconPlus {}
-                    }
+                    IconButton { class: "sm:hidden", IconPlus {} }
                 }
             }
         }
     }
 }
-
 fn rail_icon_data(section: Section) -> HugeIconData {
     use crate::components::ui::hugeicon::*;
     match section {
@@ -469,17 +404,11 @@ fn rail_icon_data(section: Section) -> HugeIconData {
         Section::Account => USER_GROUP,
     }
 }
-
 #[component]
 fn RailNav(to: Route, active: bool, icon: HugeIconData) -> Element {
     let navigator = use_navigator();
     let dest = to;
-    let class = if active {
-        "ui-btn-rail-accent"
-    } else {
-        "text-text-muted"
-    };
-
+    let class = if active { "ui-btn-rail-accent" } else { "text-text-muted" };
     rsx! {
         Button {
             variant: if active { ButtonVariant::Secondary } else { ButtonVariant::Ghost },
@@ -492,7 +421,6 @@ fn RailNav(to: Route, active: bool, icon: HugeIconData) -> Element {
         }
     }
 }
-
 #[component]
 fn SideNav(to: Route, label: &'static str, active: bool) -> Element {
     let navigator = use_navigator();
@@ -502,7 +430,6 @@ fn SideNav(to: Route, label: &'static str, active: bool) -> Element {
     } else {
         "justify-start text-text-muted"
     };
-
     rsx! {
         Button {
             variant: if active { ButtonVariant::Secondary } else { ButtonVariant::Ghost },
@@ -516,7 +443,6 @@ fn SideNav(to: Route, label: &'static str, active: bool) -> Element {
         }
     }
 }
-
 #[component]
 fn SubChip(to: Route, label: &'static str, active: bool) -> Element {
     let navigator = use_navigator();
@@ -526,7 +452,6 @@ fn SubChip(to: Route, label: &'static str, active: bool) -> Element {
     } else {
         "shrink-0 text-text-muted"
     };
-
     rsx! {
         Button {
             variant: if active { ButtonVariant::Secondary } else { ButtonVariant::Ghost },
@@ -539,7 +464,6 @@ fn SubChip(to: Route, label: &'static str, active: bool) -> Element {
         }
     }
 }
-
 #[component]
 fn MobileSectionNav(section: Section, active: bool) -> Element {
     let navigator = use_navigator();
@@ -549,7 +473,6 @@ fn MobileSectionNav(section: Section, active: bool) -> Element {
     } else {
         "justify-start gap-2.5 text-text-muted"
     };
-
     rsx! {
         Button {
             variant: if active { ButtonVariant::Secondary } else { ButtonVariant::Ghost },
@@ -559,7 +482,9 @@ fn MobileSectionNav(section: Section, active: bool) -> Element {
             onclick: move |_| {
                 navigator.push(dest);
             },
-            span { class: "opacity-80", HugeIcon { icon: rail_icon_data(section) } }
+            span { class: "opacity-80",
+                HugeIcon { icon: rail_icon_data(section) }
+            }
             span { "{section.label()}" }
         }
     }

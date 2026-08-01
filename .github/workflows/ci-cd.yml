@@ -1,0 +1,33 @@
+name: CI-CD
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          add-job-id-key: "false"
+          add-rust-environment-hash-key: "false"
+          lookup-only: "true" # test should have more detailed cache from actually building
+      - run: cargo check --features web,server
+  
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          add-job-id-key: "false"
+          add-rust-environment-hash-key: "false"
+      - run: cargo test --features web,server
+  
+  # TODO fmt with dioxus
