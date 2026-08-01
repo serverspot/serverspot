@@ -15,18 +15,16 @@ pub fn Account() -> Element {
         PageHeader {
             title: "Account",
             subtitle: "Your profile, security, and session preferences.",
-            action: rsx! {
-                div { class: "flex flex-wrap gap-2",
-                    Button {
-                        variant: ButtonVariant::Secondary,
-                        onclick: move |_| {
-                            navigator.push(Route::Login {});
-                        },
-                        "Sign out"
-                    }
-                    Button { "Save changes" }
+            div { class: "flex flex-wrap gap-2",
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    onclick: move |_| {
+                        navigator.push(Route::Login {});
+                    },
+                    "Sign out"
                 }
-            },
+                Button { "Save changes" }
+            }
         }
         section { class: "mb-6 flex flex-col gap-4 rounded-squircle-lg border border-border-subtle bg-surface/20 p-4 sm:mb-8 sm:flex-row sm:items-center sm:gap-5 sm:p-5",
             Avatar {

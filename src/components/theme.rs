@@ -568,8 +568,7 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                 Button {
                     variant: ButtonVariant::Ghost,
                     size: ButtonSize::Sm,
-                    onclick: move |
-                            _ | { navigator.push(overview); }
+                    onclick: move |_| {
                         navigator.push(overview);
                     },
                     "← Overview"

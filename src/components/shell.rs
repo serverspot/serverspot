@@ -344,7 +344,10 @@ fn ShellHeaderBar(
                 button {
                     class: "flex h-8 w-8 shrink-0 items-center justify-center md:hidden",
                     onclick: move | _
-                            | { navigator.push(Route::Dashboard {}); }
+                            | { navigator.push(Route::Dashboard {}); navigator.push(Route::Dashboard {});
+                        navigator.push(Route::Dashboard {});
+                        navigator.push(Route::Dashboard {});
+                        navigator.push(Route::Dashboard {});
                         navigator.push(Route::Dashboard {});
                     },
                     BrandMark { class: "h-7 w-7" }

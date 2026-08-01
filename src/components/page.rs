@@ -38,7 +38,7 @@ pub fn PageHeader(
     #[props(default)]
     subtitle: &'static str,
     #[props(default)]
-    action: Option<Element>,
+    children: Option<Element>,
 ) -> Element {
     rsx! {
         div { class: "mb-6 flex flex-wrap items-end justify-between gap-3 sm:mb-8 sm:gap-4",
@@ -50,7 +50,7 @@ pub fn PageHeader(
                     }
                 }
             }
-            if let Some(action) = action {
+            if let Some(action) = children {
                 div { class: "w-full sm:w-auto", {action} }
             }
         }

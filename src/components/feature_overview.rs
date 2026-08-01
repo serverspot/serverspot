@@ -413,9 +413,7 @@ fn FeatureOverview(feature: FeatureOverviewKind) -> Element {
         PageHeader {
             title: copy.title,
             subtitle: copy.subtitle,
-            action: rsx! {
-                Button { variant: ButtonVariant::Secondary, "View on website" }
-            },
+            Button { variant: ButtonVariant::Secondary, "View on website" }
         }
         div { class: "mb-6 flex flex-wrap items-center gap-2",
             StatusChip { label: copy.status, tone: copy.accent }

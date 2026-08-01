@@ -10,9 +10,7 @@ pub fn SettingsGeneral() -> Element {
         PageHeader {
             title: "General",
             subtitle: "Website domain, registration, and branding defaults.",
-            action: rsx! {
-                Button { "Save changes" }
-            },
+            Button { "Save changes" }
         }
         div { class: "grid gap-4 lg:grid-cols-2",
             DataPanel { title: "Website",
@@ -60,13 +58,10 @@ pub fn SettingsLocalisation() -> Element {
         PageHeader {
             title: "Localisation",
             subtitle: "Multi-language support, formatting, and translation management.",
-            action: rsx!
-                    { Button { IconPlus {} "Add language" } }
-                Button {
-                    IconPlus {}
-                    "Add language"
-                }
-            },
+            Button {
+                IconPlus {}
+                "Add language"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Languages", value: "12", accent: "#34d399" }
@@ -127,12 +122,10 @@ pub fn SettingsDeveloper() -> Element {
         PageHeader {
             title: "Developer platform",
             subtitle: "Plugins, APIs, webhooks, and tools for extending ServerSpot.",
-            action: rsx! {
-                Button {
-                    IconPlus {}
-                    "Create API key"
-                }
-            },
+            Button {
+                IconPlus {}
+                "Create API key"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Plugins", value: "7", accent: "#5b9dff" }
@@ -185,12 +178,10 @@ pub fn SettingsIntegrations() -> Element {
         PageHeader {
             title: "Integrations",
             subtitle: "Connect Discord, Tebex, payment providers, and third-party tools.",
-            action: rsx! {
-                Button {
-                    IconPlus {}
-                    "Add integration"
-                }
-            },
+            Button {
+                IconPlus {}
+                "Add integration"
+            }
         }
         section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
             StatPill { label: "Connected", value: "6", accent: "#7b8cff" }

@@ -31,7 +31,7 @@ pub fn launch(app: fn() -> Element) {
     #[cfg(debug_assertions)] dotenvy::dotenv().ok();
     dioxus::serve(|| async move {
         let router = dioxus::server::router(app)
-            .layer(Extension(BackendState::new().await?));
+            .layer(Extension(BackendState::new().await?)); // TODO figure out why it keeps running BackendState::new() over and over
         Ok(router)
     });
 }

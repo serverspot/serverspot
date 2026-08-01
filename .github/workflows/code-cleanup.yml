@@ -9,25 +9,25 @@ permissions:
   contents: write
 
 jobs:
-  format:
-    runs-on: ubuntu-latest
+  # format:
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
-      - run: cargo binstall -y dioxus-cli
-      - name: Format Code
-        run: dx fmt --all-code
-      - name: Commit formatting changes
-        uses: EndBug/add-and-commit@v10
-        with:
-          message: Auto-format Code
-          default_author: github_actions
-          committer_name: Github Actions
-          committer_email: 41898282+github-actions[bot]@users.noreply.github.com
+  #   steps:
+  #     - uses: actions/checkout@v6
+  #       with:
+  #         fetch-depth: 0
+  #     - name: Install cargo-binstall
+  #       uses: cargo-bins/cargo-binstall@main
+  #     - run: cargo binstall -y dioxus-cli
+  #     - name: Format Code
+  #       run: dx fmt --all-code
+  #     - name: Commit formatting changes
+  #       uses: EndBug/add-and-commit@v10
+  #       with:
+  #         message: Auto-format Code
+  #         default_author: github_actions
+  #         committer_name: Github Actions
+  #         committer_email: 41898282+github-actions[bot]@users.noreply.github.com
 
   # TODO fix -- hates RSX
   # clippy:
