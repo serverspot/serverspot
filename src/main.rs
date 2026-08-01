@@ -4,6 +4,7 @@ mod nav;
 mod router;
 mod server_funcs;
 mod user;
+#[cfg(feature = "server")] mod backend;
 use dioxus::prelude::*;
 use components::forum::{placeholder_boards, placeholder_threads};
 use components::loading::LoadingScreen;

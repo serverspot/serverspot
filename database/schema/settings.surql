@@ -29,5 +29,5 @@ DEFINE FUNCTION fn::set_global_setting($name: string, $val: any) {
 };
 
 DEFINE FUNCTION fn::get_global_setting($name: string) -> any {
-    SELECT val FROM global_setting WHERE module = $mod LIMIT 1
+    SELECT val FROM global_setting WHERE name = $name LIMIT 1
 };
