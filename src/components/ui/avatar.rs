@@ -44,28 +44,19 @@ pub fn Avatar(
         MemoAvatar {
             email,
             size,
-            px,
             img_class,
             alt,
         }
     }
 }
 #[component]
-fn MemoAvatar(
-    email: String,
-    size: u32,
-    px: &'static str,
-    img_class: &'static str,
-    alt: String,
-) -> Element {
+fn MemoAvatar(email: String, size: u32, img_class: String, alt: String) -> Element {
     let src = use_memo(move || gravatar_url(&email, size.saturating_mul(2)));
     rsx! {
         img {
             src: "{src}",
             alt,
-            width: px,
-            height: px,
-            class: img_class,
+            class: "{img_class}",
         }
     }
 }

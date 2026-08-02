@@ -2,9 +2,9 @@ use dioxus::prelude::*;
 use crate::components::brand::{favicon_svg, BrandMark};
 use crate::components::page::{PageTransition, PoweredByFooter};
 use crate::components::ui::*;
-use crate::gravatar::CurrentUser;
-use crate::nav::{crumb_for, is_theme_editor, section_for, Section};
+use crate::nav::{crumb_for, is_theme_editor, section_for, subnav_active, Section};
 use crate::router::Route;
+use crate::user::CurrentUser;
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum SheetAnim {
     Open,
@@ -189,7 +189,7 @@ pub fn AppShell() -> Element {
                             SubChip {
                                 to: sub.route,
                                 label: sub.label,
-                                active: route == sub.route,
+                                active: subnav_active(&route, sub.route),
                             }
                         }
                     }
@@ -292,7 +292,7 @@ fn MobileNavSheet(
                             SideNav {
                                 to: sub.route,
                                 label: sub.label,
-                                active: route == sub.route,
+                                active: subnav_active(&route, sub.route),
                             }
                         }
                     }

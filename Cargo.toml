@@ -8,6 +8,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.104"
+base64 = "0.22"
 dioxus = { version = "0.7.1", features = ["router", "fullstack"] }
 dotenvy = { version = "0.15.7", features = ["clap"], optional = true }
 sha2 = "0.10"

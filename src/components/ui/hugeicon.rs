@@ -1154,12 +1154,9 @@ pub const CANCEL_01: HugeIconData = HugeIconData {
 #[component]
 pub fn HugeIcon(
     icon: HugeIconData,
-    #[props(default = 16)]
-    size: u32,
-    #[props(default, into)]
-    class: String,
-    #[props(default = 1.5)]
-    stroke_width: f32,
+    #[props(default = 16)] size: u32,
+    #[props(default, into)] class: String,
+    #[props(default = 1.5)] stroke_width: f32,
 ) -> Element {
     let px = size.to_string();
     rsx! {

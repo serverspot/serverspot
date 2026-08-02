@@ -117,6 +117,8 @@ pub fn SettingRow(
     #[props(default)]
     enabled: bool,
 ) -> Element {
+    let mut on = use_signal(|| enabled);
+
     rsx! {
         div { class: "flex flex-col gap-3 border-b border-border-subtle py-4 last:border-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
             div { class: "min-w-0",
@@ -125,7 +127,11 @@ pub fn SettingRow(
             }
             Button {
                 class: "self-start",
-                variant: if enabled { ButtonVariant::Primary } else { ButtonVariant::Secondary },
+                variant: if on() {
+                    ButtonVariant::Primary
+                } else {
+                    ButtonVariant::Secondary
+                },
                 size: ButtonSize::Sm,
                 if enabled {
                     "On"

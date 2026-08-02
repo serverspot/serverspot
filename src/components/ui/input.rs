@@ -40,6 +40,25 @@ pub fn StaticInput(
     }
 }
 #[component]
+pub fn SignalTextarea(
+    mut value: Signal<String>,
+    #[props(default, into)] placeholder: String,
+    #[props(default, into)] class: String,
+) -> Element {
+    rsx! {
+        textarea {
+            class: "ui-input ui-squircle min-h-24 w-full resize-y px-4 py-3 text-sm outline-none {class}",
+            value: "{value}",
+            placeholder: "{placeholder}",
+            oninput: move |evt: FormEvent| {
+                let next = evt.value();
+                value.with_mut(|buf| buf.clone_from(&next));
+            },
+        }
+    }
+}
+
+#[component]
 pub fn SearchInput(
     mut value: Signal<String>,
     #[props(default = "Search...".to_string(), into)]

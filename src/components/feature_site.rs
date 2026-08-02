@@ -212,11 +212,6 @@ fn FeatureSiteSettings(feature: FeatureSite) -> Element {
                 SettingsField { label: "Section navigation", value: defaults
                             .primary_nav }
                 SettingRow {
-                    title: "Custom branding",
-                    description: "Override logo and accent colors for this feature’s pages.",
-                    enabled: true,
-                }
-                SettingRow {
                     title: "Custom navigation",
                     description: "Show a feature menu instead of the default website nav.",
                     enabled: false,

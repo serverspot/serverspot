@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use dioxus::prelude::*;
 use crate::components::syntax::highlighted_html;
 use crate::components::ui::*;
@@ -327,40 +326,28 @@ impl StatusMsg {
         }
     }
 }
-enum FileBody {
-    Static(&'static str),
-    Owned(String),
-}
-impl FileBody {
-    fn as_str(&self) -> &str {
-        match self {
-            Self::Static(s) => s,
-            Self::Owned(s) => s,
-        }
-    }
-}
 struct EditorFile {
-    path: Cow<'static, str>,
-    language: &'static str,
-    body: FileBody,
+    path: String,
+    language: String,
+    body: String,
 }
 impl EditorFile {
     fn from_seed(file: ThemeFile) -> Self {
         Self {
-            path: Cow::Borrowed(file.path),
-            language: file.language,
-            body: FileBody::Static(file.content),
+            path: file.path.to_owned(),
+            language: file.language.to_owned(),
+            body: file.content.to_owned(),
         }
     }
     fn parent(&self) -> Option<&str> {
         self.path.rsplit_once('/').map(|(folder, _)| folder)
     }
     fn name(&self) -> &str {
-        self.path.rsplit('/').next().unwrap_or(self.path.as_ref())
+        self.path.rsplit('/').next().unwrap_or(self.path.as_str())
     }
 }
 struct FolderEntry {
-    name: Cow<'static, str>,
+    name: String,
     open: bool,
 }
 struct ThemeEditor {
@@ -383,11 +370,11 @@ impl ThemeEditor {
             files,
             folders: vec![
                 FolderEntry {
-                    name: Cow::Borrowed("assets"),
+                    name: String::from("assets"),
                     open: true,
                 },
                 FolderEntry {
-                    name: Cow::Borrowed("partials"),
+                    name: String::from("partials"),
                     open: true,
                 },
             ],
@@ -419,7 +406,7 @@ impl ThemeEditor {
         }
         self.folders
             .push(FolderEntry {
-                name: Cow::Owned(String::from(name)),
+                name: String::from(name),
                 open,
             });
         self.folders.sort_by(|a, b| a.name.cmp(&b.name));
@@ -473,9 +460,9 @@ impl ThemeEditor {
                 content.push_str(" */\n");
                 self.files
                     .push(EditorFile {
-                        path: Cow::Owned(String::from(path)),
-                        language,
-                        body: FileBody::Owned(content),
+                        path: String::from(path),
+                        language: language.to_string(),
+                        body: content,
                     });
                 self.ensure_tab(index);
                 StatusMsg::CreatedFile
@@ -491,25 +478,25 @@ impl ThemeEditor {
         push_u16(&mut path, index);
         self.files
             .push(EditorFile {
-                path: Cow::Owned(path),
-                language: "FILE",
-                body: FileBody::Owned(String::from("/* Mock upload */\n")),
+                path,
+                language: String::from("FILE"),
+                body: String::from("/* Mock upload */\n"),
             });
         self.ensure_tab(index);
     }
     fn commit_active_body(&mut self, value: String) {
         if let Some(file) = self.files.get_mut(self.active as usize) {
-            file.body = FileBody::Owned(value);
+            file.body = value;
         }
     }
     fn active_body(&self) -> String {
         self.files
             .get(self.active as usize)
-            .map(|file| String::from(file.body.as_str()))
+            .map(|file| file.body.clone())
             .unwrap_or_default()
     }
-    fn active_language(&self) -> Option<&'static str> {
-        self.files.get(self.active as usize).map(|file| file.language)
+    fn active_language(&self) -> Option<String> {
+        self.files.get(self.active as usize).map(|file| file.language.clone())
     }
 }
 fn push_u16(buf: &mut String, mut value: u16) {
@@ -744,8 +731,8 @@ fn ThemeStatusBar(editor: Signal<ThemeEditor>, status: StatusMsg) -> Element {
     let (path, language) = {
         let state = editor.read();
         match state.files.get(state.active as usize) {
-            Some(file) => (file.path.clone(), file.language),
-            None => (Cow::Borrowed(""), ""),
+            Some(file) => (file.path.clone(), file.language.clone()),
+            None => (String::new(), String::new()),
         }
     };
     rsx! {
@@ -760,12 +747,12 @@ fn ThemeStatusBar(editor: Signal<ThemeEditor>, status: StatusMsg) -> Element {
 }
 #[component]
 fn ThemeCodePane(
-    language: &'static str,
+    #[props(into)] language: String,
     mut draft: Signal<String>,
     mut dirty: Signal<bool>,
     mut status: Signal<StatusMsg>,
 ) -> Element {
-    let html = use_memo(move || highlighted_html(draft.read().as_str(), language));
+    let html = use_memo(move || highlighted_html(draft.read().as_str(), language.as_str()));
     rsx! {
         div { class: "theme-ide-editor",
             div { class: "theme-ide-gutter-plain", aria_hidden: true }
@@ -810,8 +797,8 @@ fn ThemeFileRow(
         let language = state
             .files
             .get(index as usize)
-            .map(|file| file.language)
-            .unwrap_or("FILE");
+            .map(|file| file.language.clone())
+            .unwrap_or_else(|| String::from("FILE"));
         (state.active, language)
     };
     let name = editor
@@ -845,7 +832,11 @@ fn ThemeFolderBlock(
     let (is_open, file_count) = {
         let state = editor.read();
         (
-            state.folders.get(folder_i).map(|folder| folder.open).unwrap_or(false),
+            state
+                .folders
+                .get(folder_i)
+                .map(|folder| folder.open)
+                .unwrap_or(false),
             state.files.len() as u16,
         )
     };
@@ -854,7 +845,7 @@ fn ThemeFolderBlock(
         .folders
         .get(folder_i)
         .map(|folder| folder.name.clone())
-        .unwrap_or(Cow::Borrowed(""));
+        .unwrap_or_default();
     rsx! {
         button {
             class: "theme-ide-folder-row",
@@ -889,11 +880,7 @@ fn ThemeFolderBlock(
     }
 }
 #[component]
-fn ThemeTab(
-    mut editor: Signal<ThemeEditor>,
-    mut draft: Signal<String>,
-    index: u16,
-) -> Element {
+fn ThemeTab(mut editor: Signal<ThemeEditor>, mut draft: Signal<String>, index: u16) -> Element {
     let active = editor.read().active;
     let name = editor
         .read()
