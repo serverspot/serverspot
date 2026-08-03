@@ -12,9 +12,11 @@ use router::Route;
 use user::placeholder_current_user;
 pub const FAVICON: Asset = asset!("/assets/favicon.svg");
 pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
-fn main() {
-    #[cfg(feature = "server")] backend::launch(App);
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    #[cfg(feature = "server")] backend::launch(App)?;
     #[cfg(not(feature = "server"))] dioxus::launch(App);
+
+    Ok(())
 }
 #[component]
 fn App() -> Element {

@@ -8,10 +8,15 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.104"
-base64 = "0.22"
-dioxus = { version = "0.7.1", features = ["router", "fullstack"] }
+async-once-cell = { version = "0.5.4", optional = true }
+async-trait = "0.1.91"
+axum_session = { version = "0.20.1", optional = true }
+axum_session_auth = { version = "0.20.0", optional = true }
+axum_session_surreal = { version = "0.8.0", optional = true }
+base64 = "0.23.0"
+dioxus = { version = "0.7.10", features = ["router", "fullstack"] }
 dotenvy = { version = "0.15.7", features = ["clap"], optional = true }
-sha2 = "0.10"
+sha2 = "0.10.9"
 surrealdb = { version = "3.2.3", optional = true }
 
 [features]
@@ -21,10 +26,15 @@ desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
 # Build with `--no-default-features --features server` so `web` is not also enabled.
 # Enabling both breaks SSR hydration (dioxus#5427).
-server = ["dioxus/server", "dep:surrealdb", "dep:dotenvy"]
-
-store = []
-forum = []
+server = [
+    "dioxus/server",
+    "dep:surrealdb",
+    "dep:dotenvy",
+    "dep:axum_session_auth",
+    "dep:axum_session_surreal",
+    "dep:axum_session",
+    "dep:async-once-cell",
+]
 
 [package.metadata.docs.rs]
 features = ["web"]
