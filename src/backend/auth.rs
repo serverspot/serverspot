@@ -81,11 +81,6 @@ impl TwoFactorAuth {
     }
 }
 
-#[derive(SurrealValue, Debug)]
-pub struct UserRolesShell {
-    pub roles: Roles,
-}
-
 #[derive(Clone, Debug)]
 pub struct ActiveUser {
     id: String,
@@ -111,11 +106,14 @@ impl Authentication<ActiveUser, String, Database> for ActiveUser {
     async fn load_user(userid: String, db: Option<&Database>) -> anyhow::Result<Self> {
         let db = db.ok_or(anyhow!("failed to authenticate user: db not yet loaded"))?;
 
-        let roles: UserRolesShell = db.select(("account", userid.as_str()))
-            .await?
-            .ok_or(anyhow!("invalid userid"))?;
+        let mut res = db.query("type::record('account', $id).roles")
+            .bind(("id", userid.as_str()))
+            .await?;
 
-        let perms = roles.roles.total_permissions();
+        let roles: Option<Roles> = res.take(0)?;
+        let roles = roles.unwrap();
+
+        let perms = roles.total_permissions();
 
         Ok(Self {
             id: userid,
