@@ -6,6 +6,7 @@ DEFINE FIELD sessionid ON auth_session TYPE uuid;
 
 -- custom data attached to axum_session_surreal
 DEFINE FIELD accountid ON auth_session TYPE option<record<account>> DEFAULT none;
+DEFINE FIELD ip ON auth_session TYPE option<string> DEFAULT none;
 
 DEFINE INDEX auth_session_accountid ON auth_session
     FIELDS accountid;

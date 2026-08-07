@@ -7045,8 +7045,13 @@ dependencies = [
  "axum_session_auth",
  "axum_session_surreal",
  "base64 0.23.0",
+ "bitflags 2.13.1",
+ "chrono",
+ "dashmap",
  "dioxus",
  "dotenvy",
+ "rand 0.10.2",
+ "serde",
  "sha2 0.10.9",
  "surrealdb",
 ]

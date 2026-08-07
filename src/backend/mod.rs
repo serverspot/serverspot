@@ -9,10 +9,12 @@ use surrealdb::{
     opt::auth::Root,
 };
 
-use crate::backend::auth::UserAuth;
+use crate::backend::auth::ActiveUser;
+
 
 pub mod util;
 pub mod auth;
+pub mod db_model;
 
 pub type AppState = Arc<BackendState>;
 pub type AuthSession = SessionSurrealSession<Client>;
@@ -69,7 +71,7 @@ pub fn launch(app: fn() -> Element) -> anyhow::Result<()> {
 
             let router = dioxus::server::router(app)
                 .layer(Extension(state.clone()))
-                .layer(AuthSessionLayer::<UserAuth, i64, SessionPool, Database>::new(Some(state.db.clone())))
+                .layer(AuthSessionLayer::<ActiveUser, String, SessionPool, Database>::new(Some(state.db.clone())))
                 .layer(SessionLayer::new(session_store.clone()));
             Ok(router)
         }
