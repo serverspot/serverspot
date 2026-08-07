@@ -16,11 +16,11 @@ DEFINE FIELD game_id ON account TYPE option<string> DEFAULT none;
 DEFINE FIELD roles ON account TYPE array<record<role>> DEFAULT [];
 DEFINE FIELD require_2fa ON account TYPE bool
     VALUE (
-        (SELECT VALUE val FROM global_setting:force_2fa) OR
+        global_setting:force_2fa.val OR
         email != none OR
         (
             game_id != none AND
-            (SELECT VALUE val FROM global_setting:game_can_authenticate)
+            global_setting:game_can_authenticate.val
         )
     );
 
@@ -44,6 +44,6 @@ DEFINE FUNCTION fn::fetch_public_account($acc: record<account>) -> object {
 DEFINE FUNCTION fn::get_account_2fa_methods($acc: record<account>) -> object {
     RETURN {
         email: $acc.email != none,
-        game: $acc.game_id != none AND (SELECT VALUE val FROM global_setting:game_can_authenticate)
+        game: $acc.game_id != none AND global_setting:game_can_authenticate.val
     };
 }
