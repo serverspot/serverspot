@@ -16,11 +16,13 @@ DEFINE FIELD game_id ON account TYPE option<string> DEFAULT none;
 DEFINE FIELD roles ON account TYPE array<record<role>> DEFAULT [];
 DEFINE FIELD require_2fa ON account TYPE bool
     VALUE (
-        global_setting:force_2fa.val OR
-        email != none OR
+        (global_setting:force_2fa.val OR fn::get_account_setting($parent, "2fa_enabled")) AND
         (
-            game_id != none AND
-            global_setting:game_can_authenticate.val
+            email != none OR
+            (
+                game_id != none AND
+                global_setting:game_can_authenticate.val
+            )
         )
     );
 
@@ -33,7 +35,7 @@ DEFINE INDEX account_game_id_unique ON account
 DEFINE INDEX account_roles ON account
     FIELDS roles;
 
-DEFINE FUNCTION fn::account_fetch_roles($acc: record<account>) -> array<role> {
+DEFINE FUNCTION fn::account_fetch_roles($acc: record<account>) -> array<object> {
     SELECT * FROM $acc.roles
 };
 
