@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use anyhow::anyhow;
 use async_trait::async_trait;
 use axum_session_auth::{Authentication, HasPermission};
@@ -7,11 +9,12 @@ use dioxus::logger::tracing::error;
 use rand::RngExt;
 use surrealdb::types::SurrealValue;
 
-use crate::{backend::Database, server_funcs::model::{AccountPermissions, Roles}};
+use crate::{backend::Database, server_funcs::{auth::TwoFactorMethod, model::{AccountPermissions, Roles}}};
 
 pub struct OneTimePasscode {
     pub code: String,
     pub expiration: DateTime<Utc>,
+    pub will_verify: Option<TwoFactorMethod>,
 }
 
 impl OneTimePasscode {
@@ -26,6 +29,7 @@ impl From<String> for OneTimePasscode
         Self {
             code: value.into(),
             expiration: Utc::now() + Duration::hours(1),
+            will_verify: None,
         }
     }
 }
@@ -62,6 +66,7 @@ impl TwoFactorAuth {
         output
     }
 
+    // TODO verify stuff
     pub fn validate_code(&self, session_id: &str, code: &str) -> bool {
         if let Some(real_code) = self.auth_codes.get_mut(session_id) {
             if real_code.is_expired() {
@@ -79,18 +84,25 @@ impl TwoFactorAuth {
     pub fn prune_expired_codes(&self) {
         self.auth_codes.retain(|_, code| !code.is_expired());
     }
+
 }
 
 #[derive(Clone, Debug)]
-pub struct ActiveUser {
+pub struct ActiveAccount {
+    /// The ID of the user.
     id: String,
+    
+    /// The permissions of this user.
     perms: AccountPermissions,
-    anonymous: bool, // TODO better system for tracking anonymous visitors
+
+    /// Whether the user is anonymous.
+    /// [`perms`][Self::perms] should be empty if true.
+    anonymous: bool,
 }
 
 #[async_trait]
-impl HasPermission<Database> for ActiveUser {
-    async fn has(&self, perm: &str, pool: &Option<&Database>) -> bool {
+impl HasPermission<Database> for ActiveAccount {
+    async fn has(&self, perm: &str, _db: &Option<&Database>) -> bool {
         match perm.parse::<AccountPermissions>() {
             Ok(perm_flag) => self.perms.contains(perm_flag),
             Err(e) => {
@@ -102,7 +114,7 @@ impl HasPermission<Database> for ActiveUser {
 }
 
 #[async_trait]
-impl Authentication<ActiveUser, String, Database> for ActiveUser {
+impl Authentication<ActiveAccount, String, Database> for ActiveAccount {
     async fn load_user(userid: String, db: Option<&Database>) -> anyhow::Result<Self> {
         let db = db.ok_or(anyhow!("failed to authenticate user: db not yet loaded"))?;
 
@@ -132,5 +144,32 @@ impl Authentication<ActiveUser, String, Database> for ActiveUser {
 
     fn is_anonymous(&self) -> bool {
         self.anonymous
+    }
+}
+
+#[derive(SurrealValue, Debug)]
+pub struct AuthAccount {
+    pub id: String,
+    pub email: Option<String>,
+    pub email_verified: bool,
+    pub game_id: Option<String>,
+    pub game_id_verified: bool,
+    pub passwd_hash: String,
+    pub require_2fa: bool,
+}
+
+impl AuthAccount {
+    pub fn valid_2fa_methods(&self, game_can_authenticate: bool) -> HashSet<TwoFactorMethod> {
+        let mut output = HashSet::with_capacity(2);
+
+        if self.email.is_some() && self.email_verified {
+            output.insert(TwoFactorMethod::Email);
+        }
+
+        if game_can_authenticate && self.game_id.is_some() && self.game_id_verified {
+            output.insert(TwoFactorMethod::Game);
+        }
+
+        output
     }
 }

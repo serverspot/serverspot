@@ -2,22 +2,21 @@ use std::sync::Arc;
 use async_once_cell::OnceCell;
 use axum_session::{SessionConfig, SessionLayer, SessionStore};
 use axum_session_auth::AuthSessionLayer;
-use axum_session_surreal::{SessionSurrealPool, SessionSurrealSession};
+use axum_session_surreal::SessionSurrealPool;
 use dioxus::{prelude::*, server::axum::Extension};
 use surrealdb::{
     Surreal, engine::remote::ws::{Client, Ws},
     opt::auth::Root,
 };
 
-use crate::backend::auth::ActiveUser;
+use crate::backend::auth::ActiveAccount;
 
 
 pub mod util;
 pub mod auth;
-pub mod db_model;
 
 pub type AppState = Arc<BackendState>;
-pub type AuthSession = SessionSurrealSession<Client>;
+pub type AuthSession = axum_session_auth::AuthSession<ActiveAccount, String, SessionPool, Database>;
 pub type SessionPool = SessionSurrealPool<Client>;
 pub type Database = Surreal<Client>;
 
@@ -71,7 +70,7 @@ pub fn launch(app: fn() -> Element) -> anyhow::Result<()> {
 
             let router = dioxus::server::router(app)
                 .layer(Extension(state.clone()))
-                .layer(AuthSessionLayer::<ActiveUser, String, SessionPool, Database>::new(Some(state.db.clone())))
+                .layer(AuthSessionLayer::<ActiveAccount, String, SessionPool, Database>::new(Some(state.db.clone())))
                 .layer(SessionLayer::new(session_store.clone()));
             Ok(router)
         }

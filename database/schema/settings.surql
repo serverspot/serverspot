@@ -1,4 +1,5 @@
 -- global setting entries for various modules
+-- TODO separate id from display name conceptually
 DEFINE TABLE global_setting SCHEMAFULL;
 DEFINE FIELD name ON global_setting TYPE string;
 DEFINE FIELD val ON global_setting TYPE any;
