@@ -61,17 +61,11 @@ pub fn SearchInput(
     #[props(default, into)] class: String,
 ) -> Element {
     rsx! {
-        div {
-            class: "relative flex min-w-0 {class}",
-            span {
-                class: "pointer-events-none absolute inset-y-0 left-3.5 z-10 flex items-center text-text-muted",
+        div { class: "relative flex min-w-0 {class}",
+            span { class: "pointer-events-none absolute inset-y-0 left-3.5 z-10 flex items-center text-text-muted",
                 IconSearch {}
             }
-            SignalInput {
-                value,
-                placeholder,
-                class: "h-9 pl-10",
-            }
+            SignalInput { value, placeholder, class: "h-9 pl-10" }
         }
     }
 }

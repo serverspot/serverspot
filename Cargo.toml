@@ -28,3 +28,10 @@ forum = []
 
 [package.metadata.docs.rs]
 features = ["web"]
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = true
+opt-level = 3

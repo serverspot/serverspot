@@ -5,7 +5,6 @@ pub struct CurrentUser {
     pub role: String,
 }
 
-/// Seeded until real auth lands. Swap this initializer without touching call sites.
 pub fn placeholder_current_user() -> CurrentUser {
     CurrentUser {
         email: String::from("admin@serverspot.app"),

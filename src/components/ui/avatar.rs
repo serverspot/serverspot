@@ -46,10 +46,6 @@ fn MemoAvatar(email: String, size: u32, img_class: String, alt: String) -> Eleme
     let src = use_memo(move || gravatar_url(&email, size.saturating_mul(2)));
 
     rsx! {
-        img {
-            src: "{src}",
-            alt,
-            class: "{img_class}",
-        }
+        img { src: "{src}", alt, class: "{img_class}" }
     }
 }

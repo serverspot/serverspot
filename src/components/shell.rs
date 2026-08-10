@@ -18,8 +18,6 @@ pub fn AppShell() -> Element {
     let mut sheet = use_signal(|| Option::<SheetAnim>::None);
     let route = use_route::<Route>();
     let navigator = use_navigator();
-    let current_user = use_context::<Signal<CurrentUser>>();
-    let account_email = current_user.read().email.clone();
     let section = section_for(&route);
     let crumb = crumb_for(&route);
     let theme_ide = is_theme_editor(&route);
@@ -75,16 +73,11 @@ pub fn AppShell() -> Element {
         Some(SheetAnim::Closing) => "nav-sheet-panel-exit",
         None => "",
     };
-    let account_avatar_class = if section == Section::Account {
-        "ring-2 ring-accent"
-    } else {
-        "ring-1 ring-border-subtle"
-    };
     let side_open_now = side_open();
     let side_panel_class = if side_open_now {
-        "side-panel fixed inset-y-0 left-[68px] z-20 hidden flex-col border-r bg-bg lg:flex"
+        "side-panel fixed inset-y-0 left-[68px] z-20 hidden flex-col border-r bg-bg-elevated lg:flex"
     } else {
-        "side-panel side-panel-collapsed fixed inset-y-0 left-[68px] z-20 hidden flex-col border-r bg-bg lg:flex"
+        "side-panel side-panel-collapsed fixed inset-y-0 left-[68px] z-20 hidden flex-col border-r bg-bg-elevated lg:flex"
     };
     let content_pad = if side_open_now {
         "shell-main-pad flex h-full min-h-0 min-w-0 flex-col overflow-hidden md:pl-[68px] lg:pl-[calc(68px+14rem)]"
@@ -92,9 +85,9 @@ pub fn AppShell() -> Element {
         "shell-main-pad flex h-full min-h-0 min-w-0 flex-col overflow-hidden md:pl-[68px]"
     };
     let subnav_class = if side_open_now {
-        "flex gap-1 overflow-x-auto border-t border-border-subtle/50 px-3 py-2 sm:px-5 md:px-8 lg:hidden scrollbar-none"
+        "flex gap-1 overflow-x-auto px-5 py-2 sm:px-8 md:px-10 lg:hidden scrollbar-none"
     } else {
-        "flex gap-1 overflow-x-auto border-t border-border-subtle/50 px-3 py-2 sm:px-5 md:px-8 scrollbar-none"
+        "flex gap-1 overflow-x-auto px-5 py-2 sm:px-8 md:px-10 scrollbar-none"
     };
     let expand_btn_class = if side_open_now {
         "side-expand-btn side-expand-btn-hidden ui-btn ui-squircle ui-btn-ghost mb-3 hidden h-9 w-9 cursor-pointer items-center justify-center p-0 font-semibold text-text-muted lg:inline-flex"
@@ -109,10 +102,9 @@ pub fn AppShell() -> Element {
             class: "relative h-dvh overflow-hidden bg-bg text-text",
             style: section.theme_vars(),
 
-            aside {
-                class: "fixed inset-y-0 left-0 z-20 hidden w-[68px] flex-col items-center overflow-y-auto border-r border-border-subtle bg-bg py-5 md:flex",
+            aside { class: "fixed inset-y-0 left-0 z-20 hidden w-[68px] flex-col items-center overflow-visible border-r border-border-subtle bg-bg py-5 md:flex",
                 button {
-                    class: "mb-8 flex h-9 w-9 items-center justify-center rounded-squircle-sm transition-opacity hover:opacity-80",
+                    class: "mb-8 flex h-9 w-9 items-center justify-center rounded-md transition-opacity hover:opacity-80",
                     onclick: move |_| {
                         navigator.push(Route::Dashboard {});
                     },
@@ -127,22 +119,24 @@ pub fn AppShell() -> Element {
                     onclick: move |_| side_open.set(true),
                     span { class: "text-lg leading-none", "›" }
                 }
-                nav {
-                    class: "flex flex-1 flex-col items-center gap-1",
+                nav { class: "flex flex-1 flex-col items-center gap-3",
                     for main in Section::ALL.iter().copied() {
                         RailNav {
                             key: "{main.label()}",
                             to: main.home(),
                             active: section == main,
+                            rail_style: main.rail_style(),
+                            label: main.label(),
                             icon: rail_icon_data(main),
                         }
                     }
                 }
-                div {
-                    class: "mt-auto flex flex-col items-center gap-3 pb-1",
+                div { class: "mt-auto flex flex-col items-center gap-3 pb-1",
                     RailNav {
                         to: Section::Settings.home(),
                         active: section == Section::Settings,
+                        rail_style: Section::Settings.rail_style(),
+                        label: Section::Settings.label(),
                         icon: rail_icon_data(Section::Settings),
                     }
                     button {
@@ -151,29 +145,20 @@ pub fn AppShell() -> Element {
                         onclick: move |_| {
                             navigator.push(Route::Account {});
                         },
-                        Avatar {
-                            email: account_email,
-                            size: 32,
-                            alt: "Account",
-                            class: account_avatar_class,
-                        }
+                        ShellAccountAvatar {}
                     }
                 }
             }
 
-            aside {
-                class: side_panel_class,
-                aria_hidden: !side_open_now,
-                div {
-                    class: "side-panel-inner flex h-full flex-col overflow-y-auto px-4 py-6",
-                    div {
-                        class: "mb-5 flex items-start justify-between gap-2",
-                        div {
-                            class: "min-w-0 px-2",
-                            p { class: "mb-1 text-xs font-medium uppercase tracking-wide text-text-muted", "Section" }
+            aside { class: side_panel_class, aria_hidden: !side_open_now,
+                div { class: "side-panel-inner flex h-full flex-col overflow-y-auto px-4 py-6",
+                    div { class: "mb-6 flex items-start justify-between gap-2",
+                        div { class: "min-w-0 px-2",
+                            p { class: "mb-1 text-xs text-text-muted", "{section.label()}" }
                             p {
-                                class: "text-lg font-semibold tracking-tight text-accent",
-                                "{section.label()}"
+                                key: "{crumb}",
+                                class: "shell-crumb text-base font-semibold tracking-tight text-text",
+                                "{crumb}"
                             }
                         }
                         button {
@@ -185,54 +170,36 @@ pub fn AppShell() -> Element {
                             span { class: "text-lg leading-none", "‹" }
                         }
                     }
-                    nav {
-                        class: "flex flex-col gap-0.5",
-                        for sub in section.subs().iter().copied() {
+                    nav { class: "flex flex-col gap-0.5",
+                        for sub in section.subs() {
                             SideNav {
-                                to: sub.route,
+                                to: sub.route.clone(),
                                 label: sub.label,
-                                active: subnav_active(&route, sub.route),
+                                active: subnav_active(&route, &sub.route),
                             }
                         }
                     }
                 }
             }
 
-            div {
-                class: content_pad,
+            div { class: content_pad,
 
-                header {
-                    class: "z-30 shrink-0 border-b border-border-subtle/60 bg-bg/90 backdrop-blur-md",
-                    ShellHeaderBar {
-                        section,
-                        crumb,
-                        sheet,
-                    }
+                header { class: "z-30 shrink-0",
+                    ShellHeaderBar { section, crumb, sheet }
 
-                    nav {
-                        class: subnav_class,
-                        for sub in section.subs().iter().copied() {
+                    nav { class: subnav_class,
+                        for sub in section.subs() {
                             SubChip {
-                                to: sub.route,
+                                to: sub.route.clone(),
                                 label: sub.label,
-                                active: subnav_active(&route, sub.route),
+                                active: subnav_active(&route, &sub.route),
                             }
                         }
                     }
                 }
 
-                main {
-                    class: if theme_ide {
-                        "flex min-h-0 flex-1 flex-col overflow-hidden p-0"
-                    } else {
-                        "flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-4 sm:px-6 sm:pt-6 md:px-8"
-                    },
-                    div {
-                        class: if theme_ide {
-                            "flex min-h-0 flex-1 flex-col"
-                        } else {
-                            "flex-1"
-                        },
+                main { class: if theme_ide { "flex min-h-0 flex-1 flex-col overflow-hidden p-0" } else { "flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-6 sm:px-8 sm:pt-8 md:px-10" },
+                    div { class: if theme_ide { "flex min-h-0 flex-1 flex-col" } else { "flex-1" },
                         PageTransition {}
                     }
                     if !theme_ide {
@@ -280,8 +247,7 @@ fn MobileNavSheet(
     };
 
     rsx! {
-        div {
-            class: "fixed inset-0 z-40 md:hidden",
+        div { class: "fixed inset-0 z-40 md:hidden",
             button {
                 class: backdrop,
                 aria_label: "Close menu",
@@ -298,10 +264,8 @@ fn MobileNavSheet(
                         sheet.set(None);
                     }
                 },
-                div {
-                    class: "flex h-14 items-center justify-between gap-3 border-b border-border-subtle px-4",
-                    div {
-                        class: "flex items-center gap-3",
+                div { class: "flex h-14 items-center justify-between gap-3 border-b border-border-subtle px-4",
+                    div { class: "flex items-center gap-3",
                         BrandMark { class: "h-7 w-7" }
                         span { class: "text-base font-semibold tracking-tight", "ServerSpot" }
                     }
@@ -315,30 +279,25 @@ fn MobileNavSheet(
                     }
                 }
 
-                div {
-                    class: "flex-1 overflow-y-auto px-3 py-4",
-                    p { class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted", "Sections" }
-                    nav {
-                        class: "mb-6 flex flex-col gap-0.5",
+                div { class: "flex-1 overflow-y-auto px-3 py-4",
+                    p { class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted",
+                        "Sections"
+                    }
+                    nav { class: "mb-6 flex flex-col gap-0.5",
                         for main in Section::ALL.iter().copied().chain(std::iter::once(Section::Settings)) {
-                            MobileSectionNav {
-                                section: main,
-                                active: section == main,
-                            }
+                            MobileSectionNav { section: main, active: section == main }
                         }
                     }
 
-                    p {
-                        class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted",
+                    p { class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted",
                         "{section.label()}"
                     }
-                    nav {
-                        class: "flex flex-col gap-0.5",
-                        for sub in section.subs().iter().copied() {
+                    nav { class: "flex flex-col gap-0.5",
+                        for sub in section.subs() {
                             SideNav {
-                                to: sub.route,
+                                to: sub.route.clone(),
                                 label: sub.label,
-                                active: subnav_active(&route, sub.route),
+                                active: subnav_active(&route, &sub.route),
                             }
                         }
                     }
@@ -368,8 +327,7 @@ fn ShellHeaderBar(
     });
 
     rsx! {
-        div {
-            class: "flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-5 md:px-8",
+        div { class: "flex items-center gap-2 px-5 pt-6 sm:gap-3 sm:px-8 md:px-10",
 
             if search_open() {
                 IconButton {
@@ -400,51 +358,35 @@ fn ShellHeaderBar(
                     BrandMark { class: "h-7 w-7" }
                 }
 
-                div {
-                    class: "min-w-0 flex-1",
-                    p {
-                        class: "truncate text-sm font-medium text-text md:hidden",
+                div { class: "min-w-0 flex-1",
+                    p { class: "truncate text-sm font-medium text-text md:hidden",
                         "{section.label()}"
                         span { class: "font-normal text-text-muted", " / {crumb}" }
                     }
-                    div {
-                        class: "hidden min-w-0 items-center gap-2 text-sm text-text-muted md:flex",
+                    div { class: "hidden min-w-0 items-center gap-2 text-sm text-text-muted md:flex",
                         Link {
                             to: section.home(),
                             class: "truncate opacity-70 transition-opacity hover:opacity-100 text-text-muted",
                             "{section.label()}"
                         }
                         span { class: "opacity-40", "/" }
-                        span { class: "truncate text-text-secondary", "{crumb}" }
+                        span {
+                            key: "{crumb}",
+                            class: "shell-crumb truncate text-text-secondary",
+                            "{crumb}"
+                        }
                     }
                 }
 
-                div {
-                    class: "flex shrink-0 items-center gap-0.5 sm:gap-1",
-                    IconButton {
-                        onclick: move |_| search_open.set(true),
-                        IconSearch {}
-                    }
-                    IconButton {
-                        class: "max-lg:hidden",
-                        IconBell {}
-                    }
+                div { class: "flex shrink-0 items-center gap-0.5 sm:gap-1",
+                    IconButton { onclick: move |_| search_open.set(true), IconSearch {} }
+                    IconButton { class: "max-lg:hidden", IconBell {} }
                     IconButton {
                         class: "max-lg:hidden",
                         onclick: move |_| {
                             navigator.push(Route::SettingsIntegrations {});
                         },
                         IconGlobe {}
-                    }
-                    Button {
-                        class: "ml-1 max-sm:hidden",
-                        size: ButtonSize::Sm,
-                        IconPlus {}
-                        "New"
-                    }
-                    IconButton {
-                        class: "sm:hidden",
-                        IconPlus {}
                     }
                 }
             }
@@ -471,13 +413,19 @@ fn rail_icon_data(section: Section) -> HugeIconData {
 }
 
 #[component]
-fn RailNav(to: Route, active: bool, icon: HugeIconData) -> Element {
+fn RailNav(
+    to: Route,
+    active: bool,
+    rail_style: &'static str,
+    label: &'static str,
+    icon: HugeIconData,
+) -> Element {
     let navigator = use_navigator();
     let dest = to;
     let class = if active {
-        "ui-btn-rail-accent"
+        "ui-btn-rail-accent ui-rail-tip"
     } else {
-        "text-text-muted"
+        "ui-btn-rail-idle ui-rail-tip"
     };
 
     rsx! {
@@ -485,10 +433,12 @@ fn RailNav(to: Route, active: bool, icon: HugeIconData) -> Element {
             variant: if active { ButtonVariant::Secondary } else { ButtonVariant::Ghost },
             size: ButtonSize::IconSm,
             class,
+            style: rail_style,
+            tip: label,
             onclick: move |_| {
-                navigator.push(dest);
+                navigator.push(dest.clone());
             },
-            HugeIcon { icon }
+            HugeIcon { icon, size: 18 }
         }
     }
 }
@@ -510,7 +460,7 @@ fn SideNav(to: Route, label: &'static str, active: bool) -> Element {
             full_width: true,
             class,
             onclick: move |_| {
-                navigator.push(dest);
+                navigator.push(dest.clone());
             },
             "{label}"
         }
@@ -533,7 +483,7 @@ fn SubChip(to: Route, label: &'static str, active: bool) -> Element {
             size: ButtonSize::Sm,
             class,
             onclick: move |_| {
-                navigator.push(dest);
+                navigator.push(dest.clone());
             },
             "{label}"
         }
@@ -547,7 +497,7 @@ fn MobileSectionNav(section: Section, active: bool) -> Element {
     let class = if active {
         "ui-btn-feature-color justify-start gap-2.5"
     } else {
-        "justify-start gap-2.5 text-text-muted"
+        "ui-btn-rail-idle justify-start gap-2.5"
     };
 
     rsx! {
@@ -556,11 +506,35 @@ fn MobileSectionNav(section: Section, active: bool) -> Element {
             size: ButtonSize::Sm,
             full_width: true,
             class,
+            style: section.rail_style(),
             onclick: move |_| {
-                navigator.push(dest);
+                navigator.push(dest.clone());
             },
-            span { class: "opacity-80", HugeIcon { icon: rail_icon_data(section) } }
+            span { class: "opacity-80",
+                HugeIcon { icon: rail_icon_data(section) }
+            }
             span { "{section.label()}" }
+        }
+    }
+}
+
+#[component]
+fn ShellAccountAvatar() -> Element {
+    let current_user = use_context::<Signal<CurrentUser>>();
+    let route = use_route::<Route>();
+    let email = current_user.read().email.clone();
+    let class = if section_for(&route) == Section::Account {
+        "ring-2 ring-accent"
+    } else {
+        "ring-1 ring-border-subtle"
+    };
+
+    rsx! {
+        Avatar {
+            email,
+            size: 32,
+            alt: "Account",
+            class,
         }
     }
 }

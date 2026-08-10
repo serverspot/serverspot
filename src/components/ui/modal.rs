@@ -55,18 +55,15 @@ pub fn Modal(
                 aria_labelledby: "ui-modal-title",
                 tabindex: "0",
 
-                div {
-                    class: "flex items-start justify-between gap-3 px-5 pt-5 sm:px-6 sm:pt-6",
-                    div {
-                        class: "min-w-0 pr-2",
+                div { class: "flex items-start justify-between gap-3 px-5 pt-5 sm:px-6 sm:pt-6",
+                    div { class: "min-w-0 pr-2",
                         h2 {
                             id: "ui-modal-title",
                             class: "text-xl font-semibold tracking-tight text-text",
                             "{title}"
                         }
                         if !description.is_empty() {
-                            p {
-                                class: "mt-1.5 max-w-xl text-sm leading-relaxed text-text-muted",
+                            p { class: "mt-1.5 max-w-xl text-sm leading-relaxed text-text-muted",
                                 "{description}"
                             }
                         }
@@ -80,14 +77,10 @@ pub fn Modal(
                     }
                 }
 
-                div {
-                    class: "px-5 py-5 sm:px-6",
-                    {children}
-                }
+                div { class: "px-5 py-5 sm:px-6", {children} }
 
                 if let Some(footer) = footer {
-                    div {
-                        class: "flex flex-wrap items-center justify-end gap-2 px-5 pb-5 sm:px-6 sm:pb-6",
+                    div { class: "flex flex-wrap items-center justify-end gap-2 px-5 pb-5 sm:px-6 sm:pb-6",
                         {footer}
                     }
                 }

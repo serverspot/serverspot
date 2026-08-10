@@ -10,6 +10,7 @@ pub mod feature_site;
 pub mod forum;
 pub mod loading;
 pub mod login;
+pub mod not_found;
 pub mod page;
 pub mod settings;
 pub mod shell;

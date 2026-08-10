@@ -1,200 +1,180 @@
 use dioxus::prelude::*;
 
-use crate::components::page::{DataPanel, PageHeader, SettingRow};
-use crate::components::ui::*;
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum FeatureSite {
-    Store,
-    Support,
-    Content,
-    Players,
-    Leaderboards,
-    Votes,
-    Applications,
-    Analytics,
-}
-
-impl FeatureSite {
-    fn label(self) -> &'static str {
-        match self {
-            Self::Store => "Store",
-            Self::Support => "Support",
-            Self::Content => "Blog",
-            Self::Players => "Players",
-            Self::Leaderboards => "Leaderboards",
-            Self::Votes => "Vote rewards",
-            Self::Applications => "Applications",
-            Self::Analytics => "Analytics",
-        }
-    }
-
-    fn subtitle(self) -> &'static str {
-        match self {
-            Self::Store => "Path, branding, and navigation for the storefront on your website.",
-            Self::Support => "Path and portal settings for tickets and the help centre.",
-            Self::Content => "Path and homepage settings for the blog, news, and pages.",
-            Self::Players => "Path and profile hub settings for player pages.",
-            Self::Leaderboards => "Path and public board settings for rankings.",
-            Self::Votes => "Path and claim-page settings for vote rewards.",
-            Self::Applications => "Path and form settings for staff applications.",
-            Self::Analytics => "Path and access settings for shared analytics views.",
-        }
-    }
-
-    fn defaults(self) -> FeatureDefaults {
-        match self {
-            Self::Store => FeatureDefaults {
-                base_path: "/store",
-                page_title: "Store",
-                primary_nav: "Shop, Ranks, Crates, Gifts",
-            },
-            Self::Support => FeatureDefaults {
-                base_path: "/support",
-                page_title: "Support",
-                primary_nav: "Tickets, Help centre, Status",
-            },
-            Self::Content => FeatureDefaults {
-                base_path: "/news",
-                page_title: "Blog",
-                primary_nav: "News, Blog, Rules, Staff",
-            },
-            Self::Players => FeatureDefaults {
-                base_path: "/players",
-                page_title: "Players",
-                primary_nav: "Profiles, Search, Badges",
-            },
-            Self::Leaderboards => FeatureDefaults {
-                base_path: "/leaderboards",
-                page_title: "Leaderboards",
-                primary_nav: "Top players, Kills, Playtime",
-            },
-            Self::Votes => FeatureDefaults {
-                base_path: "/vote",
-                page_title: "Vote rewards",
-                primary_nav: "Vote links, Streaks, Claim",
-            },
-            Self::Applications => FeatureDefaults {
-                base_path: "/apply",
-                page_title: "Applications",
-                primary_nav: "Open roles, My applications",
-            },
-            Self::Analytics => FeatureDefaults {
-                base_path: "/analytics",
-                page_title: "Analytics",
-                primary_nav: "Overview, Reports, Exports",
-            },
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-struct FeatureDefaults {
-    base_path: &'static str,
-    page_title: &'static str,
-    primary_nav: &'static str,
-}
-
-#[component]
-pub fn StoreSiteSettings() -> Element {
-    rsx! { FeatureSiteSettings { feature: FeatureSite::Store } }
-}
-
-#[component]
-pub fn SupportSiteSettings() -> Element {
-    rsx! { FeatureSiteSettings { feature: FeatureSite::Support } }
-}
-
-#[component]
-pub fn ContentSiteSettings() -> Element {
-    rsx! { FeatureSiteSettings { feature: FeatureSite::Content } }
-}
+use crate::components::community::{PlayersLeaderboardsStyles, VotesApplicationsStyles};
+use crate::components::page::{DataPanel, FeatureSettingsChrome, SettingRow, SettingsField};
 
 #[component]
 pub fn PlayersSiteSettings() -> Element {
-    rsx! { FeatureSiteSettings { feature: FeatureSite::Players } }
-}
-
-#[component]
-pub fn LeaderboardsSiteSettings() -> Element {
-    rsx! { FeatureSiteSettings { feature: FeatureSite::Leaderboards } }
-}
-
-#[component]
-pub fn VotesSiteSettings() -> Element {
-    rsx! { FeatureSiteSettings { feature: FeatureSite::Votes } }
-}
-
-#[component]
-pub fn ApplicationsSiteSettings() -> Element {
-    rsx! { FeatureSiteSettings { feature: FeatureSite::Applications } }
-}
-
-#[component]
-pub fn AnalyticsSiteSettings() -> Element {
-    rsx! { FeatureSiteSettings { feature: FeatureSite::Analytics } }
-}
-
-#[component]
-fn FeatureSiteSettings(feature: FeatureSite) -> Element {
-    let defaults = feature.defaults();
-
     rsx! {
-        PageHeader {
-            title: "Settings",
-            subtitle: feature.subtitle(),
-            action: rsx! {
-                Button { "Save changes" }
-            },
-        }
-
-        div {
-            class: "mb-4 flex flex-wrap items-center gap-2",
-            span {
-                class: "rounded-squircle-sm border border-border-subtle bg-surface/40 px-2.5 py-1 text-xs text-text-muted",
-                "{feature.label()} feature"
-            }
-            span {
-                class: "text-xs text-text-muted",
-                "Uses your main website domain · www.example.com"
-            }
-        }
-
-        div {
-            class: "grid gap-4 lg:grid-cols-2",
-            DataPanel {
-                title: "On your website",
-                SettingsField { label: "Public path", value: defaults.base_path }
+        PlayersLeaderboardsStyles {}
+        FeatureSettingsChrome { subtitle: "Path and profile hub settings for the player directory.",
+            DataPanel { title: "On your website",
+                SettingsField { label: "Public path", value: "/players" }
+                SettingsField { label: "Full URL", value: "www.example.com/players" }
                 SettingsField {
-                    label: "Full URL",
-                    value: match feature {
-                        FeatureSite::Store => "www.example.com/store",
-                        FeatureSite::Support => "www.example.com/support",
-                        FeatureSite::Content => "www.example.com/news",
-                        FeatureSite::Players => "www.example.com/players",
-                        FeatureSite::Leaderboards => "www.example.com/leaderboards",
-                        FeatureSite::Votes => "www.example.com/vote",
-                        FeatureSite::Applications => "www.example.com/apply",
-                        FeatureSite::Analytics => "www.example.com/analytics",
-                    },
+                    label: "Profile URL pattern",
+                    value: "www.example.com/players/:id",
                 }
-                p {
-                    class: "pt-3 text-xs text-text-muted",
+                p { class: "pt-3 text-xs text-text-muted",
                     "Domain and HTTPS are managed in Settings → General."
                 }
             }
-            DataPanel {
-                title: "Branding & navigation",
-                SettingsField { label: "Page title", value: defaults.page_title }
-                SettingsField { label: "Section navigation", value: defaults.primary_nav }
+            DataPanel { title: "Directory behaviour",
+                SettingRow {
+                    title: "Public roster search",
+                    description: "Let visitors search and filter the player directory.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Show ranks",
+                    description: "Display rank badges on profiles and the roster.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Show linked accounts",
+                    description: "Reveal linked Minecraft and Discord identities publicly.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Public profile pages",
+                    description: "Allow anyone to view a player's case file page.",
+                    enabled: true,
+                }
+            }
+            DataPanel { title: "Branding & navigation",
+                SettingsField { label: "Page title", value: "Players" }
+                SettingsField {
+                    label: "Section navigation",
+                    value: "Profiles, Search, Badges",
+                }
                 SettingRow {
                     title: "Custom navigation",
                     description: "Show a feature menu instead of the default website nav.",
                     enabled: false,
                 }
+            }
+            DataPanel { title: "Roster defaults",
+                SettingsField { label: "Default sort", value: "Highest level" }
+                SettingsField { label: "Cards per page", value: "24" }
+                SettingsField { label: "Offline grace period", value: "5 minutes" }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn LeaderboardsSiteSettings() -> Element {
+    rsx! {
+        PlayersLeaderboardsStyles {}
+        FeatureSettingsChrome { subtitle: "Path and public board settings for rankings and podiums.",
+            DataPanel { title: "On your website",
+                SettingsField { label: "Public path", value: "/leaderboards" }
+                SettingsField { label: "Full URL", value: "www.example.com/leaderboards" }
+                SettingsField {
+                    label: "Board URL pattern",
+                    value: "www.example.com/leaderboards/:id",
+                }
+                p { class: "pt-3 text-xs text-text-muted",
+                    "Domain and HTTPS are managed in Settings → General."
+                }
+            }
+            DataPanel { title: "Board behaviour",
                 SettingRow {
-                    title: "Custom layout",
-                    description: "Enable feature-specific page layouts and templates.",
+                    title: "Public boards",
+                    description: "Show leaderboards on the public website.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Show avatars",
+                    description: "Display player avatars next to ranked entries.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Automatic resets",
+                    description: "Reset boards automatically based on their schedule.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Podium spotlight widget",
+                    description: "Show the top-3 podium widget on the overview page.",
+                    enabled: true,
+                }
+            }
+            DataPanel { title: "Branding & navigation",
+                SettingsField { label: "Page title", value: "Leaderboards" }
+                SettingsField {
+                    label: "Section navigation",
+                    value: "Top players, Kills, Playtime",
+                }
+                SettingRow {
+                    title: "Custom navigation",
+                    description: "Show a feature menu instead of the default website nav.",
+                    enabled: false,
+                }
+            }
+            DataPanel { title: "Data sources",
+                SettingsField { label: "Primary source", value: "In-game plugin API" }
+                SettingsField { label: "Sync interval", value: "5 minutes" }
+                SettingsField { label: "Fallback source", value: "Manual CSV import" }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn VotesSiteSettings() -> Element {
+    rsx! {
+        VotesApplicationsStyles {}
+        FeatureSettingsChrome { subtitle: "Listing sites, callbacks, and claim delivery for vote rewards.",
+            DataPanel { title: "Listing sites & callbacks",
+                SettingsField { label: "Connected sites", value: "4 listing sites" }
+                SettingsField { label: "Callback timeout", value: "10 seconds" }
+                SettingsField { label: "Vote cooldown", value: "12–24 hours per site" }
+                SettingsField {
+                    label: "Callback URL",
+                    value: "www.example.com/vote/callback/:site",
+                }
+                p { class: "pt-3 text-xs text-text-muted",
+                    "Each listing site posts to this callback when a vote is verified."
+                }
+            }
+            DataPanel { title: "Claim delivery",
+                SettingRow {
+                    title: "Auto-claim online players",
+                    description: "Run reward commands immediately if the player is online.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Queue offline claims",
+                    description: "Hold claims until the player next joins the server.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Streak grace period",
+                    description: "Allow a 24-hour grace period before a streak resets.",
+                    enabled: true,
+                }
+            }
+            DataPanel { title: "On your website",
+                SettingsField { label: "Public path", value: "/vote" }
+                SettingsField { label: "Full URL", value: "www.example.com/vote" }
+                SettingsField {
+                    label: "Claim URL pattern",
+                    value: "www.example.com/vote/claim/:id",
+                }
+                p { class: "pt-3 text-xs text-text-muted",
+                    "Domain and HTTPS are managed in Settings → General."
+                }
+            }
+            DataPanel { title: "Branding & navigation",
+                SettingsField { label: "Page title", value: "Vote rewards" }
+                SettingsField {
+                    label: "Section navigation",
+                    value: "Vote links, Rewards, Claim",
+                }
+                SettingRow {
+                    title: "Custom navigation",
+                    description: "Show a feature menu instead of the default website nav.",
                     enabled: false,
                 }
             }
@@ -203,12 +183,60 @@ fn FeatureSiteSettings(feature: FeatureSite) -> Element {
 }
 
 #[component]
-fn SettingsField(label: &'static str, value: &'static str) -> Element {
+pub fn ApplicationsSiteSettings() -> Element {
     rsx! {
-        div {
-            class: "border-b border-border-subtle py-3 last:border-0",
-            label { class: "mb-1.5 block text-xs font-medium text-text-muted", "{label}" }
-            StaticInput { value, class: "max-w-md" }
+        VotesApplicationsStyles {}
+        FeatureSettingsChrome { subtitle: "Path, form defaults, and review workflow for applications.",
+            DataPanel { title: "On your website",
+                SettingsField { label: "Public path", value: "/apply" }
+                SettingsField { label: "Full URL", value: "www.example.com/apply" }
+                SettingsField {
+                    label: "Form URL pattern",
+                    value: "www.example.com/apply/:role",
+                }
+                p { class: "pt-3 text-xs text-text-muted",
+                    "Domain and HTTPS are managed in Settings → General."
+                }
+            }
+            DataPanel { title: "Desk behaviour",
+                SettingRow {
+                    title: "Open applications publicly",
+                    description: "Let visitors browse open roles and apply.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Require account link",
+                    description: "Applicants must link a Minecraft account to apply.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Staff voting",
+                    description: "Allow reviewers to cast yes/no votes on each application.",
+                    enabled: true,
+                }
+                SettingRow {
+                    title: "Auto-close duplicate applications",
+                    description: "Archive earlier applications when a newer one is submitted.",
+                    enabled: false,
+                }
+            }
+            DataPanel { title: "Branding & navigation",
+                SettingsField { label: "Page title", value: "Applications" }
+                SettingsField {
+                    label: "Section navigation",
+                    value: "Open roles, My applications",
+                }
+                SettingRow {
+                    title: "Custom navigation",
+                    description: "Show a feature menu instead of the default website nav.",
+                    enabled: false,
+                }
+            }
+            DataPanel { title: "Review workflow",
+                SettingsField { label: "Reviewers per application", value: "2 minimum" }
+                SettingsField { label: "Decision notifications", value: "Email + Discord" }
+                SettingsField { label: "Reapply cooldown", value: "30 days after denial" }
+            }
         }
     }
 }

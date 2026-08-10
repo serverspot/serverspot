@@ -1108,13 +1108,46 @@ pub const CANCEL_01: HugeIconData = HugeIconData {
 pub fn HugeIcon(
     icon: HugeIconData,
     #[props(default = 16)] size: u32,
-    #[props(default, into)] class: String,
+    #[props(default = "")] class: &'static str,
     #[props(default = 1.5)] stroke_width: f32,
 ) -> Element {
-    let px = size.to_string();
+    let px: &str = match size {
+        14 => "14",
+        16 => "16",
+        18 => "18",
+        20 => "20",
+        22 => "22",
+        24 => "24",
+        28 => "28",
+        32 => "32",
+        _ => "",
+    };
+    let px_owned;
+    let px = if px.is_empty() {
+        px_owned = size.to_string();
+        px_owned.as_str()
+    } else {
+        px
+    };
+    let custom_stroke = (stroke_width - 1.5).abs() > f32::EPSILON;
+    let stroke_owned = if custom_stroke {
+        Some(stroke_width.to_string())
+    } else {
+        None
+    };
+
+    let class_name = if class.is_empty() {
+        "shrink-0"
+    } else {
+        match class {
+            "opacity-80" => "shrink-0 opacity-80",
+            _ => "shrink-0",
+        }
+    };
+
     rsx! {
         svg {
-            class: "shrink-0 {class}",
+            class: "{class_name}",
             width: "{px}",
             height: "{px}",
             view_box: "0 0 24 24",
@@ -1122,18 +1155,15 @@ pub fn HugeIcon(
             xmlns: "http://www.w3.org/2000/svg",
             for node in icon.nodes {
                 {
-                    let sw = node.stroke_width.unwrap_or("1.5");
-                    let stroke_w = if (stroke_width - 1.5).abs() > f32::EPSILON {
-                        stroke_width.to_string()
-                    } else {
-                        sw.to_string()
-                    };
+                    let sw = stroke_owned
+                        .as_deref()
+                        .unwrap_or_else(|| node.stroke_width.unwrap_or("1.5"));
                     match node.tag {
                         "path" => rsx! {
                             path {
                                 d: node.d.unwrap_or(""),
                                 stroke: "currentColor",
-                                stroke_width: "{stroke_w}",
+                                stroke_width: "{sw}",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
                                 fill: node.fill.unwrap_or("none"),
@@ -1145,7 +1175,7 @@ pub fn HugeIcon(
                                 cy: node.cy.unwrap_or("0"),
                                 r: node.r.unwrap_or("0"),
                                 stroke: "currentColor",
-                                stroke_width: "{stroke_w}",
+                                stroke_width: "{sw}",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
                                 fill: node.fill.unwrap_or("none"),
@@ -1158,7 +1188,7 @@ pub fn HugeIcon(
                                 x2: node.x2.unwrap_or("0"),
                                 y2: node.y2.unwrap_or("0"),
                                 stroke: "currentColor",
-                                stroke_width: "{stroke_w}",
+                                stroke_width: "{sw}",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
                             }
@@ -1167,7 +1197,7 @@ pub fn HugeIcon(
                             polyline {
                                 points: node.points.unwrap_or(""),
                                 stroke: "currentColor",
-                                stroke_width: "{stroke_w}",
+                                stroke_width: "{sw}",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
                                 fill: "none",
@@ -1177,7 +1207,7 @@ pub fn HugeIcon(
                             polygon {
                                 points: node.points.unwrap_or(""),
                                 stroke: "currentColor",
-                                stroke_width: "{stroke_w}",
+                                stroke_width: "{sw}",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
                                 fill: node.fill.unwrap_or("none"),
@@ -1191,7 +1221,7 @@ pub fn HugeIcon(
                                 height: node.height.unwrap_or("0"),
                                 rx: node.r.unwrap_or("0"),
                                 stroke: "currentColor",
-                                stroke_width: "{stroke_w}",
+                                stroke_width: "{sw}",
                                 stroke_linecap: "round",
                                 stroke_linejoin: "round",
                                 fill: node.fill.unwrap_or("none"),

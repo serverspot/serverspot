@@ -1,0 +1,403 @@
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes reveal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cascade-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--cascade-lift, 10px), 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@layer utilities {
+  .page-enter {
+    animation: page-enter 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  
+  .page-enter > * {
+    animation: reveal-up 0.42s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  .page-enter > *:nth-child(1) {
+    animation-delay: 0.02s;
+  }
+  .page-enter > *:nth-child(2) {
+    animation-delay: 0.06s;
+  }
+  .page-enter > *:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  .page-enter > *:nth-child(4) {
+    animation-delay: 0.14s;
+  }
+  .page-enter > *:nth-child(5) {
+    animation-delay: 0.18s;
+  }
+  .page-enter > *:nth-child(6) {
+    animation-delay: 0.22s;
+  }
+  .page-enter > *:nth-child(n + 7) {
+    animation-delay: 0.26s;
+  }
+
+  .page-header-enter {
+    animation: reveal-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  
+  .motion-cascade > * {
+    animation: cascade-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  .motion-cascade > *:nth-child(1) {
+    animation-delay: 0.03s;
+  }
+  .motion-cascade > *:nth-child(2) {
+    animation-delay: 0.07s;
+  }
+  .motion-cascade > *:nth-child(3) {
+    animation-delay: 0.11s;
+  }
+  .motion-cascade > *:nth-child(4) {
+    animation-delay: 0.15s;
+  }
+  .motion-cascade > *:nth-child(5) {
+    animation-delay: 0.19s;
+  }
+  .motion-cascade > *:nth-child(6) {
+    animation-delay: 0.23s;
+  }
+  .motion-cascade > *:nth-child(7) {
+    animation-delay: 0.27s;
+  }
+  .motion-cascade > *:nth-child(8) {
+    animation-delay: 0.31s;
+  }
+  .motion-cascade > *:nth-child(n + 9) {
+    animation-delay: 0.34s;
+  }
+
+  
+  .motion-cascade-tight > * {
+    --cascade-lift: 6px;
+  }
+
+  .motion-fade-in {
+    animation: reveal-fade 0.35s ease both;
+  }
+
+  .motion-press {
+    transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .motion-press:active {
+    transform: scale(0.97);
+  }
+
+  .shell-crumb {
+    animation: reveal-fade 0.35s ease both;
+  }
+}
+
+.attention-row {
+  transition:
+    color 0.15s ease,
+    background-color 0.18s ease,
+    padding-left 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.attention-row:hover {
+  background-color: color-mix(in srgb, var(--color-surface-2) 70%, transparent);
+  padding-left: 0.35rem;
+}
+.attention-row:active {
+  transform: scale(0.995);
+}
+
+.dash-panel,
+.ui-card {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dash-panel:hover,
+.ui-card:hover {
+  border-color: color-mix(in srgb, var(--color-border) 80%, var(--color-accent) 20%);
+}
+
+.dash-bar {
+  transform-origin: bottom center;
+  transition:
+    background-color 0.2s ease,
+    height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.2s ease;
+}
+.dash-bar:hover {
+  transform: scaleY(1.04);
+}
+
+.ui-input,
+.ui-textarea,
+textarea.ui-input,
+input.ui-input {
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.2s ease,
+    background-color 0.18s ease;
+}
+.ui-input:focus,
+.ui-textarea:focus,
+textarea.ui-input:focus,
+input.ui-input:focus {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border-subtle));
+  box-shadow: none;
+}
+
+.ui-dropdown-trigger,
+.ui-datepicker-trigger {
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.15s ease;
+}
+.ui-dropdown-trigger:active,
+.ui-datepicker-trigger:active {
+  transform: scale(0.985);
+}
+
+.ui-dropdown-option {
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease,
+    transform 0.12s ease;
+}
+.ui-dropdown-option:active {
+  transform: translateX(2px);
+}
+
+.side-panel-inner a,
+.side-panel-inner button {
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.store-product-tile,
+.store-order-row,
+.store-coupon-ticket-btn,
+.support-case,
+.roster-card,
+.press-proof,
+.forum-thread,
+.board-console-row:not(.is-head),
+.acct-lane,
+.stg-tile,
+.acct-oauth-card {
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease;
+}
+
+.store-product-tile:hover,
+.roster-card:hover,
+.press-proof:hover,
+.stg-tile:hover,
+.acct-oauth-card:hover {
+  transform: translateY(-2px);
+}
+
+.store-product-tile:active,
+.store-order-row:active,
+.support-case:active,
+.roster-card:active,
+.press-proof:active,
+.forum-thread:active,
+.store-coupon-ticket-btn:active {
+  transform: scale(0.985);
+}
+
+.store-type-chip,
+.roster-chip,
+.forum-type-chip {
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+.store-type-chip:active,
+.roster-chip:active,
+.forum-type-chip:active {
+  transform: scale(0.96);
+}
+
+.pulse-dot {
+  animation: soft-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes chart-draw {
+  from {
+    stroke-dashoffset: var(--path-len, 1);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes chart-area-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.chart-line-draw {
+  stroke-dasharray: var(--path-len, 1);
+  stroke-dashoffset: var(--path-len, 1);
+  animation: chart-draw 0.95s cubic-bezier(0.33, 1, 0.32, 1) both;
+  animation-delay: var(--draw-delay, 0.08s);
+}
+
+.chart-area-reveal {
+  opacity: 0;
+  animation: chart-area-in 0.55s ease both;
+  animation-delay: var(--draw-delay, 0.28s);
+}
+
+.analytics-metric:nth-child(1) .chart-line-draw {
+  --draw-delay: 0.06s;
+}
+.analytics-metric:nth-child(2) .chart-line-draw {
+  --draw-delay: 0.14s;
+}
+.analytics-metric:nth-child(3) .chart-line-draw {
+  --draw-delay: 0.22s;
+}
+.analytics-metric:nth-child(4) .chart-line-draw {
+  --draw-delay: 0.3s;
+}
+
+.analytics-row-spark .chart-line-draw {
+  animation-duration: 0.75s;
+  --draw-delay: 0.18s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .page-enter > *,
+  .page-header-enter,
+  .motion-cascade > *,
+  .motion-fade-in,
+  .shell-crumb,
+  .pulse-dot,
+  .chart-line-draw,
+  .chart-area-reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .chart-line-draw {
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+
+  .attention-row,
+  .dash-panel,
+  .ui-card,
+  .dash-bar,
+  .ui-input,
+  .ui-textarea,
+  .ui-dropdown-trigger,
+  .ui-datepicker-trigger,
+  .ui-dropdown-option,
+  .store-product-tile,
+  .store-order-row,
+  .store-coupon-ticket-btn,
+  .support-case,
+  .roster-card,
+  .press-proof,
+  .forum-thread,
+  .board-console-row,
+  .acct-lane,
+  .stg-tile,
+  .acct-oauth-card,
+  .store-type-chip,
+  .roster-chip,
+  .forum-type-chip,
+  .motion-press,
+  .side-panel-inner a,
+  .side-panel-inner button {
+    transition: none !important;
+  }
+
+  .attention-row:hover,
+  .store-product-tile:hover,
+  .roster-card:hover,
+  .press-proof:hover,
+  .stg-tile:hover,
+  .acct-oauth-card:hover,
+  .dash-bar:hover,
+  .store-product-tile:active,
+  .store-order-row:active,
+  .support-case:active,
+  .roster-card:active,
+  .press-proof:active,
+  .forum-thread:active,
+  .store-coupon-ticket-btn:active,
+  .motion-press:active,
+  .ui-dropdown-trigger:active,
+  .ui-datepicker-trigger:active {
+    transform: none !important;
+  }
+
+  .attention-row:hover {
+    padding-left: 0 !important;
+    background-color: transparent !important;
+  }
+}

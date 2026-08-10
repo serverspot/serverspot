@@ -1,16 +1,8 @@
 use dioxus::prelude::*;
 
-/// Shared accent palette used across admin colour pickers.
 pub const DEFAULT_COLOR_PRESETS: &[&str] = &[
     "#69bdf2", "#5b9dff", "#3ecf8e", "#5eead4", "#f5c14a", "#f0a35e", "#f071a5", "#fb7185",
 ];
-
-fn default_color_presets() -> Vec<String> {
-    DEFAULT_COLOR_PRESETS
-        .iter()
-        .map(|preset| (*preset).to_string())
-        .collect()
-}
 
 fn normalize_hex(raw: &str) -> String {
     let trimmed = raw.trim();
@@ -24,7 +16,6 @@ fn normalize_hex(raw: &str) -> String {
     }
 }
 
-/// Browser `<input type="color">` expects `#rrggbb`.
 fn color_input_value(hex: &str) -> String {
     let normalized = normalize_hex(hex).to_ascii_lowercase();
     let digits = normalized.trim_start_matches('#');
@@ -49,50 +40,68 @@ fn colors_match(a: &str, b: &str) -> bool {
 #[component]
 pub fn ColorPicker(
     mut value: Signal<String>,
-    #[props(default = default_color_presets())] presets: Vec<String>,
+    #[props(default)] presets: Option<Vec<String>>,
     #[props(default = true)] show_hex: bool,
 ) -> Element {
     let current = value();
     let picker_value = color_input_value(&current);
-    let is_custom = !presets.iter().any(|preset| colors_match(&current, preset));
+    let owned_presets = presets;
+    let is_custom = if let Some(ref presets) = owned_presets {
+        !presets.iter().any(|preset| colors_match(&current, preset))
+    } else {
+        !DEFAULT_COLOR_PRESETS
+            .iter()
+            .any(|preset| colors_match(&current, preset))
+    };
 
     rsx! {
-        div {
-            class: "space-y-2",
-            div {
-                class: "flex flex-wrap items-center gap-2",
-                for preset in presets.iter().cloned() {
-                    button {
-                        r#type: "button",
-                        class: if colors_match(&current, &preset) {
-                            "h-8 w-8 shrink-0 cursor-pointer rounded-squircle-sm outline outline-2 outline-offset-2 outline-white/70"
-                        } else {
-                            "h-8 w-8 shrink-0 cursor-pointer rounded-squircle-sm outline outline-1 outline-offset-1 outline-white/10 hover:outline-white/30"
-                        },
-                        style: "background: {preset};",
-                        title: "{preset}",
-                        "aria-label": "Select {preset}",
-                        onclick: {
+        div { class: "space-y-2",
+            div { class: "flex flex-wrap items-center gap-2",
+                if let Some(presets) = owned_presets.as_ref() {
+                    for preset in presets.iter() {
+                        {
+                            let selected = colors_match(&current, preset);
                             let color = preset.clone();
-                            move |_| value.set(color.clone())
-                        },
+                            rsx! {
+                                button {
+                                    key: "{preset}",
+                                    r#type: "button",
+                                    class: if selected { "h-8 w-8 shrink-0 cursor-pointer rounded-squircle-sm outline outline-2 outline-offset-2 outline-white/70" } else { "h-8 w-8 shrink-0 cursor-pointer rounded-squircle-sm outline outline-1 outline-offset-1 outline-white/10 hover:outline-white/30" },
+                                    style: "background: {preset};",
+                                    title: "{preset}",
+                                    "aria-label": "Select {preset}",
+                                    onclick: move |_| value.set(color.clone()),
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    for preset in DEFAULT_COLOR_PRESETS.iter().copied() {
+                        {
+                            let selected = colors_match(&current, preset);
+                            rsx! {
+                                button {
+                                    key: "{preset}",
+                                    r#type: "button",
+                                    class: if selected { "h-8 w-8 shrink-0 cursor-pointer rounded-squircle-sm outline outline-2 outline-offset-2 outline-white/70" } else { "h-8 w-8 shrink-0 cursor-pointer rounded-squircle-sm outline outline-1 outline-offset-1 outline-white/10 hover:outline-white/30" },
+                                    style: "background: {preset};",
+                                    title: "{preset}",
+                                    "aria-label": "Select {preset}",
+                                    onclick: move |_| value.set(preset.to_string()),
+                                }
+                            }
+                        }
                     }
                 }
                 label {
-                    class: if is_custom {
-                        "relative ml-0.5 inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-squircle-sm outline outline-2 outline-offset-2 outline-white/70"
-                    } else {
-                        "relative ml-0.5 inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-squircle-sm border border-dashed border-border-subtle bg-surface/20 text-text-muted hover:border-border hover:text-text-secondary"
-                    },
-                    style: if is_custom {
-                        format!("background: {picker_value};")
-                    } else {
-                        String::new()
-                    },
+                    class: if is_custom { "relative ml-0.5 inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-squircle-sm outline outline-2 outline-offset-2 outline-white/70" } else { "relative ml-0.5 inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-squircle-sm border border-dashed border-border-subtle bg-surface/20 text-text-muted hover:border-border hover:text-text-secondary" },
+                    style: if is_custom { format!("background: {picker_value};") } else { String::new() },
                     title: "Custom colour",
                     "aria-label": "Custom colour",
                     if !is_custom {
-                        span { class: "pointer-events-none text-sm font-semibold leading-none", "+" }
+                        span { class: "pointer-events-none text-sm font-semibold leading-none",
+                            "+"
+                        }
                     }
                     input {
                         r#type: "color",
@@ -105,8 +114,7 @@ pub fn ColorPicker(
                 }
             }
             if show_hex {
-                div {
-                    class: "flex max-w-[11rem] items-center gap-2",
+                div { class: "flex max-w-[11rem] items-center gap-2",
                     span {
                         class: "h-8 w-8 shrink-0 rounded-squircle-sm border border-border-subtle",
                         style: "background: {picker_value};",
