@@ -21,8 +21,8 @@ pub type SessionPool = SessionSurrealPool<Client>;
 pub type Database = Surreal<Client>;
 
 pub struct BackendState {
-    #[allow(dead_code)]
     pub db: Database,
+    pub auth_secret: Vec<u8>,
 }
 
 impl BackendState {
@@ -31,6 +31,7 @@ impl BackendState {
         let surreal_ns = util::get_env("SURREAL_NS")?;
         let surreal_user = util::get_env("SURREAL_USER")?;
         let surreal_pass = util::get_env("SURREAL_PASS")?;
+        let auth_secret = util::get_env("AUTH_SECRET")?;
         let db = Surreal::new::<Ws>(surreal_url).await?;
         db.signin(Root {
             username: surreal_user,
@@ -38,7 +39,7 @@ impl BackendState {
         }).await?;
         db.use_ns(surreal_ns).use_db("serverspot").await?;
         info!("Connected to SurrealDB successfully");
-        Ok(Arc::new(Self { db }))
+        Ok(Arc::new(Self { db, auth_secret: auth_secret.into_bytes() }))
     }
 }
 

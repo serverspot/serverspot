@@ -12,8 +12,15 @@ use crate::backend::AppState;
 use crate::backend::AuthSession;
 #[cfg(feature = "server")]
 use crate::backend::auth::AuthAccount;
+use crate::backend::auth::PendingTwoFactor;
+use crate::backend::auth::generate_otp;
+#[cfg(feature = "server")]
+use surrealdb::types::SurrealValue;
 
+
+// TODO move types like this to a separate common mod
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "server", derive(SurrealValue))]
 pub enum TwoFactorMethod {
     Game,
     Email,
@@ -91,16 +98,23 @@ pub enum LoginStatus {
     /// Proceed with two factor authentication.
     /// The code has been sent to the method selected,
     /// and must be submitted via submit_2fa within an hour.
-    TwoFactor,
+    /// The field represents the 2fa method provided in the initial request
+    TwoFactorRequired(TwoFactorMethod),
 }
 
+#[cfg(feature = "server")]
+const PENDING_TWO_FACTOR_KEY: &str = "pending-2fa";
+#[cfg(feature = "server")]
+const PENDING_REMEMBER_ME: &str = "remember-me";
+
 /// Initiate a login by entering the username and password.
-/// The two factor method may be required 
+/// The two factor method may be required if require_2fa is set to true for the account.
 #[post("/api/auth/login", auth: AuthSession, state: Extension<AppState>)]
 pub async fn initiate_login(
     username: String,
     password: String,
     two_factor_method: Option<TwoFactorMethod>,
+    remember_me: bool,
 ) -> Result<LoginStatus, AuthenticationError> {
     const QUERIES: &str = r#"
         SELECT id,email,email_verified,game_id,game_id_verified,passwd_hash,require_2fa FROM account WHERE username = $username LIMIT 1;
@@ -121,6 +135,10 @@ pub async fn initiate_login(
         AuthenticationError::Internal
     })?;
 
+    if !bcrypt::verify(password, &account.passwd_hash)? {
+        return Err(AuthenticationError::InvalidLogin);
+    }
+    
     let valid_2fa_methods = account.valid_2fa_methods(game_can_authenticate);
     
     if !(two_factor_method.as_ref().is_some_and(|m| valid_2fa_methods.contains(m)) ||
@@ -128,15 +146,26 @@ pub async fn initiate_login(
         return Err(AuthenticationError::InvalidTwoFactor(valid_2fa_methods)); 
     }
 
-    if !bcrypt::verify(password, &account.passwd_hash)? {
-        return Err(AuthenticationError::InvalidLogin);
+    match two_factor_method {
+        Some(method) => {
+            // generate and hash a OTP, storing it in the session's state.
+            let mut rng = rand::rng();
+            let code = generate_otp(&mut rng);
+            let otp_state = PendingTwoFactor::new(account.id, method, &code, &state.auth_secret);
+            auth.session.set(PENDING_TWO_FACTOR_KEY, otp_state);
+
+            // store the "remember me" choice so we can call remember_user later.
+            auth.session.set(PENDING_REMEMBER_ME, remember_me);
+
+            todo!("dispatch code to 2fa")
+        },
+        None => {
+            auth.login_user(account.id.clone());
+            auth.remember_user(remember_me);
+            Ok(LoginStatus::Complete)
+        }
     }
-
-    // TODO 2fa
-
-    todo!()
 }
-
 
 #[post("/api/auth/verify")]
 pub async fn submit_2fa() -> Result<(), AuthenticationError> {

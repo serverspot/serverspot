@@ -4,100 +4,89 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use axum_session_auth::{Authentication, HasPermission};
 use chrono::{DateTime, Duration, Utc};
-use dashmap::DashMap;
 use dioxus::logger::tracing::error;
-use rand::RngExt;
+use hmac::{Hmac, KeyInit, Mac};
+use rand::{Rng, RngExt};
+use serde::{Deserialize, Serialize};
+use sha2::Sha256;
 use surrealdb::types::SurrealValue;
 
 use crate::{backend::Database, server_funcs::{auth::TwoFactorMethod, model::{AccountPermissions, Roles}}};
 
-pub struct OneTimePasscode {
-    pub code: String,
-    pub expiration: DateTime<Utc>,
-    pub will_verify: Option<TwoFactorMethod>,
+pub const OTP_LEN: usize = 8;
+
+/// Generates a one-time passcode. Should be passed into a hash
+/// function before being stored on the session.
+pub fn generate_otp(rng: &mut impl Rng) -> String  {
+    let mut code = String::with_capacity(OTP_LEN);
+    for _ in 0..OTP_LEN {
+        let char_byte = b'0' + rng.random_range(0..=9);
+        code.push(char_byte as char);
+    }
+
+    code
 }
 
-impl OneTimePasscode {
+fn hash_otp(code: &str, secret: &[u8]) -> [u8; 32] {
+    let mut mac = Hmac::<Sha256>::new_from_slice(secret)
+        .expect("HMAC accepts arbitrary key sizes");
+
+    mac.update(code.as_bytes());
+
+    mac.finalize().into_bytes().into()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PendingTwoFactor {
+    pub account_id: String,
+    pub method: TwoFactorMethod,
+    pub otp_mac: [u8; 32],
+    pub attempts: u8,
+    pub expires_at: DateTime<Utc>,
+}
+
+impl PendingTwoFactor {
+    pub const MAX_ATTEMPTS: u8 = 5;
+    pub const OTP_LIFETIME: Duration = Duration::minutes(10);
+
+    pub fn new(account_id: String, method: TwoFactorMethod, otp: &str, secret: &[u8]) -> Self {
+        Self {
+            account_id,
+            method,
+            otp_mac: hash_otp(otp, secret),
+            attempts: 0,
+            expires_at: Utc::now() + Self::OTP_LIFETIME,
+        }
+    }
+
+    pub fn validate(&mut self, attempt: &str, secret: &[u8]) -> bool {
+        if self.is_expired() {
+            return false;
+        }
+
+        let attempt_mac = hash_otp(attempt, secret);
+
+        if attempt_mac == self.otp_mac {
+            return true;
+        }
+
+        self.attempts += 1;
+        false
+    }
+
     pub fn is_expired(&self) -> bool {
-        Utc::now() > self.expiration
+        self.attempts > Self::MAX_ATTEMPTS || Utc::now() > self.expires_at
     }
 }
 
-impl From<String> for OneTimePasscode
-{
-    fn from(value: String) -> Self {
-        Self {
-            code: value.into(),
-            expiration: Utc::now() + Duration::hours(1),
-            will_verify: None,
-        }
-    }
-}
-
-pub struct TwoFactorAuth {
-    auth_codes: DashMap<String, OneTimePasscode>,
-}
-
-impl TwoFactorAuth {
-    pub const OTP_VALID_CHARS: &'static str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-    pub fn new() -> Self {
-        Self {
-            auth_codes: DashMap::new(),
-        }
-    }
-
-    pub fn generate_code(&self, session_id: String) -> String  {
-        let mut rng = rand::rng();
-
-        let mut code = String::with_capacity(10);
-        for _ in 0..10 {
-            let char_idx: usize = rng.random_range(0..Self::OTP_VALID_CHARS.len());
-
-            // safety is guaranteed since the bounds are restricted enough.
-            code.push(unsafe { Self::OTP_VALID_CHARS.chars().nth(char_idx).unwrap_unchecked() });
-        }
-
-        let output = code.clone();
-        let code = OneTimePasscode::from(code);
-
-        self.auth_codes.insert(session_id.clone(), code);
-    
-        output
-    }
-
-    // TODO verify stuff
-    pub fn validate_code(&self, session_id: &str, code: &str) -> bool {
-        if let Some(real_code) = self.auth_codes.get_mut(session_id) {
-            if real_code.is_expired() {
-                drop(real_code);
-                self.auth_codes.remove(session_id);
-                return false;
-            }
-
-            &real_code.code == code
-        } else {
-            false
-        }
-    }
-
-    pub fn prune_expired_codes(&self) {
-        self.auth_codes.retain(|_, code| !code.is_expired());
-    }
-
-}
-
+/// Represents an active account session that has already been authenticated.
 #[derive(Clone, Debug)]
 pub struct ActiveAccount {
-    /// The ID of the user.
-    id: String,
+    /// The ID of the account.
+    pub account_id: String,
     
-    /// The permissions of this user.
-    perms: AccountPermissions,
-
-    /// Whether the user is anonymous.
-    /// [`perms`][Self::perms] should be empty if true.
-    anonymous: bool,
+    /// The total permissions of this account.
+    pub perms: AccountPermissions,
 }
 
 #[async_trait]
@@ -116,34 +105,32 @@ impl HasPermission<Database> for ActiveAccount {
 #[async_trait]
 impl Authentication<ActiveAccount, String, Database> for ActiveAccount {
     async fn load_user(userid: String, db: Option<&Database>) -> anyhow::Result<Self> {
-        let db = db.ok_or(anyhow!("failed to authenticate user: db not yet loaded"))?;
+        let db = db.ok_or(anyhow!("database unavailable"))?;
 
-        let mut res = db.query("type::record('account', $id).roles")
+        let mut res = db
+            .query("type::record('account', $id).roles")
             .bind(("id", userid.as_str()))
             .await?;
 
         let roles: Option<Roles> = res.take(0)?;
         let roles = roles.unwrap();
 
-        let perms = roles.total_permissions();
-
         Ok(Self {
-            id: userid,
-            perms,
-            anonymous: false,
+            account_id: userid,
+            perms: roles.total_permissions(),
         })
     }
 
     fn is_authenticated(&self) -> bool {
-        !self.anonymous
+        true
     }
 
     fn is_active(&self) -> bool {
-        !self.anonymous
+        true
     }
 
     fn is_anonymous(&self) -> bool {
-        self.anonymous
+        false
     }
 }
 
