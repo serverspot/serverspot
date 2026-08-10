@@ -1,3 +1,5 @@
+name: serverspot
+
 services:
   serverspot:
     build:
@@ -5,9 +7,11 @@ services:
       dockerfile: Dockerfile
     environment:
       SURREAL_URL: "surrealdb:8000"
-      SURREAL_USER: "root"
-      SURREAL_PASS: "${SURREAL_PASS:-root}"
-      SURREAL_NS: "serverspot-prod"
+      SURREAL_USER: "${SURREAL_USER:-root}"
+      SURREAL_PASS: "${SURREAL_PASS:?set SURREAL_PASS in .env}"
+      SURREAL_NS: "${SURREAL_NS:-serverspot}"
+      IP: "0.0.0.0"
+      PORT: "8080"
     restart: unless-stopped
     networks:
       - internal
@@ -17,9 +21,14 @@ services:
       surrealkit:
         condition: service_completed_successfully
     ports:
-      - "8080:8080"
+      - "${SERVERSPOT_BIND:-0.0.0.0}:${EXPOSE_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 8
+      start_period: 40s
 
-# TODO we should really create a backup and run tests before applying any migrations
   surrealkit:
     image: ghcr.io/surrealdb/surrealkit:latest
     depends_on:
@@ -29,24 +38,30 @@ services:
     environment:
       SURREALDB_HOST: "ws://surrealdb:8000"
       SURREALDB_NAME: "serverspot"
-      SURREALDB_NAMESPACE: "serverspot"
-      SURREALDB_USER: "root"
-      SURREALDB_PASSWORD: "${SURREAL_PASS:-root}"
+      SURREALDB_NAMESPACE: "${SURREAL_NS:-serverspot}"
+      SURREALDB_USER: "${SURREAL_USER:-root}"
+      SURREALDB_PASSWORD: "${SURREAL_PASS:?set SURREAL_PASS in .env}"
       SURREALDB_FOLDER: "/database"
     networks:
       - internal
     volumes:
       - ./database:/database:ro
-    restart: no
+    restart: "no"
 
   surrealdb:
-    image: surrealdb/surrealdb:latest
-    command: start --user root --pass ${SURREAL_PASS:-root} rocksdb:/data/db.db
+    image: surrealdb/surrealdb:v3.2.3
+    command:
+      - start
+      - --user
+      - ${SURREAL_USER:-root}
+      - --pass
+      - ${SURREAL_PASS:?set SURREAL_PASS in .env}
+      - rocksdb:/data/db.db
     volumes:
       - surreal_data:/data
     user: root
     healthcheck:
-      test: ["CMD", "/surreal", "isready", "--endpoint", "ws://surrealdb:8000"]
+      test: ["CMD", "/surreal", "isready", "--endpoint", "ws://127.0.0.1:8000"]
       interval: 5s
       timeout: 3s
       retries: 10
