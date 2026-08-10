@@ -49,6 +49,7 @@ have_tty() {
 }
 
 die() {
+  tput cnorm >"$TTY" 2>/dev/null || true
   printf "${C_RED}✖ %s${C_RESET}\n" "$*" >&2
   exit 1
 }
@@ -117,7 +118,6 @@ choose() {
   printf "${C_DIM}  ↑↓ move · Enter select · 1-%d jump${C_RESET}\n\n" "$count" >"$TTY"
 
   tput civis >"$TTY" 2>/dev/null || true
-  trap 'tput cnorm >"$TTY" 2>/dev/null || true' RETURN
 
   while true; do
     for ((i = 0; i < count; i++)); do
@@ -142,6 +142,7 @@ choose() {
         selected=$(((selected + 1) % count))
         ;;
       '' | $'\n' | $'\r')
+        tput cnorm >"$TTY" 2>/dev/null || true
         printf '%s\n' "${opts[$selected]}"
         for ((i = 0; i < count + 3; i++)); do printf '\033[A\033[2K' >"$TTY"; done
         printf "  ${C_GREEN}✔${C_RESET} %s  ${C_DIM}%s${C_RESET}\n\n" "$prompt" "${opts[$selected]}" >"$TTY"
@@ -171,21 +172,24 @@ public_ip() {
 
 resolve_host() {
   local host="$1"
+  local ip=""
+
   if command -v getent >/dev/null 2>&1; then
-    getent ahostsv4 "$host" 2>/dev/null | awk '{print $1; exit}'
-    return
+    ip="$(getent ahosts "$host" 2>/dev/null | awk '/STREAM/ {print $1; exit}')" || true
+    if [[ -z "$ip" ]]; then
+      ip="$(getent ahostsv4 "$host" 2>/dev/null | awk '{print $1; exit}')" || true
+    fi
+    if [[ -z "$ip" ]]; then
+      ip="$(getent hosts "$host" 2>/dev/null | awk '{print $1; exit}')" || true
+    fi
   fi
-  if command -v dig >/dev/null 2>&1; then
-    dig +short A "$host" 2>/dev/null | head -n1
-    return
+  if [[ -z "$ip" ]] && command -v dig >/dev/null 2>&1; then
+    ip="$(dig +short A "$host" 2>/dev/null | awk '/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/ {print; exit}')" || true
   fi
-  python3 - <<PY 2>/dev/null || true
-import socket
-try:
-    print(socket.getaddrinfo("${host}", None, socket.AF_INET)[0][4][0])
-except Exception:
-    pass
-PY
+  if [[ -z "$ip" ]] && command -v python3 >/dev/null 2>&1; then
+    ip="$(python3 -c "import socket; print(socket.getaddrinfo('${host}', None, socket.AF_INET)[0][4][0])" 2>/dev/null)" || true
+  fi
+  printf '%s\n' "$ip"
 }
 
 valid_domain() {
@@ -371,10 +375,10 @@ EOF
 port_busy() {
   local port="$1"
   if command -v ss >/dev/null 2>&1; then
-    ss -ltn 2>/dev/null | grep -Eq ":${port}[[:space:]]" && return 0
+    ss -ltn 2>/dev/null | grep -Eq ":${port}[[:space:]]" && return 0 || true
   fi
   if command -v lsof >/dev/null 2>&1; then
-    lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1 && return 0
+    lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1 && return 0 || true
   fi
   return 1
 }
@@ -466,8 +470,11 @@ main() {
         "Skip — I'll finish DNS after install")"
       if [[ "$dns_now" == Yes* ]]; then
         local resolved="" tries=0
+        info "Checking DNS for ${DOMAIN}…"
         while ((tries < 18)); do
-          resolved="$(resolve_host "$DOMAIN")"
+          resolved="$(resolve_host "$DOMAIN" || true)"
+          resolved="${resolved//$'\r'/}"
+          resolved="${resolved//$'\n'/}"
           if [[ -n "$ip" && "$resolved" == "$ip" ]]; then
             ok "DNS looks good (${resolved})."
             break
@@ -477,7 +484,7 @@ main() {
             break
           fi
           tries=$((tries + 1))
-          printf "${C_DIM}  waiting for DNS… (%s)${C_RESET}\r" "${resolved:-none yet}" >"$TTY"
+          printf "${C_DIM}  waiting for DNS… (%s)${C_RESET}\r" "${resolved:-none yet}" >"$TTY" || true
           sleep 5
         done
         printf '\n'
