@@ -3,11 +3,12 @@ use std::collections::HashSet;
 use dioxus::{fullstack::AsStatusCode, prelude::*};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use crate::server_funcs::error::CommonError;
 
 #[cfg(feature = "server")]
 use dioxus::server::axum::Extension;
 #[cfg(feature = "server")]
-use crate::backend::{AuthSession, AppState, auth::{AuthAccount, PendingTwoFactor, generate_otp}};
+use crate::{server_funcs::error::HasInternalError as _, backend::{AuthSession, AppState, auth::{AuthAccount, PendingTwoFactor, generate_otp}}};
 #[cfg(feature = "server")]
 use surrealdb::types::SurrealValue;
 
@@ -37,16 +38,8 @@ pub enum AuthenticationError {
     #[error("The related resource has been invalidated.")]
     Expired,
 
-    /// these are errors with stuff that dioxus handles internally.
-    /// the functions would never need to directly return this, but all server function
-    /// error types must implement From<ServerFnError>.
-    #[error("Server function related error: {0}")]
-    ServerFn(#[from] ServerFnError),
-
-    /// An internal server error whose state should not be made public to the frontend.
-    /// An error log should be printed to the server's terminal whenever one of these is thrown.
-    #[error("An internal server error has occurred")]
-    Internal,
+    #[error("{0}")]
+    Common(#[from] CommonError),
 }
 
 impl AsStatusCode for AuthenticationError {
@@ -57,38 +50,15 @@ impl AsStatusCode for AuthenticationError {
             Self::InvalidTwoFactor(_) => StatusCode::BAD_REQUEST,
             Self::InvalidSession => StatusCode::CONFLICT,
             Self::Expired => StatusCode::GONE,
-            Self::ServerFn(e) => e.as_status_code(),
-            Self::Internal => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Common(e) => e.as_status_code(),
         }
     }
 }
 
-#[cfg(feature = "server")]
-impl AuthenticationError {
-    pub fn new_internal(e: impl std::fmt::Display) -> Self {
-        error!("Encountered internal server error: {e}");
-        Self::Internal
-    }
-}
-
-/// Helper macro to implement From<E> for types which become [`AuthenticationError::Internal`]
-macro_rules! impl_from_internal {
-    ($E: ty) => {
-        #[cfg(feature = "server")]
-        impl From<$E> for AuthenticationError {
-            fn from(e: $E) -> Self {
-                Self::new_internal(e)
-            }
-        }
-    };
-    ($($E: ty),*) => {
-        $(impl_from_internal!($E);)*
-    };
-}
-
-impl_from_internal! {
+crate::err_impl_from_common_child! {AuthenticationError=>
     surrealdb::Error,
-    bcrypt::BcryptError
+    bcrypt::BcryptError,
+    dioxus::server::ServerFnError
 }
 
 /// The resulting status of a login request.
@@ -133,8 +103,7 @@ pub async fn initiate_login(
 
     let game_can_authenticate: Option<bool> = res.take(1)?;
     let game_can_authenticate = game_can_authenticate.ok_or_else(|| {
-        error!("'game_can_authenticate' global setting not found, cannot proceed with authentication");
-        AuthenticationError::Internal
+        AuthenticationError::new_internal("'game_can_authenticate' global setting not found, cannot proceed with authentication")
     })?;
 
     if !bcrypt::verify(password, &account.passwd_hash)? {
