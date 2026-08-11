@@ -7,13 +7,7 @@ use thiserror::Error;
 #[cfg(feature = "server")]
 use dioxus::server::axum::Extension;
 #[cfg(feature = "server")]
-use crate::backend::AppState;
-#[cfg(feature = "server")]
-use crate::backend::AuthSession;
-#[cfg(feature = "server")]
-use crate::backend::auth::AuthAccount;
-use crate::backend::auth::PendingTwoFactor;
-use crate::backend::auth::generate_otp;
+use crate::backend::{AuthSession, AppState, auth::{AuthAccount, PendingTwoFactor, generate_otp}};
 #[cfg(feature = "server")]
 use surrealdb::types::SurrealValue;
 
@@ -31,15 +25,21 @@ pub enum AuthenticationError {
     #[error("No account was found with the provided username")]
     AccountNotFound,
 
-    #[error("The login provided was invalid")]
-    InvalidLogin,
+    #[error("The login/secret provided was invalid")]
+    InvalidSecret,
     
     #[error("The 2fa method requested is not available for this account. Available methods include: {0:?}")]
     InvalidTwoFactor(HashSet<TwoFactorMethod>),
 
-    // these are errors with stuff that dioxus handles internally.
-    // the functions would never need to directly return this, but all server function
-    // error types must implement From<ServerFnError>.
+    #[error("The session state is not prepared for this request. This usually means the session expired or the request was sent out of order in a procedure.")]
+    InvalidSession,
+
+    #[error("The related resource has been invalidated.")]
+    Expired,
+
+    /// these are errors with stuff that dioxus handles internally.
+    /// the functions would never need to directly return this, but all server function
+    /// error types must implement From<ServerFnError>.
     #[error("Server function related error: {0}")]
     ServerFn(#[from] ServerFnError),
 
@@ -53,8 +53,10 @@ impl AsStatusCode for AuthenticationError {
     fn as_status_code(&self) -> StatusCode {
         match self {
             Self::AccountNotFound => StatusCode::NOT_FOUND,
-            Self::InvalidLogin => StatusCode::UNAUTHORIZED,
+            Self::InvalidSecret => StatusCode::UNAUTHORIZED,
             Self::InvalidTwoFactor(_) => StatusCode::BAD_REQUEST,
+            Self::InvalidSession => StatusCode::CONFLICT,
+            Self::Expired => StatusCode::GONE,
             Self::ServerFn(e) => e.as_status_code(),
             Self::Internal => StatusCode::INTERNAL_SERVER_ERROR,
         }
@@ -105,7 +107,7 @@ pub enum LoginStatus {
 #[cfg(feature = "server")]
 const PENDING_TWO_FACTOR_KEY: &str = "pending-2fa";
 #[cfg(feature = "server")]
-const PENDING_REMEMBER_ME: &str = "remember-me";
+const REMEMBER_ME_KEY: &str = "remember-me";
 
 /// Initiate a login by entering the username and password.
 /// The two factor method may be required if require_2fa is set to true for the account.
@@ -136,7 +138,7 @@ pub async fn initiate_login(
     })?;
 
     if !bcrypt::verify(password, &account.passwd_hash)? {
-        return Err(AuthenticationError::InvalidLogin);
+        return Err(AuthenticationError::InvalidSecret);
     }
     
     let valid_2fa_methods = account.valid_2fa_methods(game_can_authenticate);
@@ -155,7 +157,7 @@ pub async fn initiate_login(
             auth.session.set(PENDING_TWO_FACTOR_KEY, otp_state);
 
             // store the "remember me" choice so we can call remember_user later.
-            auth.session.set(PENDING_REMEMBER_ME, remember_me);
+            auth.session.set(REMEMBER_ME_KEY, remember_me);
 
             todo!("dispatch code to 2fa")
         },
@@ -167,9 +169,41 @@ pub async fn initiate_login(
     }
 }
 
-#[post("/api/auth/verify")]
-pub async fn submit_2fa() -> Result<(), AuthenticationError> {
-    todo!()
+#[post("/api/auth/verify", auth: AuthSession, state: Extension<AppState>)]
+pub async fn submit_2fa(code: String) -> Result<(), AuthenticationError> {
+    let mut otp_state: PendingTwoFactor = auth.session.get(PENDING_TWO_FACTOR_KEY).ok_or(AuthenticationError::InvalidSession)?;
+    let remember_me: bool = auth.session.get(REMEMBER_ME_KEY).ok_or(AuthenticationError::InvalidSession)?;
+
+    let expired = otp_state.is_expired();
+
+    // run full validity check and update attempt count
+    let is_valid = otp_state.validate(&code, &state.auth_secret);
+
+    // save new attempt count
+    auth.session.set(PENDING_TWO_FACTOR_KEY, &otp_state);
+
+    // if attempts count was too high or took too long before validation even began
+    if expired {
+        // cleanup expired values since they will need
+        // to be replaced by another call to initiate_login anyway
+        auth.session.remove(PENDING_TWO_FACTOR_KEY);
+        auth.session.remove(REMEMBER_ME_KEY);
+        return Err(AuthenticationError::Expired);
+    }
+
+    // any other reason validation failed
+    if !is_valid {
+        return Err(AuthenticationError::InvalidSecret);
+    }
+
+    // 2fa challenge accepted and passed
+    auth.session.remove(PENDING_TWO_FACTOR_KEY);
+    auth.session.remove(REMEMBER_ME_KEY);
+
+    auth.login_user(otp_state.account_id);
+    auth.remember_user(remember_me);
+
+    Ok(())
 }
 
 /// End the current user session.

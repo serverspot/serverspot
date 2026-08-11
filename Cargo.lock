@@ -7093,6 +7093,7 @@ dependencies = [
  "dashmap",
  "dioxus",
  "dotenvy",
+ "hex",
  "hmac 0.13.0",
  "rand 0.10.2",
  "serde",

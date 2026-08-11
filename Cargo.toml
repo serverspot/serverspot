@@ -20,8 +20,9 @@ chrono = "0.4.45"
 dashmap = "6.2.1"
 dioxus = { version = "0.7.10", features = ["router", "fullstack"] }
 dotenvy = { version = "0.15.7", features = ["clap"], optional = true }
+hex = "0.4.3"
 hmac = { version = "0.13.0", optional = true }
-rand = "0.10.2"
+rand = { version = "0.10.2", optional = true }
 serde = { version = "1.0.229", features = ["derive"] }
 sha2 = "0.11.0"
 surrealdb = { version = "3.2.3", optional = true }
@@ -44,6 +45,7 @@ server = [
     "dep:async-once-cell",
     "dep:bcrypt",
     "dep:hmac",
+    "dep:rand",
 ]
 
 [package.metadata.docs.rs]
