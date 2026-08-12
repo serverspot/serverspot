@@ -225,6 +225,17 @@
   .visible {
     visibility: visible;
   }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
   .absolute {
     position: absolute;
   }
@@ -546,6 +557,9 @@
   .shrink-0 {
     flex-shrink: 0;
   }
+  .transform {
+    transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
+  }
   .cursor-pointer {
     cursor: pointer;
   }
@@ -861,6 +875,9 @@
   }
   .pb-1 {
     padding-bottom: calc(var(--spacing) * 1);
+  }
+  .pb-4 {
+    padding-bottom: calc(var(--spacing) * 4);
   }
   .pb-5 {
     padding-bottom: calc(var(--spacing) * 5);
@@ -2056,6 +2073,18 @@
     width: 1.25rem;
     height: 1.25rem;
     flex-shrink: 0;
+  }
+  .stg-tile-brand.is-mark {
+    width: 1.55rem;
+    height: 1.55rem;
+    object-fit: contain;
+  }
+  .stg-tile-brand.is-rust {
+    object-fit: cover;
+    object-position: 0% 50%;
+  }
+  .stg-tile-badge:has(.is-mark) {
+    background: #0b0c10;
   }
   .stg-tile-status {
     flex-shrink: 0;
@@ -7101,6 +7130,80 @@
   .login-oauth:hover svg {
     color: #fff;
   }
+  .login-otp-copy {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-align: center;
+    color: var(--color-text-secondary);
+  }
+  .login-otp-field {
+    position: relative;
+    display: block;
+    cursor: text;
+  }
+  .login-otp-cells {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+  .login-otp-cell {
+    display: flex;
+    height: 3rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-squircle);
+    background: color-mix(in srgb, #151518 78%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+    }
+    font-size: 1.125rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--color-text);
+    transition: border-color 0.18s ease, background-color 0.18s ease;
+  }
+  .login-otp-cell.is-active {
+    border-color: color-mix(in srgb, #87d1fe 55%, #222227);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border-subtle));
+    }
+    background: color-mix(in srgb, #151518 92%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+    }
+  }
+  .login-otp-cell.is-filled {
+    border-color: color-mix(in srgb, #222227 40%, #87d1fe 35%);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in srgb, var(--color-border-subtle) 40%, var(--color-accent) 35%);
+    }
+  }
+  .login-otp-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    caret-color: transparent;
+    color: transparent;
+    background: transparent;
+    border: 0;
+  }
+  .login-otp-field:focus-within .login-otp-cell.is-active {
+    border-color: color-mix(in srgb, #87d1fe 70%, #222227);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in srgb, var(--color-accent) 70%, var(--color-border-subtle));
+    }
+  }
+  .login-otp-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
   .login-foot {
     margin-top: 1.5rem;
     max-width: 18rem;
@@ -10015,6 +10118,26 @@
     background: var(--color-surface);
   }
 }
+@property --tw-rotate-x {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-rotate-y {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-rotate-z {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-skew-x {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-skew-y {
+  syntax: "*";
+  inherits: false;
+}
 @property --tw-space-y-reverse {
   syntax: "*";
   inherits: false;
@@ -10188,6 +10311,11 @@
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
     *, ::before, ::after, ::backdrop {
+      --tw-rotate-x: initial;
+      --tw-rotate-y: initial;
+      --tw-rotate-z: initial;
+      --tw-skew-x: initial;
+      --tw-skew-y: initial;
       --tw-space-y-reverse: 0;
       --tw-divide-y-reverse: 0;
       --tw-border-style: solid;

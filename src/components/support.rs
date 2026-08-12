@@ -1,15 +1,34 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::page::{
     DataPanel, FeatureSettingsChrome, SettingRow, SettingsControl, SettingsField, StatusChip,
 };
 use crate::components::ui::*;
+use crate::i18n::t_key;
 use crate::router::Route;
 use crate::user::CurrentUser;
 
 const TICKET_PAGE_SIZE: usize = 6;
 const SUPPORT_ACCENT: &str = "#f0a35e";
 const HELP_CATEGORIES: &[&str] = &["Guides", "Rules", "Tutorials", "Billing"];
+const FILTER_ALL_DEPARTMENTS: &str = "all";
+const FILTER_ALL_ASSIGNEES: &str = "all";
+const FILTER_ALL_PRIORITIES: &str = "all";
+const UNASSIGNED_ASSIGNEE: &str = "Unassigned";
+
+fn support_help_card_views(count: u32) -> String {
+    t!("support-help-card-views", count: count)
+}
+
+fn support_help_card_foot(updated: String, helpful: u32) -> String {
+    t!("support-help-card-foot", updated: updated, helpful: helpful)
+}
+
+fn support_automation_subtitle(live: usize, rule_count: usize) -> String {
+    t!("support-automation-subtitle", live: live, total: rule_count)
+}
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum TicketStatus {
@@ -21,16 +40,15 @@ enum TicketStatus {
 }
 
 impl TicketStatus {
-    fn label(self) -> &'static str {
+    fn label(self) -> String {
         match self {
-            Self::All => "All",
-            Self::Open => "Open",
-            Self::Pending => "Pending",
-            Self::Resolved => "Resolved",
-            Self::Closed => "Closed",
+            Self::All => t_key("support-ticket-status-all"),
+            Self::Open => t_key("support-ticket-status-open"),
+            Self::Pending => t_key("support-ticket-status-pending"),
+            Self::Resolved => t_key("support-ticket-status-resolved"),
+            Self::Closed => t_key("support-ticket-status-closed"),
         }
     }
-
     fn tone(self) -> &'static str {
         match self {
             Self::All => SUPPORT_ACCENT,
@@ -215,13 +233,14 @@ fn priority_tone(priority: &str) -> &'static str {
 
 #[component]
 pub fn SupportTickets() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let tickets = use_signal(placeholder_tickets);
     let mut query = use_signal(String::new);
     let mut status = use_signal(|| TicketStatus::All);
-    let mut department = use_signal(|| String::from("All departments"));
-    let mut assignee = use_signal(|| String::from("All assignees"));
-    let mut priority = use_signal(|| String::from("All priorities"));
+    let mut department = use_signal(|| String::from(FILTER_ALL_DEPARTMENTS));
+    let mut assignee = use_signal(|| String::from(FILTER_ALL_ASSIGNEES));
+    let mut priority = use_signal(|| String::from(FILTER_ALL_PRIORITIES));
     let mut selected = use_signal(|| Option::<u64>::None);
     let mut visible = use_signal(|| TICKET_PAGE_SIZE);
 
@@ -249,7 +268,7 @@ pub fn SupportTickets() -> Element {
             .read()
             .iter()
             .filter(|ticket| {
-                ticket.assignee == "Unassigned"
+                ticket.assignee == UNASSIGNED_ASSIGNEE
                     && matches!(ticket.status, TicketStatus::Open | TicketStatus::Pending)
             })
             .count()
@@ -268,7 +287,7 @@ pub fn SupportTickets() -> Element {
     let attention_id = attention().as_ref().map(|ticket| ticket.id);
 
     let department_options = use_memo(move || {
-        std::iter::once(String::from("All departments"))
+        std::iter::once(String::from(FILTER_ALL_DEPARTMENTS))
             .chain(
                 tickets
                     .read()
@@ -277,10 +296,18 @@ pub fn SupportTickets() -> Element {
                     .collect::<std::collections::BTreeSet<_>>()
                     .into_iter(),
             )
+            .map(|value| {
+                let label = if value == FILTER_ALL_DEPARTMENTS {
+                    t_key("support-filter-all-departments")
+                } else {
+                    value.clone()
+                };
+                SelectOption::new(value, label)
+            })
             .collect::<Vec<_>>()
     });
     let assignee_options = use_memo(move || {
-        std::iter::once(String::from("All assignees"))
+        std::iter::once(String::from(FILTER_ALL_ASSIGNEES))
             .chain(
                 tickets
                     .read()
@@ -289,6 +316,14 @@ pub fn SupportTickets() -> Element {
                     .collect::<std::collections::BTreeSet<_>>()
                     .into_iter(),
             )
+            .map(|value| {
+                let label = if value == FILTER_ALL_ASSIGNEES {
+                    t_key("support-filter-all-assignees")
+                } else {
+                    value.clone()
+                };
+                SelectOption::new(value, label)
+            })
             .collect::<Vec<_>>()
     });
 
@@ -303,12 +338,12 @@ pub fn SupportTickets() -> Element {
             .iter()
             .filter(|ticket| {
                 let status_ok = status_now == TicketStatus::All || ticket.status == status_now;
-                let department_ok =
-                    department_now == "All departments" || ticket.department == department_now;
-                let assignee_ok =
-                    assignee_now == "All assignees" || ticket.assignee == assignee_now;
-                let priority_ok =
-                    priority_now == "All priorities" || ticket.priority == priority_now;
+                let department_ok = department_now == FILTER_ALL_DEPARTMENTS
+                    || ticket.department == department_now;
+                let assignee_ok = assignee_now == FILTER_ALL_ASSIGNEES
+                    || ticket.assignee == assignee_now;
+                let priority_ok = priority_now == FILTER_ALL_PRIORITIES
+                    || ticket.priority == priority_now;
                 let search_ok = q.is_empty()
                     || ticket.subject.to_lowercase().contains(&q)
                     || ticket.player.to_lowercase().contains(&q)
@@ -327,9 +362,9 @@ pub fn SupportTickets() -> Element {
     let remaining = matched.saturating_sub(limit);
     let can_load_more = remaining > 0;
     let filters_active = status() != TicketStatus::All
-        || department() != "All departments"
-        || assignee() != "All assignees"
-        || priority() != "All priorities"
+        || department() != FILTER_ALL_DEPARTMENTS
+        || assignee() != FILTER_ALL_ASSIGNEES
+        || priority() != FILTER_ALL_PRIORITIES
         || !query().trim().is_empty();
 
     let selected_ticket = {
@@ -339,12 +374,33 @@ pub fn SupportTickets() -> Element {
             .or_else(|| filtered_now.first().cloned())
     };
 
+    let summary_open = open_count();
+    let summary_pending = pending_count();
+    let summary_unassigned = unassigned_count();
+    let summary_text = t!(
+        "support-tickets-summary",
+        open: summary_open,
+        pending: summary_pending,
+        unassigned: summary_unassigned
+    );
+    let search_placeholder = t!("support-tickets-search-placeholder");
+    let attention_block = attention().map(|case| {
+        let wait = t!("support-tickets-waiting", when: case.when.clone());
+        let meta = t!(
+            "support-tickets-attention-meta",
+            id: case.id,
+            department: case.department.clone(),
+            priority: case.priority.clone()
+        );
+        (case, wait, meta)
+    });
+
     rsx! {
         div { class: "mb-2 flex flex-wrap items-end justify-between gap-4",
             div { class: "min-w-0",
-                p { class: "text-sm text-text-muted", "Desk" }
+                p { class: "text-sm text-text-muted", { t!("support-tickets-eyebrow") } }
                 h1 { class: "mt-1 text-3xl font-semibold tracking-tight sm:text-4xl",
-                    "Inbox"
+                    { t!("support-tickets-title") }
                 }
             }
             if filters_active {
@@ -354,25 +410,23 @@ pub fn SupportTickets() -> Element {
                     onclick: move |_| {
                         query.set(String::new());
                         status.set(TicketStatus::All);
-                        department.set(String::from("All departments"));
-                        assignee.set(String::from("All assignees"));
-                        priority.set(String::from("All priorities"));
+                        department.set(String::from(FILTER_ALL_DEPARTMENTS));
+                        assignee.set(String::from(FILTER_ALL_ASSIGNEES));
+                        priority.set(String::from(FILTER_ALL_PRIORITIES));
                         selected.set(None);
                         visible.set(TICKET_PAGE_SIZE);
                     },
-                    "Clear filters"
+                    { t!("support-tickets-clear-filters") }
                 }
             }
         }
 
-        p { class: "mb-10 text-sm text-text-muted",
-            "{open_count()} open · {pending_count()} awaiting reply · {unassigned_count()} unassigned"
-        }
+        p { class: "mb-10 text-sm text-text-muted", "{summary_text}" }
 
-        if let Some(case) = attention() {
+        if let Some((case, attention_wait, attention_meta)) = attention_block {
             section { class: "mb-10",
                 p { class: "mb-4 text-xs font-medium uppercase tracking-wide text-text-muted",
-                    "Needs you"
+                    { t!("support-tickets-needs-you") }
                 }
                 button {
                     r#type: "button",
@@ -387,7 +441,7 @@ pub fn SupportTickets() -> Element {
                             label: case.status.label(),
                             tone: case.status.tone(),
                         }
-                        span { class: "support-attention-wait", "Waiting {case.when}" }
+                        span { class: "support-attention-wait", "{attention_wait}" }
                     }
                     h2 { class: "support-attention-title", "{case.subject}" }
                     p { class: "support-attention-note", "{case.note}" }
@@ -399,9 +453,7 @@ pub fn SupportTickets() -> Element {
                         }
                         div { class: "min-w-0",
                             p { class: "truncate text-sm font-medium text-text", "{case.player}" }
-                            p { class: "truncate text-xs text-text-muted",
-                                "#{case.id} · {case.department} · {case.priority} priority"
-                            }
+                            p { class: "truncate text-xs text-text-muted", "{attention_meta}" }
                         }
                     }
                 }
@@ -412,7 +464,7 @@ pub fn SupportTickets() -> Element {
             SearchInput {
                 class: "support-filters-search",
                 value: query,
-                placeholder: "Search player, subject, or ticket #…",
+                placeholder: "{search_placeholder}",
             }
             div { class: "support-filters-chips",
                 for chip in [
@@ -442,24 +494,23 @@ pub fn SupportTickets() -> Element {
             div { class: "support-filters-selects",
                 SignalSelect {
                     value: department,
-                    options: department_options()
-                        .into_iter()
-                        .map(|name| SelectOption::new(name.clone(), name))
-                        .collect(),
+                    options: department_options(),
                 }
                 SignalSelect {
                     value: assignee,
-                    options: assignee_options()
-                        .into_iter()
-                        .map(|name| SelectOption::new(name.clone(), name))
-                        .collect(),
+                    options: assignee_options(),
                 }
                 SignalSelect {
                     value: priority,
-                    options: ["All priorities", "High", "Normal", "Low"]
-                        .into_iter()
-                        .map(|name| SelectOption::new(name, name))
-                        .collect(),
+                    options: [
+                        (FILTER_ALL_PRIORITIES, t_key("support-filter-all-priorities")),
+                        ("High", t_key("support-priority-high")),
+                        ("Normal", t_key("support-priority-normal")),
+                        ("Low", t_key("support-priority-low")),
+                    ]
+                    .into_iter()
+                    .map(|(value, label)| SelectOption::new(value, label))
+                    .collect(),
                 }
             }
         }
@@ -468,8 +519,8 @@ pub fn SupportTickets() -> Element {
             div { class: "motion-cascade motion-cascade-tight support-stack",
                 if matched == 0 {
                     div { class: "support-stack-empty",
-                        p { class: "text-sm font-medium text-text", "Inbox is quiet" }
-                        p { class: "mt-1 text-sm text-text-muted", "Nothing matches these filters." }
+                        p { class: "text-sm font-medium text-text", { t!("support-tickets-inbox-quiet") } }
+                        p { class: "mt-1 text-sm text-text-muted", { t!("support-tickets-no-matches") } }
                     }
                 } else {
                     for ticket in filtered().into_iter().take(limit) {
@@ -508,7 +559,7 @@ pub fn SupportTickets() -> Element {
                                 let next = *visible.peek() + TICKET_PAGE_SIZE;
                                 visible.set(next.min(matched));
                             },
-                            "Show older · {remaining} left"
+                            { t!("support-tickets-show-older", remaining: remaining) }
                         }
                     }
                 }
@@ -522,7 +573,9 @@ pub fn SupportTickets() -> Element {
                         rsx! {
                             div { class: "support-reading-head",
                                 div { class: "min-w-0",
-                                    p { class: "support-reading-kicker", "Case #{ticket.id}" }
+                                    p { class: "support-reading-kicker",
+                                        { t!("support-tickets-case-kicker", id: ticket.id) }
+                                    }
                                     h2 { class: "support-reading-title", "{ticket.subject}" }
                                 }
                                 StatusChip { label: ticket.status.label(), tone: ticket.status.tone() }
@@ -532,19 +585,20 @@ pub fn SupportTickets() -> Element {
                                 span { class: "support-tag", style: "--tag-accent: {tone};", "{ticket.priority}" }
                                 span { class: "support-tag", "{ticket.department}" }
                                 span { class: "support-tag", "{ticket.assignee}" }
-                                span { class: "support-tag is-muted", "Opened {ticket.when} ago" }
+                                span { class: "support-tag is-muted",
+                                    { t!("support-tickets-opened-ago", when: ticket.when.clone()) }
+                                }
                             }
 
                             div { class: "mt-5 flex items-center gap-3",
                                 Avatar { email: ticket.email.clone(), size: 36, alt: ticket.player.clone() }
                                 div { class: "min-w-0",
                                     p { class: "truncate text-sm font-medium text-text", "{ticket.player}" }
-                                    p { class: "truncate text-xs text-text-muted", "{ticket.email}" }
                                 }
                             }
 
                             div { class: "mt-5",
-                                p { class: "text-xs text-text-muted", "Latest note" }
+                                p { class: "text-xs text-text-muted", { t!("support-tickets-latest-note") } }
                                 p { class: "mt-1.5 text-sm leading-relaxed text-text-secondary", "{ticket.note}" }
                             }
 
@@ -556,16 +610,16 @@ pub fn SupportTickets() -> Element {
                                                 id: ticket_id,
                                             });
                                     },
-                                    "Open ticket"
+                                    { t!("support-tickets-open-ticket") }
                                 }
                             }
                         }
                     }
                 } else {
                     div { class: "support-reading-empty",
-                        p { class: "text-sm font-medium text-text", "Pick a case" }
+                        p { class: "text-sm font-medium text-text", { t!("support-tickets-pick-case") } }
                         p { class: "mt-1 max-w-xs text-sm text-text-muted",
-                            "Select a ticket from the stack to preview details, then open it."
+                            { t!("support-tickets-pick-case-hint") }
                         }
                     }
                 }
@@ -576,6 +630,7 @@ pub fn SupportTickets() -> Element {
 
 #[component]
 pub fn SupportTicket(id: u64) -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let mut reply = use_signal(String::new);
     let ticket = use_hook(|| {
@@ -587,16 +642,16 @@ pub fn SupportTicket(id: u64) -> Element {
     let Some(ticket) = ticket else {
         return rsx! {
             div { class: "mb-6",
-                p { class: "text-sm text-text-muted", "Desk" }
-                h1 { class: "mt-1 text-3xl font-semibold tracking-tight", "Ticket not found" }
-                p { class: "mt-2 text-sm text-text-secondary", "That case is no longer in the inbox." }
+                p { class: "text-sm text-text-muted", { t!("support-tickets-eyebrow") } }
+                h1 { class: "mt-1 text-3xl font-semibold tracking-tight", { t!("support-ticket-not-found-title") } }
+                p { class: "mt-2 text-sm text-text-secondary", { t!("support-ticket-not-found-desc") } }
                 div { class: "mt-6",
                     Button {
                         variant: ButtonVariant::Secondary,
                         onclick: move |_| {
                             navigator.push(Route::SupportTickets {});
                         },
-                        "Back to inbox"
+                        { t!("support-ticket-back-inbox") }
                     }
                 }
             }
@@ -604,12 +659,24 @@ pub fn SupportTicket(id: u64) -> Element {
     };
 
     let tone = priority_tone(&ticket.priority);
-    let reply_placeholder = format!("Write a reply to {}…", ticket.player);
+    let reply_placeholder = t!("support-ticket-reply-placeholder", player: ticket.player.clone());
+    let meta_when = ticket.when.clone();
+    let meta_department = ticket.department.clone();
+    let meta_priority = ticket.priority.clone();
+    let meta_assignee = ticket.assignee.clone();
+    let header_eyebrow = t!("support-ticket-header-eyebrow", id: ticket.id);
+    let meta_text = t!(
+        "support-ticket-meta",
+        when: meta_when,
+        department: meta_department,
+        priority: meta_priority,
+        assignee: meta_assignee
+    );
 
     rsx! {
         div { class: "mb-2 flex flex-wrap items-end justify-between gap-4",
             div { class: "min-w-0",
-                p { class: "text-sm text-text-muted", "Desk · Case #{ticket.id}" }
+                p { class: "text-sm text-text-muted", "{header_eyebrow}" }
                 h1 { class: "mt-1 text-3xl font-semibold tracking-tight sm:text-4xl",
                     "{ticket.subject}"
                 }
@@ -622,14 +689,12 @@ pub fn SupportTicket(id: u64) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::SupportTickets {});
                     },
-                    "Back to inbox"
+                    { t!("support-ticket-back-inbox") }
                 }
             }
         }
 
-        p { class: "mb-8 text-sm text-text-muted",
-            "Opened {ticket.when} ago · {ticket.department} · {ticket.priority} priority · {ticket.assignee}"
-        }
+        p { class: "mb-8 text-sm text-text-muted", "{meta_text}" }
 
         div { class: "support-ticket-page",
             section { class: "support-ticket-main",
@@ -642,7 +707,6 @@ pub fn SupportTicket(id: u64) -> Element {
                         }
                         div { class: "min-w-0",
                             p { class: "truncate text-sm font-medium text-text", "{ticket.player}" }
-                            p { class: "truncate text-xs text-text-muted", "{ticket.email}" }
                         }
                     }
                     p { class: "support-letter-body", "{ticket.note}" }
@@ -660,17 +724,17 @@ pub fn SupportTicket(id: u64) -> Element {
                             onclick: move |_| {
                                 reply.write().clear();
                             },
-                            "Send reply"
+                            { t!("support-ticket-send-reply") }
                         }
                         Button {
                             size: ButtonSize::Sm,
                             variant: ButtonVariant::Secondary,
-                            "Assign"
+                            { t!("support-ticket-assign") }
                         }
                         Button {
                             size: ButtonSize::Sm,
                             variant: ButtonVariant::Ghost,
-                            "Internal note"
+                            { t!("support-ticket-internal-note") }
                         }
                     }
                 }
@@ -678,27 +742,29 @@ pub fn SupportTicket(id: u64) -> Element {
 
             aside { class: "support-ticket-side",
                 p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                    "Case details"
+                    { t!("support-ticket-case-details") }
                 }
                 div { class: "support-reading-tags mt-4",
                     span { class: "support-tag", style: "--tag-accent: {tone};", "{ticket.priority}" }
                     span { class: "support-tag", "{ticket.department}" }
                     span { class: "support-tag", "{ticket.assignee}" }
-                    span { class: "support-tag is-muted", "Opened {ticket.when} ago" }
+                    span { class: "support-tag is-muted",
+                        { t!("support-tickets-opened-ago", when: ticket.when.clone()) }
+                    }
                 }
                 div { class: "mt-6 space-y-4",
                     div {
-                        p { class: "text-xs text-text-muted", "Player" }
+                        p { class: "text-xs text-text-muted", { t!("support-ticket-field-player") } }
                         p { class: "mt-1 text-sm font-medium text-text", "{ticket.player}" }
                     }
                     div {
-                        p { class: "text-xs text-text-muted", "Email" }
-                        p { class: "mt-1 text-sm font-medium text-text break-all",
-                            "{ticket.email}"
+                        p { class: "text-xs text-text-muted", { t!("support-ticket-field-status") } }
+                        p { class: "mt-1 text-sm font-medium text-text",
+                            "{ticket.status.label()}"
                         }
                     }
                     div {
-                        p { class: "text-xs text-text-muted", "Status" }
+                        p { class: "text-xs text-text-muted", { t!("support-ticket-field-status-chip") } }
                         div { class: "mt-1.5",
                             StatusChip {
                                 label: ticket.status.label(),
@@ -714,8 +780,8 @@ pub fn SupportTicket(id: u64) -> Element {
 
 #[component]
 fn Field(
-    label: &'static str,
-    #[props(default)] hint: Option<&'static str>,
+    #[props(into)] label: String,
+    #[props(default)] hint: Option<String>,
     children: Element,
 ) -> Element {
     rsx! {
@@ -745,11 +811,11 @@ impl Presence {
         }
     }
 
-    fn label(self) -> &'static str {
+    fn label(self) -> String {
         match self {
-            Self::Online => "Online",
-            Self::Away => "Away",
-            Self::Offline => "Offline",
+            Self::Online => t_key("support-presence-online"),
+            Self::Away => t_key("support-presence-away"),
+            Self::Offline => t_key("support-presence-offline"),
         }
     }
 }
@@ -803,6 +869,7 @@ fn placeholder_staff() -> Vec<StaffMember> {
 
 #[component]
 pub fn SupportOverview() -> Element {
+    let _lang = i18n();
     let articles = use_context::<Signal<Vec<Article>>>();
     let navigator = use_navigator();
     let tickets = use_hook(placeholder_tickets);
@@ -820,7 +887,7 @@ pub fn SupportOverview() -> Element {
     let unassigned_count = tickets
         .iter()
         .filter(|ticket| {
-            ticket.assignee == "Unassigned"
+            ticket.assignee == UNASSIGNED_ASSIGNEE
                 && matches!(ticket.status, TicketStatus::Open | TicketStatus::Pending)
         })
         .count();
@@ -850,57 +917,64 @@ pub fn SupportOverview() -> Element {
         article_list.iter().map(|a| a.helpful_pct).sum::<u32>() / article_list.len() as u32
     };
     let live_rules = AUTOMATION_RULES_DEFAULT_LIVE;
+    let staff_online_text = t!("support-overview-staff-online", online: online_count, total: staff_len);
+    let help_centre_meta = t!(
+        "support-overview-help-centre-meta",
+        count: article_count,
+        helpful: helpful_avg
+    );
+    let automation_meta = t!("support-overview-automation-meta", count: live_rules);
 
     rsx! {
         div { class: "mb-8 flex flex-wrap items-end justify-between gap-4",
             div { class: "min-w-0",
-                p { class: "text-sm text-text-muted", "Live desk" }
+                p { class: "text-sm text-text-muted", { t!("support-overview-eyebrow") } }
                 h1 { class: "mt-1 text-3xl font-semibold tracking-tight sm:text-4xl",
-                    "Support"
+                    { t!("support-overview-title") }
                 }
                 p { class: "mt-2 max-w-xl text-sm text-text-secondary",
-                    "Open cases, staff coverage, and where automation is doing the work."
+                    { t!("support-overview-subtitle") }
                 }
             }
-            Button { variant: ButtonVariant::Secondary, "View on website" }
+            Button { variant: ButtonVariant::Secondary, { t!("support-overview-view-site") } }
         }
 
         div { class: "motion-cascade ops-meter",
             div { class: "ops-meter-item",
-                p { class: "ops-meter-label", "Open now" }
+                p { class: "ops-meter-label", { t!("support-overview-open-now") } }
                 p { class: "ops-meter-value is-accent", "{open_count}" }
             }
             span { class: "ops-meter-divider" }
             div { class: "ops-meter-item",
-                p { class: "ops-meter-label", "Pending reply" }
+                p { class: "ops-meter-label", { t!("support-overview-pending-reply") } }
                 p { class: "ops-meter-value", "{pending_count}" }
             }
             span { class: "ops-meter-divider" }
             div { class: "ops-meter-item",
-                p { class: "ops-meter-label", "Unassigned" }
+                p { class: "ops-meter-label", { t!("support-overview-unassigned") } }
                 p { class: "ops-meter-value", "{unassigned_count}" }
             }
             span { class: "ops-meter-divider" }
             div { class: "ops-meter-item",
-                p { class: "ops-meter-label", "Avg. first reply" }
+                p { class: "ops-meter-label", { t!("support-overview-avg-first-reply") } }
                 p { class: "ops-meter-value", "14m" }
             }
         }
 
         section { class: "mb-9",
             div { class: "ops-section-head",
-                h2 { class: "ops-section-title", "Open right now" }
+                h2 { class: "ops-section-title", { t!("support-overview-open-right-now") } }
                 Button {
                     variant: ButtonVariant::Ghost,
                     size: ButtonSize::Sm,
                     onclick: move |_| {
                         navigator.push(Route::SupportTickets {});
                     },
-                    "View inbox →"
+                    { t!("support-overview-view-inbox") }
                 }
             }
             if open_now.is_empty() {
-                p { class: "ops-empty", "Nothing waiting on staff right now." }
+                p { class: "ops-empty", { t!("support-overview-nothing-waiting") } }
             } else {
                 div { class: "motion-cascade motion-cascade-tight ops-strip",
                     for ticket in open_now {
@@ -934,8 +1008,8 @@ pub fn SupportOverview() -> Element {
 
         section { class: "mb-9",
             div { class: "ops-section-head",
-                h2 { class: "ops-section-title", "Staff on the desk" }
-                p { class: "ops-section-sub", "{online_count} of {staff_len} online" }
+                h2 { class: "ops-section-title", { t!("support-overview-staff-desk") } }
+                p { class: "ops-section-sub", "{staff_online_text}" }
             }
             div { class: "motion-cascade motion-cascade-tight ops-roster",
                 for member in staff {
@@ -945,8 +1019,15 @@ pub fn SupportOverview() -> Element {
                         } else {
                             (member.active_tickets * 100 / member.capacity).min(100)
                         };
+                        let roster_active = member.active_tickets;
+                        let roster_capacity = member.capacity;
+                        let roster_load = t!(
+                            "support-overview-roster-load",
+                            active: roster_active,
+                            capacity: roster_capacity
+                        );
                         rsx! {
-                            div { class: "ops-roster-row", key: "{member.email}",
+                            div { class: "ops-roster-row", key: "{member.name}",
                                 div { class: "ops-roster-avatar-wrap",
                                     Avatar { email: member.email.clone(), size: 36, alt: member.name.clone() }
                                     span {
@@ -961,7 +1042,7 @@ pub fn SupportOverview() -> Element {
                                 div { class: "ops-roster-load",
                                     div { class: "ops-roster-load-fill", style: "width: {load_pct}%;" }
                                 }
-                                span { class: "ops-roster-load-label", "{member.active_tickets}/{member.capacity} tickets" }
+                                span { class: "ops-roster-load-label", "{roster_load}" }
                             }
                         }
                     }
@@ -978,10 +1059,8 @@ pub fn SupportOverview() -> Element {
                         navigator.push(Route::SupportHelpCentre {});
                     },
                     div {
-                        p { class: "ops-pulse-title", "Help centre" }
-                        p { class: "ops-pulse-meta",
-                            "{article_count} articles · {helpful_avg}% helpful"
-                        }
+                        p { class: "ops-pulse-title", { t!("support-overview-help-centre") } }
+                        p { class: "ops-pulse-meta", "{help_centre_meta}" }
                     }
                     span { class: "ops-pulse-arrow", "→" }
                 }
@@ -992,8 +1071,8 @@ pub fn SupportOverview() -> Element {
                         navigator.push(Route::SupportAutomation {});
                     },
                     div {
-                        p { class: "ops-pulse-title", "Automation" }
-                        p { class: "ops-pulse-meta", "{live_rules} rules live" }
+                        p { class: "ops-pulse-title", { t!("support-overview-automation") } }
+                        p { class: "ops-pulse-meta", "{automation_meta}" }
                     }
                     span { class: "ops-pulse-arrow", "→" }
                 }
@@ -1010,11 +1089,11 @@ enum ArticleStatus {
 }
 
 impl ArticleStatus {
-    fn label(self) -> &'static str {
+    fn label(self) -> String {
         match self {
-            Self::Published => "Published",
-            Self::Featured => "Featured",
-            Self::Draft => "Draft",
+            Self::Published => t_key("support-article-status-published"),
+            Self::Featured => t_key("support-article-status-featured"),
+            Self::Draft => t_key("support-article-status-draft"),
         }
     }
 
@@ -1180,6 +1259,7 @@ fn next_article_id(articles: &[Article]) -> u64 {
 
 #[component]
 pub fn SupportHelpCentre() -> Element {
+    let _lang = i18n();
     let articles = use_context::<Signal<Vec<Article>>>();
     let navigator = use_navigator();
     let all = articles();
@@ -1190,24 +1270,29 @@ pub fn SupportHelpCentre() -> Element {
     } else {
         all.iter().map(|a| a.helpful_pct).sum::<u32>() / total as u32
     };
+    let shelf_count = HELP_CATEGORIES.len();
+    let help_subtitle = t!(
+        "support-help-subtitle",
+        total: total,
+        shelves: shelf_count,
+        helpful: helpful_avg
+    );
 
     rsx! {
         div { class: "mb-8 flex flex-wrap items-end justify-between gap-4",
             div { class: "min-w-0",
-                p { class: "text-sm text-text-muted", "Knowledge base" }
+                p { class: "text-sm text-text-muted", { t!("support-help-eyebrow") } }
                 h1 { class: "mt-1 text-3xl font-semibold tracking-tight sm:text-4xl",
-                    "Help centre"
+                    { t!("support-help-title") }
                 }
-                p { class: "mt-2 max-w-xl text-sm text-text-secondary",
-                    "{total} articles across {HELP_CATEGORIES.len()} shelves · {helpful_avg}% marked helpful."
-                }
+                p { class: "mt-2 max-w-xl text-sm text-text-secondary", "{help_subtitle}" }
             }
             Button {
                 onclick: move |_| {
                     navigator.push(Route::SupportHelpNew {});
                 },
                 IconPlus {}
-                "New article"
+                { t!("support-help-new-article") }
             }
         }
 
@@ -1238,12 +1323,17 @@ pub fn SupportHelpCentre() -> Element {
                         section { key: "{category}", id: "shelf-{category}", class: "shelf",
                             div { class: "shelf-head",
                                 h2 { class: "shelf-title", "{category}" }
-                                span { class: "shelf-count", "{items.len()} articles" }
+                                span { class: "shelf-count",
+                                    { t!("support-help-shelf-count", count: items.len()) }
+                                }
                             }
                             div { class: "shelf-rail",
                                 for article in items {
                                     {
                                         let article_id = article.id;
+                                        let card_views = support_help_card_views(article.views);
+                                        let card_foot =
+                                            support_help_card_foot(article.updated.clone(), article.helpful_pct);
                                         rsx! {
                                             button {
                                                 r#type: "button",
@@ -1257,11 +1347,11 @@ pub fn SupportHelpCentre() -> Element {
                                                 },
                                                 div { class: "shelf-card-top",
                                                     StatusChip { label: article.status.label(), tone: article.status.tone() }
-                                                    span { class: "shelf-card-views", "{article.views} views" }
+                                                    span { class: "shelf-card-views", "{card_views}" }
                                                 }
                                                 h3 { class: "shelf-card-title", "{article.title}" }
                                                 p { class: "shelf-card-snippet", "{article.snippet}" }
-                                                div { class: "shelf-card-foot", "Updated {article.updated} · {article.helpful_pct}% helpful" }
+                                                div { class: "shelf-card-foot", "{card_foot}" }
                                             }
                                         }
                                     }
@@ -1277,6 +1367,7 @@ pub fn SupportHelpCentre() -> Element {
 
 #[component]
 pub fn SupportHelpNew() -> Element {
+    let _lang = i18n();
     rsx! {
         ArticleEditor { article_id: None }
     }
@@ -1284,6 +1375,7 @@ pub fn SupportHelpNew() -> Element {
 
 #[component]
 pub fn SupportHelpEdit(id: u64) -> Element {
+    let _lang = i18n();
     rsx! {
         ArticleEditor { article_id: Some(id) }
     }
@@ -1291,6 +1383,7 @@ pub fn SupportHelpEdit(id: u64) -> Element {
 
 #[component]
 fn ArticleEditor(article_id: Option<u64>) -> Element {
+    let _lang = i18n();
     let mut articles = use_context::<Signal<Vec<Article>>>();
     let current_user = use_context::<Signal<CurrentUser>>();
     let navigator = use_navigator();
@@ -1341,11 +1434,11 @@ fn ArticleEditor(article_id: Option<u64>) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::SupportHelpCentre {});
                     },
-                    "← Help centre"
+                    { t!("support-article-back") }
                 }
             }
-            h1 { class: "text-3xl font-semibold tracking-tight", "Article not found" }
-            p { class: "mt-2 text-sm text-text-muted", "This article may have been deleted." }
+            h1 { class: "text-3xl font-semibold tracking-tight", { t!("support-article-not-found-title") } }
+            p { class: "mt-2 text-sm text-text-muted", { t!("support-article-not-found-desc") } }
         };
     }
 
@@ -1397,12 +1490,12 @@ fn ArticleEditor(article_id: Option<u64>) -> Element {
     };
 
     let preview_title = if title_now.trim().is_empty() {
-        String::from("Article title")
+        t_key("support-article-preview-title")
     } else {
         title_now.trim().to_string()
     };
     let preview_snippet = if snippet_now.trim().is_empty() {
-        String::from("A short summary shown on the shelf card.")
+        t_key("support-article-preview-snippet")
     } else {
         snippet_now.trim().to_string()
     };
@@ -1416,7 +1509,7 @@ fn ArticleEditor(article_id: Option<u64>) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::SupportHelpCentre {});
                     },
-                    "← Help centre"
+                    { t!("support-article-back") }
                 }
                 div { class: "flex flex-wrap items-center gap-2",
                     if let Some(id) = article_id {
@@ -1427,7 +1520,7 @@ fn ArticleEditor(article_id: Option<u64>) -> Element {
                                 articles.with_mut(|list| list.retain(|article| article.id != id));
                                 navigator.push(Route::SupportHelpCentre {});
                             },
-                            "Delete"
+                            { t!("support-article-delete") }
                         }
                     }
                     Button {
@@ -1436,62 +1529,60 @@ fn ArticleEditor(article_id: Option<u64>) -> Element {
                         onclick: move |_| {
                             navigator.push(Route::SupportHelpCentre {});
                         },
-                        "Cancel"
+                        { t!("support-article-cancel") }
                     }
                     Button {
                         size: ButtonSize::Sm,
                         disabled: !can_save,
                         onclick: save,
                         if is_new {
-                            "Publish article"
+                            { t!("support-article-publish") }
                         } else {
-                            "Save changes"
+                            { t!("support-article-save") }
                         }
                     }
                 }
             }
 
             div { class: "mb-8",
-                p { class: "text-sm text-text-muted", "Knowledge base" }
+                p { class: "text-sm text-text-muted", { t!("support-help-eyebrow") } }
                 h1 { class: "mt-1 text-3xl font-semibold tracking-tight",
                     if is_new {
-                        "New article"
+                        { t!("support-article-new-title") }
                     } else {
-                        "Edit article"
+                        { t!("support-article-edit-title") }
                     }
                 }
-                p { class: "mt-2 max-w-2xl text-sm text-text-muted",
-                    "Title, shelf, body, and whether it's ready for players to see."
-                }
+                p { class: "mt-2 max-w-2xl text-sm text-text-muted", { t!("support-article-lede") } }
             }
 
             div { class: "motion-cascade forum-editor-layout",
                 div { class: "forum-editor-main space-y-8",
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Basics" }
-                        p { class: "forum-editor-lede", "Title and the shelf this article lives on." }
+                        h2 { class: "forum-editor-heading", { t!("support-article-section-basics") } }
+                        p { class: "forum-editor-lede", { t!("support-article-section-basics-lede") } }
                         div { class: "mt-4 space-y-4",
-                            Field { label: "Title",
+                            Field { label: t_key("support-article-field-title"),
                                 SignalInput {
                                     value: title,
-                                    placeholder: "How to claim vote rewards",
+                                    placeholder: t_key("support-article-placeholder-title"),
                                 }
                             }
-                            Field { label: "Shelf",
+                            Field { label: t_key("support-article-field-shelf"),
                                 SignalSelect {
                                     value: category,
                                     options: HELP_CATEGORIES
-                                                                            .iter()
-                                                                            .map(|c| SelectOption::new(*c, *c))
-                                                                            .collect(),
+                                        .iter()
+                                        .map(|c| SelectOption::new(*c, *c))
+                                        .collect(),
                                 }
                             }
                             Field {
-                                label: "Snippet",
-                                hint: "Shown on the shelf card. Leave blank to use the start of the body.",
+                                label: t_key("support-article-field-snippet"),
+                                hint: Some(t_key("support-article-field-snippet-hint")),
                                 SignalTextarea {
                                     value: snippet,
-                                    placeholder: "One or two sentences…",
+                                    placeholder: "{t!(\"support-article-placeholder-snippet\")}",
                                     class: "min-h-[4.5rem]",
                                 }
                             }
@@ -1499,22 +1590,20 @@ fn ArticleEditor(article_id: Option<u64>) -> Element {
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Content" }
-                        p { class: "forum-editor-lede", "The full article body. Markdown supported." }
+                        h2 { class: "forum-editor-heading", { t!("support-article-section-content") } }
+                        p { class: "forum-editor-lede", { t!("support-article-section-content-lede") } }
                         div { class: "mt-4",
                             SignalTextarea {
                                 value: body,
-                                placeholder: "Write the article…",
+                                placeholder: "{t!(\"support-article-placeholder-body\")}",
                                 class: "min-h-[14rem]",
                             }
                         }
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Status" }
-                        p { class: "forum-editor-lede",
-                            "Drafts sit in the proof queue until you publish them."
-                        }
+                        h2 { class: "forum-editor-heading", { t!("support-article-section-status") } }
+                        p { class: "forum-editor-lede", { t!("support-article-section-status-lede") } }
                         div { class: "mt-4 flex flex-wrap gap-2",
                             for option in [ArticleStatus::Draft, ArticleStatus::Published, ArticleStatus::Featured] {
                                 button {
@@ -1533,7 +1622,7 @@ fn ArticleEditor(article_id: Option<u64>) -> Element {
                 aside { class: "forum-editor-aside",
                     div { class: "forum-editor-preview",
                         p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                            "Shelf preview"
+                            { t!("support-article-shelf-preview") }
                         }
                         div {
                             class: "mt-4 shelf-card",
@@ -1543,11 +1632,13 @@ fn ArticleEditor(article_id: Option<u64>) -> Element {
                                     label: status_now.label(),
                                     tone: status_now.tone(),
                                 }
-                                span { class: "shelf-card-views", "0 views" }
+                                span { class: "shelf-card-views", { t!("support-article-preview-views") } }
                             }
                             h3 { class: "shelf-card-title", "{preview_title}" }
                             p { class: "shelf-card-snippet", "{preview_snippet}" }
-                            div { class: "shelf-card-foot", "{category_now} · just now" }
+                            div { class: "shelf-card-foot",
+                                { t!("support-article-preview-foot", category: category_now.clone()) }
+                            }
                         }
                     }
                 }
@@ -1558,55 +1649,55 @@ fn ArticleEditor(article_id: Option<u64>) -> Element {
 
 #[derive(Clone, Copy)]
 struct AutomationRuleMeta {
-    name: &'static str,
-    description: &'static str,
-    category: &'static str,
+    name_key: &'static str,
+    description_key: &'static str,
+    category_key: &'static str,
     tone: &'static str,
-    trigger: &'static str,
+    trigger_key: &'static str,
 }
 
 const AUTOMATION_RULES: &[AutomationRuleMeta] = &[
     AutomationRuleMeta {
-        name: "AI first reply",
-        description: "Draft a reply from help centre articles before a human responds.",
-        category: "First reply",
+        name_key: "support-auto-rule-ai-first-reply-name",
+        description_key: "support-auto-rule-ai-first-reply-desc",
+        category_key: "support-auto-category-first-reply",
         tone: "#f0a35e",
-        trigger: "When a ticket opens with no staff reply yet",
+        trigger_key: "support-auto-rule-ai-first-reply-trigger",
     },
     AutomationRuleMeta {
-        name: "Discord alert",
-        description: "Post new tickets to #support-alerts as soon as they land.",
-        category: "Notifications",
+        name_key: "support-auto-rule-discord-alert-name",
+        description_key: "support-auto-rule-discord-alert-desc",
+        category_key: "support-auto-category-notifications",
         tone: "#5b9dff",
-        trigger: "When any ticket status changes to Open",
+        trigger_key: "support-auto-rule-discord-alert-trigger",
     },
     AutomationRuleMeta {
-        name: "SLA breach ping",
-        description: "Ping the on-call staff member if a high priority ticket goes unassigned.",
-        category: "Escalation",
+        name_key: "support-auto-rule-sla-breach-name",
+        description_key: "support-auto-rule-sla-breach-desc",
+        category_key: "support-auto-category-escalation",
         tone: "#f87171",
-        trigger: "When a High priority ticket waits 15 minutes",
+        trigger_key: "support-auto-rule-sla-breach-trigger",
     },
     AutomationRuleMeta {
-        name: "CSAT follow-up",
-        description: "Send a one-question satisfaction survey after a ticket resolves.",
-        category: "Notifications",
+        name_key: "support-auto-rule-csat-name",
+        description_key: "support-auto-rule-csat-desc",
+        category_key: "support-auto-category-notifications",
         tone: "#5b9dff",
-        trigger: "When a ticket status changes to Resolved",
+        trigger_key: "support-auto-rule-csat-trigger",
     },
     AutomationRuleMeta {
-        name: "Auto-close idle tickets",
-        description: "Close tickets automatically after a week without a reply.",
-        category: "Cleanup",
+        name_key: "support-auto-rule-auto-close-name",
+        description_key: "support-auto-rule-auto-close-desc",
+        category_key: "support-auto-category-cleanup",
         tone: "#858899",
-        trigger: "When a ticket sits idle for 7 days",
+        trigger_key: "support-auto-rule-auto-close-trigger",
     },
     AutomationRuleMeta {
-        name: "Duplicate merge suggestion",
-        description: "Flag likely duplicate tickets opened by the same player minutes apart.",
-        category: "Cleanup",
+        name_key: "support-auto-rule-duplicate-name",
+        description_key: "support-auto-rule-duplicate-desc",
+        category_key: "support-auto-category-cleanup",
         tone: "#858899",
-        trigger: "When a player opens a second ticket within 10 minutes",
+        trigger_key: "support-auto-rule-duplicate-trigger",
     },
 ];
 
@@ -1628,24 +1719,25 @@ fn RuleSwitch(checked: bool, onclick: EventHandler<MouseEvent>) -> Element {
 
 #[component]
 pub fn SupportAutomation() -> Element {
+    let _lang = i18n();
     let mut enabled = use_signal(|| vec![true, true, true, true, false, false]);
     let enabled_now = enabled();
     let live_count = enabled_now.iter().filter(|on| **on).count();
+    let rules_total = AUTOMATION_RULES.len();
+    let automation_subtitle = support_automation_subtitle(live_count, rules_total);
 
     rsx! {
         div { class: "mb-8 flex flex-wrap items-end justify-between gap-4",
             div { class: "min-w-0",
-                p { class: "text-sm text-text-muted", "Playbook" }
+                p { class: "text-sm text-text-muted", { t!("support-automation-eyebrow") } }
                 h1 { class: "mt-1 text-3xl font-semibold tracking-tight sm:text-4xl",
-                    "Automation"
+                    { t!("support-automation-title") }
                 }
-                p { class: "mt-2 max-w-xl text-sm text-text-secondary",
-                    "{live_count} of {AUTOMATION_RULES.len()} rules live. Flip a track on or off — the AI preview reacts."
-                }
+                p { class: "mt-2 max-w-xl text-sm text-text-secondary", "{automation_subtitle}" }
             }
             Button { size: ButtonSize::Sm, variant: ButtonVariant::Secondary,
                 IconAi {}
-                "Configure AI"
+                { t!("support-automation-configure-ai") }
             }
         }
 
@@ -1654,20 +1746,24 @@ pub fn SupportAutomation() -> Element {
                 for (index, rule) in AUTOMATION_RULES.iter().enumerate() {
                     {
                         let on = enabled_now[index];
+                        let name = t_key(rule.name_key);
+                        let category = t_key(rule.category_key);
+                        let description = t_key(rule.description_key);
+                        let trigger = t_key(rule.trigger_key);
                         rsx! {
                             div {
                                 class: "auto-rail",
-                                key: "{rule.name}",
+                                key: "{rule.name_key}",
                                 style: "--rail-tone: {rule.tone};",
                                 span { class: "auto-rail-bar" }
                                 div { class: "auto-rail-body",
                                     div { class: "auto-rail-copy",
                                         div { class: "auto-rail-top",
-                                            p { class: "auto-rail-name", "{rule.name}" }
-                                            span { class: "auto-rail-tag", "{rule.category}" }
+                                            p { class: "auto-rail-name", "{name}" }
+                                            span { class: "auto-rail-tag", "{category}" }
                                         }
-                                        p { class: "auto-rail-desc", "{rule.description}" }
-                                        p { class: "auto-rail-trigger", "{rule.trigger}" }
+                                        p { class: "auto-rail-desc", "{description}" }
+                                        p { class: "auto-rail-trigger", "{trigger}" }
                                     }
                                     RuleSwitch {
                                         checked: on,
@@ -1687,9 +1783,9 @@ pub fn SupportAutomation() -> Element {
             }
 
             aside { class: "auto-preview",
-                p { class: "auto-preview-kicker", "AI reply preview" }
+                p { class: "auto-preview-kicker", { t!("support-automation-preview-kicker") } }
                 div { class: "auto-preview-ticket",
-                    p { class: "auto-preview-ticket-label", "Incoming · NovaCraft" }
+                    p { class: "auto-preview-ticket-label", { t!("support-automation-preview-incoming") } }
                     p { class: "auto-preview-ticket-text",
                         "“I paid for VIP through PayPal but the rank never showed up in-game. Can someone check?”"
                     }
@@ -1697,7 +1793,7 @@ pub fn SupportAutomation() -> Element {
                 div { class: "auto-preview-reply",
                     span { class: "auto-preview-badge",
                         IconAi { class: "h-3.5 w-3.5" }
-                        "AI drafted"
+                        { t!("support-automation-preview-drafted") }
                     }
                     p { class: "auto-preview-reply-text",
                         "Hi NovaCraft — thanks for flagging this. I can see the payment but the rank grant didn't run. I've queued a manual grant and it should apply within 10 minutes. Sorry for the wait!"
@@ -1709,15 +1805,15 @@ pub fn SupportAutomation() -> Element {
                                 style: "width: 82%;",
                             }
                         }
-                        span { class: "auto-preview-meter-label", "82% confidence" }
+                        span { class: "auto-preview-meter-label", { t!("support-automation-preview-confidence") } }
                     }
                 }
                 div { class: "auto-preview-actions",
-                    Button { size: ButtonSize::Sm, "Use reply" }
+                    Button { size: ButtonSize::Sm, { t!("support-automation-use-reply") } }
                     Button {
                         size: ButtonSize::Sm,
                         variant: ButtonVariant::Secondary,
-                        "Regenerate"
+                        { t!("support-automation-regenerate") }
                     }
                 }
             }
@@ -1727,33 +1823,32 @@ pub fn SupportAutomation() -> Element {
 
 #[component]
 pub fn SupportSiteSettings() -> Element {
+    let _lang = i18n();
     let public_path = use_signal(|| String::from("/support"));
     let page_title = use_signal(|| String::from("Support"));
     let department = use_signal(|| String::from("Store"));
     let priority = use_signal(|| String::from("Normal"));
 
     rsx! {
-        FeatureSettingsChrome { subtitle: "Path, ticket defaults, and how the desk hands off to the help centre and automation.",
-            DataPanel { title: "Support path",
-                SettingsControl { label: "Public path",
+        FeatureSettingsChrome { subtitle: t_key("support-settings-subtitle"),
+            DataPanel { title: t_key("support-settings-panel-path"),
+                SettingsControl { label: t_key("support-settings-field-public-path"),
                     SignalInput {
                         value: public_path,
-                        placeholder: "/support".to_string(),
+                        placeholder: t_key("support-settings-placeholder-path"),
                     }
                 }
                 SettingsField {
-                    label: "Full URL",
+                    label: t_key("support-settings-field-full-url"),
                     value: format!("www.example.com{}", public_path()),
                 }
-                SettingsControl { label: "Page title",
-                    SignalInput { value: page_title, placeholder: "Support".to_string() }
+                SettingsControl { label: t_key("support-settings-field-page-title"),
+                    SignalInput { value: page_title, placeholder: t_key("support-settings-placeholder-page-title") }
                 }
-                p { class: "pt-3 text-xs text-text-muted",
-                    "Domain and HTTPS are managed in Settings → General."
-                }
+                p { class: "pt-3 text-xs text-text-muted", { t!("support-settings-domain-hint") } }
             }
-            DataPanel { title: "Ticket defaults",
-                SettingsControl { label: "Default department",
+            DataPanel { title: t_key("support-settings-panel-ticket-defaults"),
+                SettingsControl { label: t_key("support-settings-field-default-department"),
                     SignalSelect {
                         value: department,
                         options: ["Store", "Gameplay", "Moderation", "Account"]
@@ -1762,42 +1857,46 @@ pub fn SupportSiteSettings() -> Element {
                             .collect(),
                     }
                 }
-                SettingsControl { label: "Default priority",
+                SettingsControl { label: t_key("support-settings-field-default-priority"),
                     SignalSelect {
                         value: priority,
-                        options: ["Low", "Normal", "High"]
-                            .into_iter()
-                            .map(|name| SelectOption::new(name, name))
-                            .collect(),
+                        options: [
+                            ("Low", t_key("support-priority-low")),
+                            ("Normal", t_key("support-priority-normal")),
+                            ("High", t_key("support-priority-high")),
+                        ]
+                        .into_iter()
+                        .map(|(value, label)| SelectOption::new(value, label))
+                        .collect(),
                     }
                 }
                 SettingRow {
-                    title: "Business hours only",
-                    description: "Show players an away message outside your staffed hours.",
+                    title: t_key("support-settings-business-hours-title"),
+                    description: t_key("support-settings-business-hours-desc"),
                     enabled: false,
                 }
             }
-            DataPanel { title: "Help centre",
+            DataPanel { title: t_key("support-settings-panel-help-centre"),
                 SettingRow {
-                    title: "Public search",
-                    description: "Let players search articles without logging in.",
+                    title: t_key("support-settings-public-search-title"),
+                    description: t_key("support-settings-public-search-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Ask for feedback",
-                    description: "Show a helpful / not helpful prompt at the end of articles.",
+                    title: t_key("support-settings-feedback-title"),
+                    description: t_key("support-settings-feedback-desc"),
                     enabled: true,
                 }
             }
-            DataPanel { title: "Automation defaults",
+            DataPanel { title: t_key("support-settings-panel-automation"),
                 SettingRow {
-                    title: "AI first reply",
-                    description: "Draft a reply from help centre articles before a human responds.",
+                    title: t_key("support-auto-rule-ai-first-reply-name"),
+                    description: t_key("support-auto-rule-ai-first-reply-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Discord alerts",
-                    description: "Post new tickets to your staff Discord channel.",
+                    title: t_key("support-settings-discord-alerts-title"),
+                    description: t_key("support-settings-discord-alerts-desc"),
                     enabled: true,
                 }
             }

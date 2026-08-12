@@ -1,16 +1,21 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::community::{
     placeholder_players, placeholder_vote_sites, vote_site_status_class, vote_site_status_label,
     Application, ApplicationStatus, BoardPodium, BoardReset, BoardStandings, LeaderboardBoard,
     Player, PlayerStatus, PlayersLeaderboardsStyles, VoteReward, VotesApplicationsStyles,
+    VoteSiteStatus,
 };
 use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill};
 use crate::components::ui::*;
+use crate::i18n::t_key;
 use crate::router::Route;
 
 #[component]
 pub fn PlayersOverview() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let players = use_hook(placeholder_players);
     let online = players
@@ -27,33 +32,33 @@ pub fn PlayersOverview() -> Element {
     rsx! {
         PlayersLeaderboardsStyles {}
         PageHeader {
-            title: "Players",
-            subtitle: "The roster, ranks, and linked identities for every player across your servers.",
+            title: t_key("feature-overview-players-title"),
+            subtitle: t_key("community-players-subtitle"),
             action: rsx! {
                 Button {
                     variant: ButtonVariant::Secondary,
                     onclick: move |_| {
                         navigator.push(Route::CommunityPlayers {});
                     },
-                    "Open roster"
+                    { t!("feature-overview-open-roster") }
                 }
             },
         }
 
         section { class: "motion-cascade stat-strip mb-8",
-            StatPill { label: "Total players", value: "1,842", accent: "#69bdf2" }
-            StatPill { label: "Linked accounts", value: "1,204", accent: "#3ecf8e" }
+            StatPill { label: t_key("feature-overview-total-players"), value: "1,842", accent: "#69bdf2" }
+            StatPill { label: t_key("feature-overview-linked-accounts"), value: "1,204", accent: "#3ecf8e" }
             StatPill {
-                label: "Online now",
+                label: t_key("feature-overview-online-now"),
                 value: online.to_string(),
                 accent: "#5b9dff",
             }
-            StatPill { label: "Servers", value: "7", accent: "#87d1fe" }
+            StatPill { label: t_key("feature-overview-servers"), value: "7", accent: "#87d1fe" }
         }
 
         if let Some(player) = spotlight {
             div { class: "roster-spotlight",
-                span { class: "roster-spotlight-ribbon", "Spotlight" }
+                span { class: "roster-spotlight-ribbon", { t!("feature-overview-spotlight") } }
                 Avatar { email: player.email, size: 64, alt: player.username }
                 div { class: "min-w-0",
                     div { class: "flex flex-wrap items-center gap-2",
@@ -77,28 +82,28 @@ pub fn PlayersOverview() -> Element {
                                     id: player.id,
                                 });
                         },
-                        "Open file"
+                        { t!("feature-overview-open-file") }
                     }
                 }
                 div { class: "roster-spotlight-stats",
                     div { class: "roster-spotlight-stat",
                         p { class: "roster-spotlight-stat-value", "{player.level}" }
-                        p { class: "roster-spotlight-stat-label", "Level" }
+                        p { class: "roster-spotlight-stat-label", { t!("community-label-level") } }
                     }
                     div { class: "roster-spotlight-stat",
                         p { class: "roster-spotlight-stat-value", "{player.playtime_hours}h" }
-                        p { class: "roster-spotlight-stat-label", "Playtime" }
+                        p { class: "roster-spotlight-stat-label", { t!("community-label-playtime") } }
                     }
                     div { class: "roster-spotlight-stat",
                         p { class: "roster-spotlight-stat-value", "{player.votes}" }
-                        p { class: "roster-spotlight-stat-label", "Votes" }
+                        p { class: "roster-spotlight-stat-label", { t!("community-label-votes") } }
                     }
                 }
             }
         }
 
         section { class: "mb-2 flex items-baseline justify-between gap-3",
-            h2 { class: "text-sm font-semibold text-text", "Recently active" }
+            h2 { class: "text-sm font-semibold text-text", { t!("feature-overview-recently-active") } }
             button {
                 class: "text-xs font-semibold transition-colors",
                 style: "color: #69bdf2;",
@@ -106,7 +111,7 @@ pub fn PlayersOverview() -> Element {
                 onclick: move |_| {
                     navigator.push(Route::CommunityPlayers {});
                 },
-                "Full roster →"
+                { t!("feature-overview-full-roster") }
             }
         }
         div { class: "motion-cascade motion-cascade-tight roster-recent",
@@ -128,7 +133,7 @@ pub fn PlayersOverview() -> Element {
                             div { class: "min-w-0 flex-1",
                                 p { class: "truncate text-sm font-medium text-text", "{player.username}" }
                                 p { class: "mt-0.5 truncate text-xs text-text-muted",
-                                    "{player.rank.label()} · Level {player.level}"
+                                    { t!("community-level-rank-line", rank: player.rank.label(), level: player.level) }
                                 }
                             }
                             span { class: "text-xs text-text-muted", "{player.last_seen}" }
@@ -142,6 +147,7 @@ pub fn PlayersOverview() -> Element {
 
 #[component]
 pub fn LeaderboardsOverview() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let boards = use_context::<Signal<Vec<LeaderboardBoard>>>();
     let board_count = use_memo(move || boards.read().len());
@@ -159,7 +165,7 @@ pub fn LeaderboardsOverview() -> Element {
             .filter(|b| b.reset != BoardReset::Never)
             .map(|b| b.reset.label())
             .next()
-            .unwrap_or("None scheduled")
+            .unwrap_or_else(|| t_key("community-board-reset-none"))
     });
     let ranked_players =
         use_memo(move || boards.read().iter().map(|b| b.entries.len()).sum::<usize>());
@@ -170,10 +176,10 @@ pub fn LeaderboardsOverview() -> Element {
 
         div { class: "board-console-masthead",
             div { class: "min-w-0",
-                p { class: "board-console-eyebrow", "Leaderboard admin" }
-                h1 { class: "board-console-title", "{board_count()} boards live" }
+                p { class: "board-console-eyebrow", { t!("community-leaderboard-admin") } }
+                h1 { class: "board-console-title", { t!("feature-overview-boards-live", count: board_count()) } }
                 p { class: "board-console-sub",
-                    "Podiums, standings, and rank rewards across every configured board."
+                    { t!("feature-overview-boards-sub") }
                 }
             }
             div { class: "flex flex-wrap items-center gap-2",
@@ -183,7 +189,7 @@ pub fn LeaderboardsOverview() -> Element {
                     onclick: move |_| {
                         navigator.push(Route::CommunityLeaderboards {});
                     },
-                    "All boards"
+                    { t!("feature-overview-all-boards") }
                 }
                 Button {
                     size: ButtonSize::Sm,
@@ -191,37 +197,37 @@ pub fn LeaderboardsOverview() -> Element {
                         navigator.push(Route::LeaderboardsBoardNew {});
                     },
                     IconPlus {}
-                    "New board"
+                    { t!("community-new-board") }
                 }
             }
         }
 
         section { class: "motion-cascade board-stat-strip",
             div { class: "board-stat-tile",
-                span { class: "board-stat-tile-label", "Boards" }
+                span { class: "board-stat-tile-label", { t!("feature-overview-stat-boards") } }
                 span { class: "board-stat-tile-value", "{board_count}" }
-                span { class: "board-stat-tile-meta", "Configured standings" }
+                span { class: "board-stat-tile-meta", { t!("feature-overview-stat-boards-meta") } }
             }
             div { class: "board-stat-tile",
-                span { class: "board-stat-tile-label", "With rewards" }
+                span { class: "board-stat-tile-label", { t!("feature-overview-stat-with-rewards") } }
                 span { class: "board-stat-tile-value", "{with_rewards}" }
-                span { class: "board-stat-tile-meta", "Place payouts ready" }
+                span { class: "board-stat-tile-meta", { t!("feature-overview-stat-with-rewards-meta") } }
             }
             div { class: "board-stat-tile",
-                span { class: "board-stat-tile-label", "Ranked seats" }
+                span { class: "board-stat-tile-label", { t!("feature-overview-stat-ranked-seats") } }
                 span { class: "board-stat-tile-value", "{ranked_players}" }
-                span { class: "board-stat-tile-meta", "Across all boards" }
+                span { class: "board-stat-tile-meta", { t!("feature-overview-stat-ranked-seats-meta") } }
             }
             div { class: "board-stat-tile",
-                span { class: "board-stat-tile-label", "Next reset" }
+                span { class: "board-stat-tile-label", { t!("feature-overview-stat-next-reset") } }
                 span { class: "board-stat-tile-value", "{next_reset}" }
-                span { class: "board-stat-tile-meta", "Soonest cadence" }
+                span { class: "board-stat-tile-meta", { t!("feature-overview-stat-next-reset-meta") } }
             }
         }
 
         if boards_now().is_empty() {
             p { class: "text-sm text-text-muted",
-                "No boards yet. Create one to start ranking players."
+                { t!("community-boards-empty") }
             }
         } else {
             div { class: "motion-cascade board-card-grid",
@@ -236,7 +242,7 @@ pub fn LeaderboardsOverview() -> Element {
                             .map(|r| {
                                 format!("#{place} · {summary}", place = r.place, summary = r.summary)
                             })
-                            .unwrap_or_else(|| "No rank rewards yet".into());
+                            .unwrap_or_else(|| t_key("community-no-rank-rewards"));
                         rsx! {
                             article {
                                 key: "{board.id}",
@@ -245,7 +251,9 @@ pub fn LeaderboardsOverview() -> Element {
                                 div { class: "board-card-head",
                                     div { class: "min-w-0",
                                         h2 { class: "board-card-title", "{board.name}" }
-                                        p { class: "board-card-meta", "{board.entries.len()} ranked · {board.source.label()}" }
+                                        p { class: "board-card-meta",
+                                            { t!("community-board-ranked-meta", count: board.entries.len(), source: board.source.label()) }
+                                        }
                                     }
                                     div { class: "board-card-chips",
                                         span { class: "board-chip is-accent", "{board.stat.label()}" }
@@ -271,7 +279,7 @@ pub fn LeaderboardsOverview() -> Element {
                                                         id: board_id,
                                                     });
                                             },
-                                            "Open board"
+                                            { t!("feature-overview-open-board") }
                                         }
                                     }
                                 }
@@ -286,6 +294,7 @@ pub fn LeaderboardsOverview() -> Element {
 
 #[component]
 pub fn VotesOverview() -> Element {
+    let _lang = i18n();
     let rewards = use_context::<Signal<Vec<VoteReward>>>();
     let navigator = use_navigator();
     let list = use_memo(move || rewards());
@@ -293,7 +302,7 @@ pub fn VotesOverview() -> Element {
     let votes_today: u32 = sites.iter().map(|s| s.votes_today).sum();
     let live = sites
         .iter()
-        .filter(|s| vote_site_status_label(s.status) == "Live")
+        .filter(|s| s.status == VoteSiteStatus::Live)
         .count();
     let enabled_rewards = list().iter().filter(|r| r.active).count();
     let top_rewards = use_memo(move || {
@@ -306,10 +315,12 @@ pub fn VotesOverview() -> Element {
         VotesApplicationsStyles {}
         div { class: "vote-console-masthead",
             div { class: "min-w-0",
-                p { class: "vote-console-eyebrow", "Vote-site console" }
-                h1 { class: "vote-console-title", "{live} of {sites.len()} listing sites live" }
+                p { class: "vote-console-eyebrow", { t!("feature-overview-vote-console") } }
+                h1 { class: "vote-console-title",
+                    { t!("feature-overview-vote-sites-live", live: live, total: sites.len()) }
+                }
                 p { class: "vote-console-sub",
-                    "{votes_today} votes across your sites today · {enabled_rewards} reward(s) paying out"
+                    { t!("feature-overview-vote-summary", votes: votes_today, rewards: enabled_rewards) }
                 }
             }
             div { class: "flex flex-wrap items-center gap-2",
@@ -319,30 +330,30 @@ pub fn VotesOverview() -> Element {
                     onclick: move |_| {
                         navigator.push(Route::VotesSiteSettings {});
                     },
-                    "Sites & callbacks"
+                    { t!("feature-overview-sites-callbacks") }
                 }
                 Button {
                     size: ButtonSize::Sm,
                     onclick: move |_| {
                         navigator.push(Route::CommunityVotes {});
                     },
-                    "Rewards"
+                    { t!("nav-sub-rewards") }
                 }
             }
         }
 
         section { class: "vote-site-panel",
             div { class: "vote-site-panel-head",
-                h2 { class: "text-sm font-semibold text-text", "Connected listing sites" }
-                span { class: "text-xs text-text-muted", "Callback status refreshes each vote" }
+                h2 { class: "text-sm font-semibold text-text", { t!("feature-overview-connected-sites") } }
+                span { class: "text-xs text-text-muted", { t!("feature-overview-callback-refresh") } }
             }
             div { class: "vote-site-table",
                 div { class: "vote-site-row is-head",
-                    span { "Site" }
-                    span { "Status" }
-                    span { "Votes today" }
-                    span { "Cooldown" }
-                    span { "Last callback" }
+                    span { { t!("feature-overview-col-site") } }
+                    span { { t!("feature-overview-col-status") } }
+                    span { { t!("feature-overview-col-votes-today") } }
+                    span { { t!("feature-overview-col-cooldown") } }
+                    span { { t!("feature-overview-col-last-callback") } }
                 }
                 for site in sites {
                     div { key: "{site.id}", class: "vote-site-row",
@@ -361,30 +372,30 @@ pub fn VotesOverview() -> Element {
         }
 
         div { class: "motion-cascade grid gap-4 lg:grid-cols-2",
-            DataPanel { title: "Top rewards",
+            DataPanel { title: t_key("feature-overview-top-rewards"),
                 for reward in top_rewards() {
                     RowItem {
                         title: reward.name.clone(),
                         meta: format!("{} · {}", reward.trigger_kind, reward.reward_summary),
-                        trailing: format!("{} claims", reward.claims),
+                        trailing: t!("community-claims-count", count: reward.claims),
                     }
                 }
             }
-            DataPanel { title: "Quick status",
+            DataPanel { title: t_key("feature-overview-quick-status"),
                 RowItem {
-                    title: "Public claim path",
-                    meta: "www.example.com/vote",
-                    trailing: "On website",
+                    title: t_key("feature-overview-public-claim-path"),
+                    meta: String::from("www.example.com/vote"),
+                    trailing: t_key("feature-overview-on-website"),
                 }
                 RowItem {
-                    title: "Callback timeout",
-                    meta: "10 seconds per site",
-                    trailing: "OK",
+                    title: t_key("feature-overview-callback-timeout"),
+                    meta: t_key("feature-overview-callback-timeout-meta"),
+                    trailing: t_key("feature-overview-status-ok"),
                 }
                 RowItem {
-                    title: "Auto-claim",
-                    meta: "Runs commands when players are online",
-                    trailing: "On",
+                    title: t_key("feature-overview-auto-claim"),
+                    meta: t_key("feature-overview-auto-claim-meta"),
+                    trailing: t_key("common-on"),
                 }
             }
         }
@@ -393,6 +404,7 @@ pub fn VotesOverview() -> Element {
 
 #[component]
 pub fn ApplicationsOverview() -> Element {
+    let _lang = i18n();
     let applications = use_context::<Signal<Vec<Application>>>();
     let navigator = use_navigator();
     let list = applications();
@@ -433,10 +445,12 @@ pub fn ApplicationsOverview() -> Element {
 
         div { class: "app-console-masthead",
             div { class: "min-w-0",
-                p { class: "app-console-eyebrow", "Applications" }
-                h1 { class: "app-console-title", "{open_count} applications need a decision" }
+                p { class: "app-console-eyebrow", { t!("feature-overview-applications") } }
+                h1 { class: "app-console-title",
+                    { t!("feature-overview-applications-need-decision", count: open_count) }
+                }
                 p { class: "app-console-sub",
-                    "{submitted} submitted · {reviewing} in review · {roles.len()} open role(s)"
+                    { t!("feature-overview-applications-summary", submitted: submitted, reviewing: reviewing, roles: roles.len()) }
                 }
             }
             div { class: "flex flex-wrap items-center gap-2",
@@ -446,35 +460,35 @@ pub fn ApplicationsOverview() -> Element {
                     onclick: move |_| {
                         navigator.push(Route::ApplicationsSiteSettings {});
                     },
-                    "Form settings"
+                    { t!("feature-overview-form-settings") }
                 }
                 Button {
                     size: ButtonSize::Sm,
                     onclick: move |_| {
                         navigator.push(Route::CommunityApplications {});
                     },
-                    "Open inbox"
+                    { t!("feature-overview-open-inbox") }
                 }
             }
         }
 
         section { class: "app-console-panel",
             div { class: "app-console-panel-head",
-                h2 { class: "text-sm font-semibold text-text", "Recent submissions" }
-                span { class: "text-xs text-text-muted", "Newest first" }
+                h2 { class: "text-sm font-semibold text-text", { t!("feature-overview-recent-submissions") } }
+                span { class: "text-xs text-text-muted", { t!("feature-overview-newest-first") } }
             }
             if recent.is_empty() {
                 p { class: "px-4 py-6 text-sm text-text-muted",
-                    "No applications yet. Publish a form to start receiving them."
+                    { t!("feature-overview-applications-empty") }
                 }
             } else {
                 div { class: "app-console-table is-compact",
                     div { class: "app-console-row is-head",
-                        span { "Applicant" }
-                        span { "Role" }
-                        span { "Status" }
-                        span { "Votes" }
-                        span { "Submitted" }
+                        span { { t!("feature-overview-col-applicant") } }
+                        span { { t!("feature-overview-col-role") } }
+                        span { { t!("feature-overview-col-status") } }
+                        span { { t!("feature-overview-col-votes") } }
+                        span { { t!("feature-overview-col-submitted") } }
                     }
                     for app in recent {
                         {
@@ -504,41 +518,41 @@ pub fn ApplicationsOverview() -> Element {
         }
 
         div { class: "mt-4 grid gap-4 lg:grid-cols-2",
-            DataPanel { title: "Pipeline",
+            DataPanel { title: t_key("feature-overview-pipeline"),
                 RowItem {
-                    title: "Submitted",
-                    meta: "Waiting for a first look",
+                    title: t_key("community-app-status-submitted"),
+                    meta: t_key("feature-overview-pipeline-submitted-meta"),
                     trailing: format!("{submitted}"),
                 }
                 RowItem {
-                    title: "Reviewing",
-                    meta: "Staff are voting",
+                    title: t_key("community-app-status-reviewing"),
+                    meta: t_key("feature-overview-pipeline-reviewing-meta"),
                     trailing: format!("{reviewing}"),
                 }
                 RowItem {
-                    title: "Accepted",
-                    meta: "Approved and notified",
+                    title: t_key("community-app-status-accepted"),
+                    meta: t_key("feature-overview-pipeline-accepted-meta"),
                     trailing: format!("{accepted}"),
                 }
                 RowItem {
-                    title: "Denied",
-                    meta: "Closed with a decision",
+                    title: t_key("community-app-status-denied"),
+                    meta: t_key("feature-overview-pipeline-denied-meta"),
                     trailing: format!("{denied}"),
                 }
             }
-            DataPanel { title: "Open roles",
+            DataPanel { title: t_key("feature-overview-open-roles"),
                 if roles.is_empty() {
                     RowItem {
-                        title: "No roles yet",
-                        meta: "Create a form to open a role",
-                        trailing: "—",
+                        title: t_key("feature-overview-no-roles"),
+                        meta: t_key("feature-overview-no-roles-meta"),
+                        trailing: String::from("—"),
                     }
                 } else {
                     for name in roles {
                         RowItem {
                             title: name.clone(),
-                            meta: "Accepting applications",
-                            trailing: "Open",
+                            meta: t_key("feature-overview-accepting-applications"),
+                            trailing: t_key("feature-overview-role-open"),
                         }
                     }
                 }

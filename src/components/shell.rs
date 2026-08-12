@@ -1,9 +1,12 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::brand::{favicon_svg, BrandMark};
 use crate::components::page::{PageTransition, PoweredByFooter};
 use crate::components::ui::*;
-use crate::nav::{crumb_for, is_theme_editor, section_for, subnav_active, Section};
+use crate::i18n::{crumb_label, section_document_title, section_label, subnav_label};
+use crate::nav::{is_theme_editor, section_for, subnav_active, Section};
 use crate::router::Route;
 use crate::user::CurrentUser;
 
@@ -19,7 +22,10 @@ pub fn AppShell() -> Element {
     let route = use_route::<Route>();
     let navigator = use_navigator();
     let section = section_for(&route);
-    let crumb = crumb_for(&route);
+    let _lang = i18n();
+    let section_name = section_label(section);
+    let crumb = crumb_label(&route);
+    let doc_title = section_document_title(section);
     let theme_ide = is_theme_editor(&route);
     let mut favicon_accent = use_signal(|| Option::<&'static str>::None);
     let mut side_open = use_signal(|| true);
@@ -96,7 +102,7 @@ pub fn AppShell() -> Element {
     };
 
     rsx! {
-        document::Title { "{section.document_title()}" }
+        document::Title { "{doc_title}" }
 
         div {
             class: "relative h-dvh overflow-hidden bg-bg text-text",
@@ -112,8 +118,8 @@ pub fn AppShell() -> Element {
                 }
                 button {
                     class: expand_btn_class,
-                    aria_label: "Show sidebar",
-                    title: "Show sidebar",
+                    aria_label: "{t!(\"shell-aria-show-sidebar\")}",
+                    title: "{t!(\"shell-aria-show-sidebar\")}",
                     aria_hidden: side_open_now,
                     tabindex: if side_open_now { "-1" } else { "0" },
                     onclick: move |_| side_open.set(true),
@@ -122,11 +128,11 @@ pub fn AppShell() -> Element {
                 nav { class: "flex flex-1 flex-col items-center gap-3",
                     for main in Section::ALL.iter().copied() {
                         RailNav {
-                            key: "{main.label()}",
+                            key: "{main:?}",
                             to: main.home(),
                             active: section == main,
                             rail_style: main.rail_style(),
-                            label: main.label(),
+                            label: section_label(main),
                             icon: rail_icon_data(main),
                         }
                     }
@@ -136,12 +142,12 @@ pub fn AppShell() -> Element {
                         to: Section::Settings.home(),
                         active: section == Section::Settings,
                         rail_style: Section::Settings.rail_style(),
-                        label: Section::Settings.label(),
+                        label: section_label(Section::Settings),
                         icon: rail_icon_data(Section::Settings),
                     }
                     button {
                         class: "rounded-full transition-opacity hover:opacity-80",
-                        aria_label: "Account",
+                        aria_label: "{t!(\"shell-aria-account\")}",
                         onclick: move |_| {
                             navigator.push(Route::Account {});
                         },
@@ -154,7 +160,7 @@ pub fn AppShell() -> Element {
                 div { class: "side-panel-inner flex h-full flex-col overflow-y-auto px-4 py-6",
                     div { class: "mb-6 flex items-start justify-between gap-2",
                         div { class: "min-w-0 px-2",
-                            p { class: "mb-1 text-xs text-text-muted", "{section.label()}" }
+                            p { class: "mb-1 text-xs text-text-muted", "{section_name}" }
                             p {
                                 key: "{crumb}",
                                 class: "shell-crumb text-base font-semibold tracking-tight text-text",
@@ -163,8 +169,8 @@ pub fn AppShell() -> Element {
                         }
                         button {
                             class: "ui-btn ui-squircle ui-btn-ghost inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center p-0 font-semibold text-text-muted",
-                            aria_label: "Hide sidebar",
-                            title: "Hide sidebar",
+                            aria_label: "{t!(\"shell-aria-hide-sidebar\")}",
+                            title: "{t!(\"shell-aria-hide-sidebar\")}",
                             tabindex: if side_open_now { "0" } else { "-1" },
                             onclick: move |_| side_open.set(false),
                             span { class: "text-lg leading-none", "‹" }
@@ -174,7 +180,7 @@ pub fn AppShell() -> Element {
                         for sub in section.subs() {
                             SideNav {
                                 to: sub.route.clone(),
-                                label: sub.label,
+                                label: subnav_label(sub.label_id),
                                 active: subnav_active(&route, &sub.route),
                             }
                         }
@@ -185,13 +191,13 @@ pub fn AppShell() -> Element {
             div { class: content_pad,
 
                 header { class: "z-30 shrink-0",
-                    ShellHeaderBar { section, crumb, sheet }
+                    ShellHeaderBar { section, section_name, crumb, sheet }
 
                     nav { class: subnav_class,
                         for sub in section.subs() {
                             SubChip {
                                 to: sub.route.clone(),
-                                label: sub.label,
+                                label: subnav_label(sub.label_id),
                                 active: subnav_active(&route, &sub.route),
                             }
                         }
@@ -229,6 +235,8 @@ fn MobileNavSheet(
     backdrop_class: &'static str,
     panel_class: &'static str,
 ) -> Element {
+    let _lang = i18n();
+    let section_title = section_label(section);
     let backdrop = match backdrop_class {
         "nav-sheet-backdrop-enter" => "absolute inset-0 bg-black/50 nav-sheet-backdrop-enter",
         "nav-sheet-backdrop-exit" => "absolute inset-0 bg-black/50 nav-sheet-backdrop-exit",
@@ -250,7 +258,7 @@ fn MobileNavSheet(
         div { class: "fixed inset-0 z-40 md:hidden",
             button {
                 class: backdrop,
-                aria_label: "Close menu",
+                aria_label: "{t!(\"shell-aria-close-menu\")}",
                 onclick: move |_| {
                     if matches!(*sheet.peek(), Some(SheetAnim::Open)) {
                         sheet.set(Some(SheetAnim::Closing));
@@ -267,7 +275,7 @@ fn MobileNavSheet(
                 div { class: "flex h-14 items-center justify-between gap-3 border-b border-border-subtle px-4",
                     div { class: "flex items-center gap-3",
                         BrandMark { class: "h-7 w-7" }
-                        span { class: "text-base font-semibold tracking-tight", "ServerSpot" }
+                        span { class: "text-base font-semibold tracking-tight", { t!("brand-name") } }
                     }
                     IconButton {
                         onclick: move |_| {
@@ -281,7 +289,7 @@ fn MobileNavSheet(
 
                 div { class: "flex-1 overflow-y-auto px-3 py-4",
                     p { class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted",
-                        "Sections"
+                        { t!("shell-mobile-sections") }
                     }
                     nav { class: "mb-6 flex flex-col gap-0.5",
                         for main in Section::ALL.iter().copied().chain(std::iter::once(Section::Settings)) {
@@ -290,13 +298,13 @@ fn MobileNavSheet(
                     }
 
                     p { class: "mb-2 px-2 text-xs font-medium uppercase tracking-wide text-text-muted",
-                        "{section.label()}"
+                        "{section_title}"
                     }
                     nav { class: "flex flex-col gap-0.5",
                         for sub in section.subs() {
                             SideNav {
                                 to: sub.route.clone(),
-                                label: sub.label,
+                                label: subnav_label(sub.label_id),
                                 active: subnav_active(&route, &sub.route),
                             }
                         }
@@ -310,9 +318,11 @@ fn MobileNavSheet(
 #[component]
 fn ShellHeaderBar(
     section: Section,
-    crumb: &'static str,
+    section_name: String,
+    crumb: String,
     mut sheet: Signal<Option<SheetAnim>>,
 ) -> Element {
+    let _lang = i18n();
     let mut search_open = use_signal(|| false);
     let mut search = use_signal(String::new);
     let navigator = use_navigator();
@@ -341,7 +351,7 @@ fn ShellHeaderBar(
                 SearchInput {
                     class: "min-w-0 flex-1",
                     value: search,
-                    placeholder: "Search…",
+                    placeholder: "{t!(\"shell-search-placeholder\")}",
                 }
             } else {
                 IconButton {
@@ -360,14 +370,14 @@ fn ShellHeaderBar(
 
                 div { class: "min-w-0 flex-1",
                     p { class: "truncate text-sm font-medium text-text md:hidden",
-                        "{section.label()}"
+                        "{section_name}"
                         span { class: "font-normal text-text-muted", " / {crumb}" }
                     }
                     div { class: "hidden min-w-0 items-center gap-2 text-sm text-text-muted md:flex",
                         Link {
                             to: section.home(),
                             class: "truncate opacity-70 transition-opacity hover:opacity-100 text-text-muted",
-                            "{section.label()}"
+                            "{section_name}"
                         }
                         span { class: "opacity-40", "/" }
                         span {
@@ -417,7 +427,7 @@ fn RailNav(
     to: Route,
     active: bool,
     rail_style: &'static str,
-    label: &'static str,
+    label: String,
     icon: HugeIconData,
 ) -> Element {
     let navigator = use_navigator();
@@ -444,7 +454,7 @@ fn RailNav(
 }
 
 #[component]
-fn SideNav(to: Route, label: &'static str, active: bool) -> Element {
+fn SideNav(to: Route, label: String, active: bool) -> Element {
     let navigator = use_navigator();
     let dest = to;
     let class = if active {
@@ -468,7 +478,7 @@ fn SideNav(to: Route, label: &'static str, active: bool) -> Element {
 }
 
 #[component]
-fn SubChip(to: Route, label: &'static str, active: bool) -> Element {
+fn SubChip(to: Route, label: String, active: bool) -> Element {
     let navigator = use_navigator();
     let dest = to;
     let class = if active {
@@ -513,7 +523,7 @@ fn MobileSectionNav(section: Section, active: bool) -> Element {
             span { class: "opacity-80",
                 HugeIcon { icon: rail_icon_data(section) }
             }
-            span { "{section.label()}" }
+            span { "{section_label(section)}" }
         }
     }
 }
@@ -533,7 +543,7 @@ fn ShellAccountAvatar() -> Element {
         Avatar {
             email,
             size: 32,
-            alt: "Account",
+            alt: "{t!(\"shell-aria-account\")}",
             class,
         }
     }

@@ -24,7 +24,7 @@ use crate::components::{
         ForumAutoModeration, ForumBoardEdit, ForumBoardNew, ForumBoards, ForumModeration,
         ForumOverview, ForumSiteSettings, ForumThread, ForumThreadNew, ForumThreads,
     },
-    login::Login,
+    login::{Login, LoginOtp, LoginReset},
     not_found::AdminNotFound,
     settings::{
         SettingsDeveloper, SettingsGeneral, SettingsHosting, SettingsIntegrations,
@@ -48,6 +48,11 @@ use crate::components::{
 pub enum Route {
     #[route("/admin/login")]
     Login {},
+    #[route("/admin/login/otp")]
+    LoginOtp {},
+    #[route("/admin/login/reset")]
+    LoginReset {},
+
 
     #[redirect("/", || Route::Dashboard {})]
     #[redirect("/login", || Route::Login {})]

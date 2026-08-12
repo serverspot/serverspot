@@ -1,4 +1,6 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::router::Route;
 
@@ -24,6 +26,8 @@ const REPO_URL: &str = "https://github.com/serverspot/serverspot";
 
 #[component]
 pub fn PoweredByFooter() -> Element {
+    let _lang = i18n();
+
     rsx! {
         footer { class: "flex items-center justify-center py-6",
             a {
@@ -31,9 +35,9 @@ pub fn PoweredByFooter() -> Element {
                 target: "_blank",
                 rel: "noopener noreferrer",
                 class: "inline-flex items-center gap-2 text-xs text-text-muted transition-colors hover:text-text-secondary",
-                span { "Powered by" }
+                span { { t!("footer-powered-by") } }
                 BrandMark { class: "h-3.5 w-3.5 opacity-50" }
-                span { class: "font-medium", "ServerSpot" }
+                span { class: "font-medium", { t!("brand-name") } }
             }
         }
     }
@@ -41,8 +45,8 @@ pub fn PoweredByFooter() -> Element {
 
 #[component]
 pub fn PageHeader(
-    title: &'static str,
-    #[props(default)] subtitle: &'static str,
+    #[props(into)] title: String,
+    #[props(default, into)] subtitle: String,
     #[props(default)] action: Option<Element>,
 ) -> Element {
     rsx! {
@@ -80,7 +84,7 @@ pub fn StatPill(
 }
 
 #[component]
-pub fn DataPanel(title: &'static str, children: Element) -> Element {
+pub fn DataPanel(#[props(into)] title: String, children: Element) -> Element {
     rsx! {
         section { class: "overflow-hidden rounded-lg border border-border-subtle bg-surface",
             div { class: "border-b border-border-subtle px-4 py-3",
@@ -118,11 +122,12 @@ pub fn RowItem(
 
 #[component]
 pub fn SettingRow(
-    title: &'static str,
-    description: &'static str,
+    #[props(into)] title: String,
+    #[props(into)] description: String,
     #[props(default)] enabled: bool,
 ) -> Element {
     let mut on = use_signal(|| enabled);
+    let _lang = i18n();
 
     rsx! {
         div { class: "flex flex-col gap-3 border-b border-border-subtle py-4 last:border-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
@@ -139,9 +144,9 @@ pub fn SettingRow(
                     on.set(next);
                 },
                 if on() {
-                    "On"
+                    { t!("common-on") }
                 } else {
-                    "Off"
+                    { t!("common-off") }
                 }
             }
         }
@@ -190,13 +195,15 @@ pub fn InfoCard(title: &'static str, body: &'static str) -> Element {
 }
 
 #[component]
-pub fn FeatureSettingsChrome(subtitle: &'static str, children: Element) -> Element {
+pub fn FeatureSettingsChrome(#[props(into)] subtitle: String, children: Element) -> Element {
+    let _lang = i18n();
+
     rsx! {
         PageHeader {
-            title: "Settings",
+            title: crate::i18n::t_key("common-settings"),
             subtitle,
             action: rsx! {
-                Button { "Save changes" }
+                Button { { t!("common-save-changes") } }
             },
         }
 
@@ -215,7 +222,7 @@ pub fn SettingsField(#[props(into)] label: String, #[props(into)] value: String)
 }
 
 #[component]
-pub fn SettingsControl(label: &'static str, children: Element) -> Element {
+pub fn SettingsControl(#[props(into)] label: String, children: Element) -> Element {
     rsx! {
         div { class: "border-b border-border-subtle py-3 last:border-0",
             label { class: "mb-1.5 block text-xs font-medium text-text-muted", "{label}" }

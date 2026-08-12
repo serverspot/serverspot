@@ -1,9 +1,12 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::page::{
     DataPanel, FeatureSettingsChrome, SettingRow, SettingsControl, SettingsField,
 };
 use crate::components::ui::*;
+use crate::i18n::t_key;
 use crate::router::Route;
 use crate::user::CurrentUser;
 
@@ -42,11 +45,11 @@ enum BoardVisibility {
 }
 
 impl BoardVisibility {
-    const fn label(self) -> &'static str {
+    fn label(self) -> String {
         match self {
-            Self::Public => "Public",
-            Self::Staff => "Staff",
-            Self::Private => "Private",
+            Self::Public => t_key("forum-visibility-public"),
+            Self::Staff => t_key("forum-visibility-staff"),
+            Self::Private => t_key("forum-visibility-private"),
         }
     }
 
@@ -58,11 +61,11 @@ impl BoardVisibility {
         }
     }
 
-    const fn hint(self) -> &'static str {
+    fn hint(self) -> String {
         match self {
-            Self::Public => "Anyone on the site can browse this board.",
-            Self::Staff => "Only staff roles can open this board.",
-            Self::Private => "Invite-only — hidden from the public list.",
+            Self::Public => t_key("forum-visibility-public-hint"),
+            Self::Staff => t_key("forum-visibility-staff-hint"),
+            Self::Private => t_key("forum-visibility-private-hint"),
         }
     }
 }
@@ -332,9 +335,9 @@ fn default_thread_board(boards: &[Board]) -> String {
 
 fn thread_badge_line(pinned: bool, locked: bool) -> String {
     match (pinned, locked) {
-        (true, true) => String::from("Pinned · Locked"),
-        (true, false) => String::from("Pinned"),
-        (false, true) => String::from("Locked"),
+        (true, true) => t_key("forum-thread-badge-pinned-locked"),
+        (true, false) => t_key("forum-thread-badge-pinned"),
+        (false, true) => t_key("forum-thread-badge-locked"),
         (false, false) => String::new(),
     }
 }
@@ -349,11 +352,11 @@ enum ThreadStatusOption {
 impl ThreadStatusOption {
     const ALL: [Self; 3] = [Self::Pinned, Self::Locked, Self::Open];
 
-    const fn label(self) -> &'static str {
+    fn label(self) -> String {
         match self {
-            Self::Pinned => "Pinned",
-            Self::Locked => "Locked",
-            Self::Open => "Open",
+            Self::Pinned => t_key("forum-thread-status-pinned"),
+            Self::Locked => t_key("forum-thread-status-locked"),
+            Self::Open => t_key("forum-thread-status-open"),
         }
     }
 
@@ -394,11 +397,11 @@ enum ThreadSort {
 impl ThreadSort {
     const ALL: [Self; 3] = [Self::Recent, Self::Replies, Self::Title];
 
-    const fn label(self) -> &'static str {
+    fn label(self) -> String {
         match self {
-            Self::Recent => "Recent",
-            Self::Replies => "Most replies",
-            Self::Title => "Title A–Z",
+            Self::Recent => t_key("forum-thread-sort-recent"),
+            Self::Replies => t_key("forum-thread-sort-replies"),
+            Self::Title => t_key("forum-thread-sort-title"),
         }
     }
 }
@@ -462,11 +465,15 @@ fn toggle_selection(mut selected: Signal<Vec<String>>, value: &str) {
     });
 }
 
-fn selection_summary(selected: &[String], empty: &str, singular: &str) -> String {
+fn selection_summary(
+    selected: &[String],
+    empty: String,
+    plural: impl Fn(usize) -> String,
+) -> String {
     match selected.len() {
-        0 => empty.to_string(),
+        0 => empty,
         1 => selected[0].clone(),
-        n => format!("{n} {singular}"),
+        n => plural(n),
     }
 }
 
@@ -478,11 +485,11 @@ enum ReportSeverity {
 }
 
 impl ReportSeverity {
-    const fn label(self) -> &'static str {
+    fn label(self) -> String {
         match self {
-            Self::High => "High",
-            Self::Medium => "Medium",
-            Self::Low => "Low",
+            Self::High => t_key("forum-report-severity-high"),
+            Self::Medium => t_key("forum-report-severity-medium"),
+            Self::Low => t_key("forum-report-severity-low"),
         }
     }
 
@@ -540,6 +547,7 @@ const REPORTS: &[Report] = &[
 
 #[component]
 pub fn ForumOverview() -> Element {
+    let _lang = i18n();
     let threads = use_context::<Signal<Vec<Thread>>>();
     let stats = placeholder_forum_stats();
     let navigator = use_navigator();
@@ -555,33 +563,31 @@ pub fn ForumOverview() -> Element {
         div { class: "motion-cascade forum-desk",
             div { class: "forum-desk-masthead",
                 div { class: "min-w-0",
-                    p { class: "forum-desk-eyebrow", "Community desk" }
-                    h1 { class: "forum-desk-title", "Forum" }
-                    p { class: "forum-desk-sub",
-                        "Boards, threads, and the moderation queue in one place."
-                    }
+                    p { class: "forum-desk-eyebrow", { t!("forum-overview-eyebrow") } }
+                    h1 { class: "forum-desk-title", { t!("forum-overview-title") } }
+                    p { class: "forum-desk-sub", { t!("forum-overview-subtitle") } }
                 }
-                Button { variant: ButtonVariant::Secondary, size: ButtonSize::Sm, "View on website" }
+                Button { variant: ButtonVariant::Secondary, size: ButtonSize::Sm, { t!("forum-overview-view-site") } }
             }
 
             div { class: "motion-cascade ops-meter",
                 div { class: "ops-meter-item",
-                    p { class: "ops-meter-label", "Posts today" }
+                    p { class: "ops-meter-label", { t!("forum-overview-posts-today") } }
                     p { class: "ops-meter-value is-accent", "{posts_today}" }
                 }
                 span { class: "ops-meter-divider" }
                 div { class: "ops-meter-item",
-                    p { class: "ops-meter-label", "Threads" }
+                    p { class: "ops-meter-label", { t!("forum-overview-threads") } }
                     p { class: "ops-meter-value", "{thread_count}" }
                 }
                 span { class: "ops-meter-divider" }
                 div { class: "ops-meter-item",
-                    p { class: "ops-meter-label", "Members" }
+                    p { class: "ops-meter-label", { t!("forum-overview-members") } }
                     p { class: "ops-meter-value", "{members}" }
                 }
                 span { class: "ops-meter-divider" }
                 div { class: "ops-meter-item",
-                    p { class: "ops-meter-label", "Open reports" }
+                    p { class: "ops-meter-label", { t!("forum-overview-open-reports") } }
                     p { class: "ops-meter-value", "{report_count}" }
                 }
             }
@@ -589,8 +595,8 @@ pub fn ForumOverview() -> Element {
             if let Some(featured) = featured {
                 section { class: "mb-9",
                     div { class: "ops-section-head",
-                        h2 { class: "ops-section-title", "Hot right now" }
-                        span { class: "ops-section-sub", "Most active conversation" }
+                        h2 { class: "ops-section-title", { t!("forum-overview-hot-now") } }
+                        span { class: "ops-section-sub", { t!("forum-overview-hot-sub") } }
                     }
                     button {
                         r#type: "button",
@@ -614,7 +620,12 @@ pub fn ForumOverview() -> Element {
                             div { class: "min-w-0 text-left",
                                 p { class: "text-sm font-medium text-text", "{featured.author}" }
                                 p { class: "text-xs text-text-muted",
-                                    "{featured.category} · {featured.replies} replies · {featured.when}"
+                                    { t!(
+                                        "forum-overview-featured-meta",
+                                        category: featured.category.clone(),
+                                        replies: featured.replies,
+                                        when: featured.when.clone()
+                                    ) }
                                 }
                             }
                         }
@@ -624,14 +635,14 @@ pub fn ForumOverview() -> Element {
 
             section { class: "mb-9",
                 div { class: "ops-section-head",
-                    h2 { class: "ops-section-title", "Needs a look" }
+                    h2 { class: "ops-section-title", { t!("forum-overview-needs-look") } }
                     Button {
                         variant: ButtonVariant::Ghost,
                         size: ButtonSize::Sm,
                         onclick: move |_| {
                             navigator.push(Route::ForumModeration {});
                         },
-                        "Open queue →"
+                        { t!("forum-overview-open-queue") }
                     }
                 }
                 div { class: "motion-cascade motion-cascade-tight forum-queue",
@@ -649,8 +660,8 @@ pub fn ForumOverview() -> Element {
                         navigator.push(Route::ForumBoards {});
                     },
                     div { class: "min-w-0",
-                        p { class: "ops-pulse-title", "Boards" }
-                        p { class: "ops-pulse-meta", "Structure and visibility" }
+                        p { class: "ops-pulse-title", { t!("forum-overview-boards") } }
+                        p { class: "ops-pulse-meta", { t!("forum-overview-boards-meta") } }
                     }
                     span { class: "ops-pulse-arrow", "→" }
                 }
@@ -661,8 +672,8 @@ pub fn ForumOverview() -> Element {
                         navigator.push(Route::ForumThreads {});
                     },
                     div { class: "min-w-0",
-                        p { class: "ops-pulse-title", "Threads" }
-                        p { class: "ops-pulse-meta", "Search and moderate conversations" }
+                        p { class: "ops-pulse-title", { t!("forum-overview-threads") } }
+                        p { class: "ops-pulse-meta", { t!("forum-overview-threads-meta") } }
                     }
                     span { class: "ops-pulse-arrow", "→" }
                 }
@@ -673,8 +684,8 @@ pub fn ForumOverview() -> Element {
                         navigator.push(Route::ForumAutoModeration {});
                     },
                     div { class: "min-w-0",
-                        p { class: "ops-pulse-title", "Auto Mod" }
-                        p { class: "ops-pulse-meta", "Filters, mutes, and bot identity" }
+                        p { class: "ops-pulse-title", { t!("forum-overview-auto-mod") } }
+                        p { class: "ops-pulse-meta", { t!("forum-overview-auto-mod-meta") } }
                     }
                     span { class: "ops-pulse-arrow", "→" }
                 }
@@ -685,6 +696,7 @@ pub fn ForumOverview() -> Element {
 
 #[component]
 fn OverviewReportRow(report: Report) -> Element {
+    let _lang = i18n();
     let meta = report.meta();
     let severity = report.severity;
 
@@ -704,6 +716,7 @@ fn OverviewReportRow(report: Report) -> Element {
 
 #[component]
 pub fn ForumBoards() -> Element {
+    let _lang = i18n();
     let boards = use_context::<Signal<Vec<Board>>>();
     let navigator = use_navigator();
     let list = boards();
@@ -712,18 +725,16 @@ pub fn ForumBoards() -> Element {
         div { class: "motion-cascade forum-desk",
             div { class: "forum-desk-masthead",
                 div { class: "min-w-0",
-                    p { class: "forum-desk-eyebrow", "Community structure" }
-                    h1 { class: "forum-desk-title", "Boards" }
-                    p { class: "forum-desk-sub",
-                        "Spaces players browse on the forum. Click a board to edit it."
-                    }
+                    p { class: "forum-desk-eyebrow", { t!("forum-boards-eyebrow") } }
+                    h1 { class: "forum-desk-title", { t!("forum-boards-title") } }
+                    p { class: "forum-desk-sub", { t!("forum-boards-subtitle") } }
                 }
                 Button {
                     onclick: move |_| {
                         navigator.push(Route::ForumBoardNew {});
                     },
                     IconPlus {}
-                    "New board"
+                    { t!("forum-boards-new") }
                 }
             }
 
@@ -731,17 +742,17 @@ pub fn ForumBoards() -> Element {
                 span {
                     class: "forum-vis-chip",
                     style: "--chip-tone: {BoardVisibility::Public.tone()};",
-                    "Public"
+                    { t!("forum-visibility-public") }
                 }
                 span {
                     class: "forum-vis-chip",
                     style: "--chip-tone: {BoardVisibility::Staff.tone()};",
-                    "Staff"
+                    { t!("forum-visibility-staff") }
                 }
                 span {
                     class: "forum-vis-chip",
                     style: "--chip-tone: {BoardVisibility::Private.tone()};",
-                    "Private"
+                    { t!("forum-visibility-private") }
                 }
             }
 
@@ -749,10 +760,10 @@ pub fn ForumBoards() -> Element {
                 for board in list.into_iter() {
                     {
                         let board_id = board.id;
-                        let counts = format!(
-                            "{} threads · {} today",
-                            format_count(board.threads),
-                            board.posts_today,
+                        let counts = t!(
+                            "forum-boards-counts",
+                            threads: format_count(board.threads),
+                            today: board.posts_today
                         );
                         let has_banner = !board.banner.is_empty();
                         rsx! {
@@ -816,6 +827,7 @@ pub fn ForumBoards() -> Element {
 
 #[component]
 pub fn ForumBoardNew() -> Element {
+    let _lang = i18n();
     rsx! {
         BoardEditor { board_id: None }
     }
@@ -823,6 +835,7 @@ pub fn ForumBoardNew() -> Element {
 
 #[component]
 pub fn ForumBoardEdit(id: u64) -> Element {
+    let _lang = i18n();
     rsx! {
         BoardEditor { board_id: Some(id) }
     }
@@ -830,6 +843,7 @@ pub fn ForumBoardEdit(id: u64) -> Element {
 
 #[component]
 fn BoardEditor(board_id: Option<u64>) -> Element {
+    let _lang = i18n();
     let mut boards = use_context::<Signal<Vec<Board>>>();
     let navigator = use_navigator();
     let is_new = board_id.is_none();
@@ -875,19 +889,19 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
         .filter(|link| !link.label.trim().is_empty() || !link.url.trim().is_empty())
         .count();
     let preview_name = if name_now.trim().is_empty() {
-        String::from("Untitled board")
+        t_key("forum-board-preview-untitled")
     } else {
         name_now.trim().to_string()
     };
     let preview_description = if description_now.trim().is_empty() {
-        String::from("No description yet")
+        t_key("forum-board-preview-no-description")
     } else {
         description_now.trim().to_string()
     };
-    let activity_label = format!(
-        "{} threads · {} today",
-        format_count(thread_count),
-        posts_today
+    let activity_label = t!(
+        "forum-boards-counts",
+        threads: format_count(thread_count),
+        today: posts_today
     );
 
     if missing {
@@ -899,11 +913,11 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::ForumBoards {});
                     },
-                    "← Boards"
+                    { t!("forum-board-back") }
                 }
             }
-            h1 { class: "text-3xl font-semibold tracking-tight", "Board not found" }
-            p { class: "mt-2 text-sm text-text-muted", "This board may have been deleted." }
+            h1 { class: "text-3xl font-semibold tracking-tight", { t!("forum-board-not-found-title") } }
+            p { class: "mt-2 text-sm text-text-muted", { t!("forum-board-not-found-desc") } }
         };
     }
 
@@ -966,7 +980,7 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::ForumBoards {});
                     },
-                    "← Boards"
+                    { t!("forum-board-back") }
                 }
                 div { class: "flex flex-wrap items-center gap-2",
                     if let Some(id) = board_id {
@@ -977,7 +991,7 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                                 boards.with_mut(|list| list.retain(|board| board.id != id));
                                 navigator.push(Route::ForumBoards {});
                             },
-                            "Delete"
+                            { t!("forum-board-delete") }
                         }
                     }
                     Button {
@@ -986,50 +1000,46 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                         onclick: move |_| {
                             navigator.push(Route::ForumBoards {});
                         },
-                        "Cancel"
+                        { t!("forum-board-cancel") }
                     }
                     Button {
                         size: ButtonSize::Sm,
                         disabled: !can_save,
                         onclick: save,
                         if is_new {
-                            "Create board"
+                            { t!("forum-board-create") }
                         } else {
-                            "Save changes"
+                            { t!("forum-board-save") }
                         }
                     }
                 }
             }
 
             div { class: "mb-8",
-                p { class: "text-sm text-text-muted", "Community structure" }
+                p { class: "text-sm text-text-muted", { t!("forum-boards-eyebrow") } }
                 h1 { class: "mt-1 text-3xl font-semibold tracking-tight",
                     if is_new {
-                        "New board"
+                        { t!("forum-board-new-title") }
                     } else {
-                        "Edit board"
+                        { t!("forum-board-edit-title") }
                     }
                 }
-                p { class: "mt-2 max-w-2xl text-sm text-text-muted",
-                    "Name, media, visibility, and links players see on this board."
-                }
+                p { class: "mt-2 max-w-2xl text-sm text-text-muted", { t!("forum-board-lede") } }
             }
 
             div { class: "motion-cascade forum-editor-layout",
                 div { class: "forum-editor-main space-y-8",
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Basics" }
-                        p { class: "forum-editor-lede",
-                            "Name and short description shown in the board list."
-                        }
+                        h2 { class: "forum-editor-heading", { t!("forum-board-section-basics") } }
+                        p { class: "forum-editor-lede", { t!("forum-board-section-basics-lede") } }
                         div { class: "mt-4 space-y-4",
-                            FormField { label: "Name",
-                                SignalInput { value: name, placeholder: "Survival" }
+                            FormField { label: t_key("forum-board-field-name"),
+                                SignalInput { value: name, placeholder: t_key("forum-board-name-placeholder") }
                             }
-                            FormField { label: "Description",
+                            FormField { label: t_key("forum-board-field-description"),
                                 SignalTextarea {
                                     value: description,
-                                    placeholder: "Builds, bases, and day-to-day talk…",
+                                    placeholder: t_key("forum-board-description-placeholder"),
                                     class: "min-h-[5.5rem]",
                                 }
                             }
@@ -1037,14 +1047,14 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Links" }
+                        h2 { class: "forum-editor-heading", { t!("forum-board-section-links") } }
                         p { class: "forum-editor-lede",
-                            "Optional shortcuts — Discord, maps, docs. Up to {MAX_BOARD_LINKS}."
+                            { t!("forum-board-section-links-lede", max: MAX_BOARD_LINKS) }
                         }
                         div { class: "mt-4 space-y-3",
                             div { class: "flex items-center justify-between gap-3",
                                 p { class: "text-xs text-text-muted",
-                                    "{links_now.len()} / {MAX_BOARD_LINKS}"
+                                    { t!("forum-board-links-count", current: links_now.len(), max: MAX_BOARD_LINKS) }
                                 }
                                 Button {
                                     variant: ButtonVariant::Secondary,
@@ -1065,12 +1075,12 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                                             });
                                     },
                                     IconPlus {}
-                                    "Add link"
+                                    { t!("forum-board-add-link") }
                                 }
                             }
                             if links_now.is_empty() {
                                 p { class: "rounded-squircle-sm border border-dashed border-border-subtle px-3 py-4 text-sm text-text-muted",
-                                    "No links yet. Add up to {MAX_BOARD_LINKS}."
+                                    { t!("forum-board-no-links", max: MAX_BOARD_LINKS) }
                                 }
                             } else {
                                 div { class: "space-y-3",
@@ -1088,40 +1098,36 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Appearance" }
-                        p { class: "forum-editor-lede",
-                            "Accent colour for the board thumbnail when no image is set."
-                        }
+                        h2 { class: "forum-editor-heading", { t!("forum-board-section-appearance") } }
+                        p { class: "forum-editor-lede", { t!("forum-board-section-appearance-lede") } }
                         div { class: "mt-4",
-                            FormField { label: "Colour",
+                            FormField { label: t_key("forum-board-field-colour"),
                                 ColorPicker { value: accent }
                             }
                         }
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Visibility" }
-                        p { class: "forum-editor-lede",
-                            "Who can browse this board on the public forum."
-                        }
+                        h2 { class: "forum-editor-heading", { t!("forum-board-section-visibility") } }
+                        p { class: "forum-editor-lede", { t!("forum-board-section-visibility-lede") } }
                         div { class: "mt-4",
                             div {
                                 class: "inline-flex w-full rounded-squircle-sm border border-border-subtle p-1",
                                 style: "background: var(--color-surface);",
                                 SegmentChoice {
-                                    label: "Public",
+                                    label: t_key("forum-visibility-public"),
                                     tone: BoardVisibility::Public.tone(),
                                     active: visibility_now == BoardVisibility::Public,
                                     onclick: move |_| visibility.set(BoardVisibility::Public),
                                 }
                                 SegmentChoice {
-                                    label: "Staff",
+                                    label: t_key("forum-visibility-staff"),
                                     tone: BoardVisibility::Staff.tone(),
                                     active: visibility_now == BoardVisibility::Staff,
                                     onclick: move |_| visibility.set(BoardVisibility::Staff),
                                 }
                                 SegmentChoice {
-                                    label: "Private",
+                                    label: t_key("forum-visibility-private"),
                                     tone: BoardVisibility::Private.tone(),
                                     active: visibility_now == BoardVisibility::Private,
                                     onclick: move |_| visibility.set(BoardVisibility::Private),
@@ -1132,20 +1138,18 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Media" }
-                        p { class: "forum-editor-lede",
-                            "Square icon and optional wide banner for the board page."
-                        }
+                        h2 { class: "forum-editor-heading", { t!("forum-board-section-media") } }
+                        p { class: "forum-editor-lede", { t!("forum-board-section-media-lede") } }
                         div { class: "mt-4 grid gap-5 sm:grid-cols-2",
                             MediaUploadField {
-                                label: "Image",
-                                hint: "Square icon next to the board name",
+                                label: t_key("forum-board-field-image"),
+                                hint: t_key("forum-board-field-image-hint"),
                                 value: image,
                                 tall: false,
                             }
                             MediaUploadField {
-                                label: "Banner",
-                                hint: "Wide header shown above the board",
+                                label: t_key("forum-board-field-banner"),
+                                hint: t_key("forum-board-field-banner-hint"),
                                 value: banner,
                                 tall: true,
                             }
@@ -1156,7 +1160,7 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                 aside { class: "forum-editor-aside",
                     div { class: "forum-editor-preview",
                         p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                            "Preview"
+                            { t!("forum-board-preview") }
                         }
                         div { class: "mt-4 flex items-start gap-3",
                             if image_now.trim().is_empty() {
@@ -1187,17 +1191,17 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                             }
                         }
                         ul { class: "mt-5 space-y-1.5 text-xs text-text-secondary",
-                            li { "{visibility_now.label()} board" }
+                            li { { t!("forum-board-preview-visibility", label: visibility_now.label()) } }
                             if filled_links > 0 {
-                                li { "{filled_links} links" }
+                                li { { t!("forum-board-preview-links", count: filled_links) } }
                             } else {
-                                li { "No links yet" }
+                                li { { t!("forum-board-preview-no-links") } }
                             }
                             if !is_new {
                                 li { "{activity_label}" }
                             }
                             if !banner_now.trim().is_empty() {
-                                li { "Banner set" }
+                                li { { t!("forum-board-preview-banner-set") } }
                             }
                         }
                     }
@@ -1209,6 +1213,7 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
 
 #[component]
 fn BoardLinkEditor(mut links: Signal<Vec<BoardLinkDraft>>, index: usize, link_id: u64) -> Element {
+    let _lang = i18n();
     let link = links().get(index).cloned().unwrap_or(BoardLinkDraft {
         id: link_id,
         label: String::new(),
@@ -1220,21 +1225,23 @@ fn BoardLinkEditor(mut links: Signal<Vec<BoardLinkDraft>>, index: usize, link_id
             class: "rounded-squircle-sm border border-border-subtle p-3",
             style: "background: var(--color-surface);",
             div { class: "mb-2 flex items-center justify-between gap-2",
-                p { class: "text-xs font-medium text-text-secondary", "Link {index + 1}" }
+                p { class: "text-xs font-medium text-text-secondary",
+                    { t!("forum-board-link-index", index: index + 1) }
+                }
                 Button {
                     variant: ButtonVariant::Danger,
                     size: ButtonSize::Sm,
                     onclick: move |_| {
                         links.write().retain(|item| item.id != link_id);
                     },
-                    "Remove"
+                    { t!("forum-board-link-remove") }
                 }
             }
             div { class: "grid gap-2 sm:grid-cols-2",
                 input {
                     r#type: "text",
                     class: "ui-input ui-squircle h-10 w-full px-4 text-sm outline-none",
-                    placeholder: "Label",
+                    placeholder: "{t!(\"forum-board-link-label-placeholder\")}",
                     value: "{link.label}",
                     oninput: move |evt: FormEvent| {
                         let next = evt.value();
@@ -1249,7 +1256,7 @@ fn BoardLinkEditor(mut links: Signal<Vec<BoardLinkDraft>>, index: usize, link_id
                 input {
                     r#type: "url",
                     class: "ui-input ui-squircle h-10 w-full px-4 text-sm outline-none",
-                    placeholder: "https://…",
+                    placeholder: t_key("form-placeholder-url"),
                     value: "{link.url}",
                     oninput: move |evt: FormEvent| {
                         let next = evt.value();
@@ -1268,11 +1275,12 @@ fn BoardLinkEditor(mut links: Signal<Vec<BoardLinkDraft>>, index: usize, link_id
 
 #[component]
 fn MediaUploadField(
-    label: &'static str,
-    hint: &'static str,
+    #[props(into)] label: String,
+    #[props(into)] hint: String,
     mut value: Signal<String>,
     tall: bool,
 ) -> Element {
+    let _lang = i18n();
     let mut file_name = use_signal(String::new);
     let current = value();
     let name_now = file_name();
@@ -1298,14 +1306,14 @@ fn MediaUploadField(
                             value.set(String::new());
                             file_name.set(String::new());
                         },
-                        "Remove"
+                        { t!("forum-media-remove") }
                     }
                 }
             }
             label { class: "{frame}", style: "background: var(--color-surface);",
                 if current.trim().is_empty() {
                     span { class: "pointer-events-none px-3 text-center text-xs leading-relaxed text-text-muted",
-                        "Click to upload image"
+                        { t!("forum-media-upload") }
                     }
                 } else {
                     img {
@@ -1347,8 +1355,8 @@ fn MediaUploadField(
 
 #[component]
 fn FormField(
-    label: &'static str,
-    #[props(default)] hint: Option<&'static str>,
+    #[props(into)] label: String,
+    #[props(default)] hint: Option<String>,
     children: Element,
 ) -> Element {
     rsx! {
@@ -1371,7 +1379,7 @@ enum SegmentIdle {
 
 #[component]
 fn SegmentChoice(
-    label: &'static str,
+    #[props(into)] label: String,
     tone: &'static str,
     active: bool,
     #[props(default)] idle: SegmentIdle,
@@ -1435,7 +1443,7 @@ fn BoardChoiceChip(
 }
 
 #[component]
-fn ToneChip(label: &'static str, tone: &'static str) -> Element {
+fn ToneChip(#[props(into)] label: String, tone: &'static str) -> Element {
     rsx! {
         span {
             class: "inline-flex items-center rounded-squircle-sm px-2.5 py-1 text-xs font-medium",
@@ -1447,6 +1455,7 @@ fn ToneChip(label: &'static str, tone: &'static str) -> Element {
 
 #[component]
 pub fn ForumThreads() -> Element {
+    let _lang = i18n();
     let boards = use_context::<Signal<Vec<Board>>>();
     let threads = use_context::<Signal<Vec<Thread>>>();
     let navigator = use_navigator();
@@ -1469,20 +1478,29 @@ pub fn ForumThreads() -> Element {
     let result_label = use_memo(move || {
         let len = filtered().len();
         if len == 1 {
-            String::from("1 thread")
+            t_key("forum-threads-result-one")
         } else {
-            format!("{len} threads")
+            t!("forum-threads-result-many", count: len)
         }
     });
     let status_summary = use_memo(move || {
         let labels: Vec<String> = statuses()
             .iter()
-            .filter_map(|key| ThreadStatusOption::from_key(key).map(|opt| opt.label().to_string()))
+            .filter_map(|key| ThreadStatusOption::from_key(key).map(|opt| opt.label()))
             .collect();
-        selection_summary(&labels, "Any status", "statuses")
+        selection_summary(
+            &labels,
+            t_key("forum-threads-filter-any-status"),
+            |n| t!("forum-threads-filter-n-statuses", count: n),
+        )
     });
-    let board_summary =
-        use_memo(move || selection_summary(&board_filters(), "All boards", "boards"));
+    let board_summary = use_memo(move || {
+        selection_summary(
+            &board_filters(),
+            t_key("forum-threads-filter-all-boards"),
+            |n| t!("forum-threads-filter-n-boards", count: n),
+        )
+    });
     let filters_active = !query().trim().is_empty()
         || !statuses().is_empty()
         || !board_filters().is_empty()
@@ -1497,29 +1515,29 @@ pub fn ForumThreads() -> Element {
         div { class: "motion-cascade forum-desk",
             div { class: "forum-desk-masthead",
                 div { class: "min-w-0",
-                    p { class: "forum-desk-eyebrow", "Conversations" }
-                    h1 { class: "forum-desk-title", "Threads" }
-                    p { class: "forum-desk-sub", "Search, filter, and open any conversation." }
+                    p { class: "forum-desk-eyebrow", { t!("forum-threads-eyebrow") } }
+                    h1 { class: "forum-desk-title", { t!("forum-threads-title") } }
+                    p { class: "forum-desk-sub", { t!("forum-threads-subtitle") } }
                 }
                 Button {
                     onclick: move |_| {
                         navigator.push(Route::ForumThreadNew {});
                     },
                     IconPlus {}
-                    "New thread"
+                    { t!("forum-threads-new") }
                 }
             }
 
             div { class: "forum-toolbar mb-5",
                 SearchInput {
                     value: query,
-                    placeholder: "Search title, author, board…",
+                    placeholder: "{t!(\"forum-threads-search-placeholder\")}",
                     class: "forum-toolbar-search",
                 }
 
                 div { class: "forum-toolbar-filters",
                     FilterMultiSelect {
-                        label: "Status",
+                        label: t_key("forum-threads-filter-status-label"),
                         summary: status_summary(),
                         open: status_menu,
                         on_toggle_menu: move |_| {
@@ -1533,7 +1551,7 @@ pub fn ForumThreads() -> Element {
                         body: rsx! {
                             for option in ThreadStatusOption::ALL {
                                 FilterCheckOption {
-                                    label: option.label().to_string(),
+                                    label: option.label(),
                                     checked: statuses_now.iter().any(|item| item == option.key()),
                                     onclick: move |_| toggle_selection(statuses, option.key()),
                                 }
@@ -1542,7 +1560,7 @@ pub fn ForumThreads() -> Element {
                     }
 
                     FilterMultiSelect {
-                        label: "Boards",
+                        label: t_key("forum-threads-filter-boards-label"),
                         summary: board_summary(),
                         open: board_menu,
                         on_toggle_menu: move |_| {
@@ -1555,7 +1573,7 @@ pub fn ForumThreads() -> Element {
                         },
                         body: rsx! {
                             if boards_now.is_empty() {
-                                p { class: "px-3 py-2 text-xs text-text-muted", "No boards yet." }
+                                p { class: "px-3 py-2 text-xs text-text-muted", { t!("forum-threads-no-boards") } }
                             } else {
                                 for option in boards_now.iter() {
                                     FilterCheckOption {
@@ -1573,8 +1591,8 @@ pub fn ForumThreads() -> Element {
                     }
 
                     FilterMultiSelect {
-                        label: "Sort",
-                        summary: sort_now.label().to_string(),
+                        label: t_key("forum-threads-filter-sort-label"),
+                        summary: sort_now.label(),
                         open: sort_menu,
                         on_toggle_menu: move |_| {
                             let next = !sort_menu();
@@ -1587,7 +1605,7 @@ pub fn ForumThreads() -> Element {
                         body: rsx! {
                             for option in ThreadSort::ALL {
                                 FilterCheckOption {
-                                    label: option.label().to_string(),
+                                    label: option.label(),
                                     checked: sort_now == option,
                                     onclick: move |_| {
                                         sort.set(option);
@@ -1611,7 +1629,7 @@ pub fn ForumThreads() -> Element {
                                 board_menu.set(false);
                                 sort_menu.set(false);
                             },
-                            "Clear filters"
+                            { t!("forum-threads-clear-filters") }
                         }
                     }
                 }
@@ -1621,7 +1639,7 @@ pub fn ForumThreads() -> Element {
 
             if filtered().is_empty() {
                 p { class: "rounded-squircle-lg border border-dashed border-border-subtle px-4 py-10 text-center text-sm text-text-muted",
-                    "No threads match these filters."
+                    { t!("forum-threads-empty") }
                 }
             } else {
                 div { class: "motion-cascade motion-cascade-tight forum-thread-panel",
@@ -1636,7 +1654,7 @@ pub fn ForumThreads() -> Element {
 
 #[component]
 fn FilterMultiSelect(
-    label: &'static str,
+    #[props(into)] label: String,
     #[props(into)] summary: String,
     open: Signal<bool>,
     on_toggle_menu: EventHandler<MouseEvent>,
@@ -1696,6 +1714,7 @@ fn FilterCheckOption(
 
 #[component]
 pub fn ForumThreadNew() -> Element {
+    let _lang = i18n();
     let boards = use_context::<Signal<Vec<Board>>>();
     let mut threads = use_context::<Signal<Vec<Thread>>>();
     let current_user = use_context::<Signal<CurrentUser>>();
@@ -1717,12 +1736,12 @@ pub fn ForumThreadNew() -> Element {
     let can_save = !title_now.trim().is_empty() && !board_now.trim().is_empty();
 
     let preview_title = if title_now.trim().is_empty() {
-        String::from("Thread title")
+        t_key("forum-thread-preview-title")
     } else {
         title_now.trim().to_string()
     };
     let preview_body = if body_now.trim().is_empty() {
-        String::from("The opening post players will read first.")
+        t_key("forum-thread-preview-body")
     } else {
         body_now.trim().to_string()
     };
@@ -1737,12 +1756,15 @@ pub fn ForumThreadNew() -> Element {
         "mt-1.5 max-w-3xl text-sm leading-relaxed text-text-muted"
     };
     let preview_board = if board_now.trim().is_empty() {
-        String::from("Board")
+        t_key("forum-thread-preview-board")
     } else {
         board_now.clone()
     };
     let badge_line = thread_badge_line(pinned_now, locked_now);
-    let preview_meta = format!("{} · 0 replies · just now", user.name);
+    let preview_meta = t!(
+        "forum-thread-preview-meta",
+        author: user.name.clone()
+    );
 
     let create = move |_| {
         if title().trim().is_empty() || board().trim().is_empty() {
@@ -1777,7 +1799,7 @@ pub fn ForumThreadNew() -> Element {
                     onclick: move |_| {
                         navigator.push(Route::ForumThreads {});
                     },
-                    "← Threads"
+                    { t!("forum-thread-back") }
                 }
                 div { class: "flex flex-wrap items-center gap-2",
                     Button {
@@ -1786,41 +1808,39 @@ pub fn ForumThreadNew() -> Element {
                         onclick: move |_| {
                             navigator.push(Route::ForumThreads {});
                         },
-                        "Cancel"
+                        { t!("forum-thread-cancel") }
                     }
                     Button {
                         size: ButtonSize::Sm,
                         disabled: !can_save,
                         onclick: create,
-                        "Create thread"
+                        { t!("forum-thread-create") }
                     }
                 }
             }
 
             div { class: "mb-8",
-                p { class: "text-sm text-text-muted", "Start a conversation" }
-                h1 { class: "mt-1 text-3xl font-semibold tracking-tight", "New thread" }
-                p { class: "mt-2 max-w-2xl text-sm text-text-muted",
-                    "Title, opening post, board, and whether it should be pinned or locked."
-                }
+                p { class: "text-sm text-text-muted", { t!("forum-thread-new-eyebrow") } }
+                h1 { class: "mt-1 text-3xl font-semibold tracking-tight", { t!("forum-thread-new-title") } }
+                p { class: "mt-2 max-w-2xl text-sm text-text-muted", { t!("forum-thread-new-lede") } }
             }
 
             div { class: "motion-cascade forum-editor-layout",
                 div { class: "forum-editor-main space-y-8",
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Basics" }
-                        p { class: "forum-editor-lede", "Title and opening post players see first." }
+                        h2 { class: "forum-editor-heading", { t!("forum-thread-section-basics") } }
+                        p { class: "forum-editor-lede", { t!("forum-thread-section-basics-lede") } }
                         div { class: "mt-4 space-y-4",
-                            FormField { label: "Title",
+                            FormField { label: t_key("forum-thread-field-title"),
                                 SignalInput {
                                     value: title,
-                                    placeholder: "Season 4 spawn redesign",
+                                    placeholder: t_key("forum-thread-title-placeholder"),
                                 }
                             }
-                            FormField { label: "Opening post",
+                            FormField { label: t_key("forum-thread-field-opening"),
                                 SignalTextarea {
                                     value: body,
-                                    placeholder: "Share the context, ask for feedback, or drop the announcement…",
+                                    placeholder: "{t!(\"forum-thread-placeholder-opening\")}",
                                     class: "min-h-[9rem]",
                                 }
                             }
@@ -1828,11 +1848,11 @@ pub fn ForumThreadNew() -> Element {
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Board" }
-                        p { class: "forum-editor-lede", "Where this thread lives on the forum." }
+                        h2 { class: "forum-editor-heading", { t!("forum-thread-section-board") } }
+                        p { class: "forum-editor-lede", { t!("forum-thread-section-board-lede") } }
                         div { class: "mt-4",
                             if boards_now.is_empty() {
-                                SignalInput { value: board, placeholder: "General" }
+                                SignalInput { value: board, placeholder: t_key("forum-thread-board-placeholder") }
                             } else {
                                 div { class: "flex flex-wrap gap-2",
                                     for option in boards_now.into_iter() {
@@ -1853,20 +1873,18 @@ pub fn ForumThreadNew() -> Element {
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Options" }
-                        p { class: "forum-editor-lede",
-                            "Pinned threads stay at the top. Locked threads stay visible but closed to replies."
-                        }
+                        h2 { class: "forum-editor-heading", { t!("forum-thread-section-options") } }
+                        p { class: "forum-editor-lede", { t!("forum-thread-section-options-lede") } }
                         div { class: "mt-4 inline-flex w-full gap-2",
                             SegmentChoice {
-                                label: "Pinned",
+                                label: t_key("forum-thread-status-pinned"),
                                 tone: "#69bdf2",
                                 active: pinned_now,
                                 idle: SegmentIdle::Outline,
                                 onclick: move |_| pinned.set(!pinned()),
                             }
                             SegmentChoice {
-                                label: "Locked",
+                                label: t_key("forum-thread-status-locked"),
                                 tone: "#f0a35e",
                                 active: locked_now,
                                 idle: SegmentIdle::Outline,
@@ -1879,7 +1897,7 @@ pub fn ForumThreadNew() -> Element {
                 aside { class: "forum-editor-aside",
                     div { class: "forum-editor-preview",
                         p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                            "Preview"
+                            { t!("forum-board-preview") }
                         }
                         article { class: "mt-4 forum-thread forum-thread-static pointer-events-none border-b-0",
                             Avatar {
@@ -1907,19 +1925,19 @@ pub fn ForumThreadNew() -> Element {
                             }
                         }
                         ul { class: "mt-5 space-y-1.5 text-xs text-text-secondary",
-                            li { "Posted as {user.name}" }
+                            li { { t!("forum-thread-preview-posted-as", name: user.name.clone()) } }
                             li {
                                 if pinned_now {
-                                    "Pinned to top"
+                                    { t!("forum-thread-preview-pinned") }
                                 } else {
-                                    "Not pinned"
+                                    { t!("forum-thread-preview-not-pinned") }
                                 }
                             }
                             li {
                                 if locked_now {
-                                    "Locked · no replies yet"
+                                    { t!("forum-thread-preview-locked") }
                                 } else {
-                                    "Open for replies"
+                                    { t!("forum-thread-preview-open") }
                                 }
                             }
                         }
@@ -1932,9 +1950,10 @@ pub fn ForumThreadNew() -> Element {
 
 #[component]
 fn ThreadCard(thread: Thread) -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let thread_id = thread.id;
-    let replies = format!("{} replies", thread.replies);
+    let replies = t!("forum-thread-card-replies", count: thread.replies);
     let badge_line = thread_badge_line(thread.pinned, thread.locked);
 
     rsx! {
@@ -1982,6 +2001,7 @@ fn ThreadCard(thread: Thread) -> Element {
 
 #[component]
 pub fn ForumThread(id: u64) -> Element {
+    let _lang = i18n();
     let mut threads = use_context::<Signal<Vec<Thread>>>();
     let boards = use_context::<Signal<Vec<Board>>>();
     let navigator = use_navigator();
@@ -2002,11 +2022,11 @@ pub fn ForumThread(id: u64) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::ForumThreads {});
                     },
-                    "← Threads"
+                    { t!("forum-thread-back") }
                 }
             }
-            h1 { class: "text-3xl font-semibold tracking-tight", "Thread not found" }
-            p { class: "mt-2 text-sm text-text-muted", "This conversation may have been removed." }
+            h1 { class: "text-3xl font-semibold tracking-tight", { t!("forum-thread-not-found-title") } }
+            p { class: "mt-2 text-sm text-text-muted", { t!("forum-thread-not-found-desc") } }
         };
     };
 
@@ -2016,13 +2036,21 @@ pub fn ForumThread(id: u64) -> Element {
         if !badges.is_empty() {
             parts.push(badges);
         }
-        parts.push(format!("{} replies", thread.replies));
+        parts.push(t!("forum-thread-card-replies", count: thread.replies));
         parts.push(thread.when.clone());
         parts.join(" · ")
     };
     let reply_samples = placeholder_replies(&thread);
-    let pin_label = if thread.pinned { "Unpin" } else { "Pin" };
-    let lock_label = if thread.locked { "Unlock" } else { "Lock" };
+    let pin_label = if thread.pinned {
+        t_key("forum-thread-unpin")
+    } else {
+        t_key("forum-thread-pin")
+    };
+    let lock_label = if thread.locked {
+        t_key("forum-thread-unlock")
+    } else {
+        t_key("forum-thread-lock")
+    };
     let boards_now = boards();
     let thread_board = thread.category.clone();
     let move_menu_open = move_open();
@@ -2035,7 +2063,7 @@ pub fn ForumThread(id: u64) -> Element {
                 onclick: move |_| {
                     navigator.push(Route::ForumThreads {});
                 },
-                "← Threads"
+                { t!("forum-thread-back") }
             }
             div { class: "relative flex flex-wrap items-center justify-end gap-2",
                 Button {
@@ -2068,7 +2096,7 @@ pub fn ForumThread(id: u64) -> Element {
                     variant: ButtonVariant::Secondary,
                     size: ButtonSize::Sm,
                     onclick: move |_| move_open.set(!move_open()),
-                    "Move"
+                    { t!("forum-thread-move") }
                 }
                 Button {
                     variant: ButtonVariant::Danger,
@@ -2080,12 +2108,12 @@ pub fn ForumThread(id: u64) -> Element {
                             });
                         navigator.push(Route::ForumThreads {});
                     },
-                    "Delete"
+                    { t!("forum-thread-delete") }
                 }
                 if move_menu_open && !boards_now.is_empty() {
                     div { class: "absolute right-0 top-full z-20 mt-2 w-56 rounded-squircle-sm border border-border-subtle bg-bg-elevated p-1 shadow-lg",
                         p { class: "px-2.5 py-1.5 text-[11px] font-medium uppercase tracking-wide text-text-muted",
-                            "Move to board"
+                            { t!("forum-thread-move-to-board") }
                         }
                         for option in boards_now.into_iter() {
                             button {
@@ -2128,7 +2156,9 @@ pub fn ForumThread(id: u64) -> Element {
             div { class: "min-w-0 flex-1",
                 div { class: "flex flex-wrap items-baseline gap-x-2 gap-y-1",
                     p { class: "text-sm font-semibold text-text", "{thread.author}" }
-                    span { class: "text-xs text-text-muted", "Original post · {thread.when}" }
+                    span { class: "text-xs text-text-muted",
+                        { t!("forum-thread-original-post", when: thread.when.clone()) }
+                    }
                 }
                 p { class: "mt-3 text-[0.95rem] leading-relaxed text-text-secondary whitespace-pre-wrap",
                     "{thread.preview}"
@@ -2138,19 +2168,17 @@ pub fn ForumThread(id: u64) -> Element {
 
         section { class: "mt-2 mb-4 flex items-baseline justify-between gap-3 border-t border-border-subtle pt-6",
             p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                "Replies"
+                { t!("forum-thread-replies") }
             }
             span { class: "text-xs text-text-secondary", "{thread.replies}" }
         }
 
         if thread.locked {
-            p { class: "mb-4 text-sm text-text-muted",
-                "This thread is locked — new replies are disabled."
-            }
+            p { class: "mb-4 text-sm text-text-muted", { t!("forum-thread-locked-notice") } }
         }
 
         if reply_samples.is_empty() {
-            p { class: "py-8 text-sm text-text-muted", "No replies yet." }
+            p { class: "py-8 text-sm text-text-muted", { t!("forum-thread-no-replies") } }
         } else {
             for reply in reply_samples.into_iter() {
                 article { class: "forum-post",
@@ -2174,13 +2202,13 @@ pub fn ForumThread(id: u64) -> Element {
 
         if !thread.locked {
             section { class: "mt-8 max-w-2xl border-t border-border-subtle pt-6",
-                p { class: "mb-3 text-xs font-medium text-text-muted", "Reply" }
+                p { class: "mb-3 text-xs font-medium text-text-muted", { t!("forum-thread-reply-label") } }
                 textarea {
                     class: "ui-input ui-squircle min-h-28 w-full resize-y px-4 py-3 text-sm outline-none",
-                    placeholder: "Write a reply…",
+                    placeholder: "{t!(\"forum-thread-reply-placeholder\")}",
                 }
                 div { class: "mt-3",
-                    Button { "Post reply" }
+                    Button { { t!("forum-thread-post-reply") } }
                 }
             }
         }
@@ -2233,47 +2261,52 @@ fn placeholder_replies(thread: &Thread) -> Vec<ThreadReply> {
 
 #[component]
 pub fn ForumModeration() -> Element {
+    let _lang = i18n();
     let current_user = use_context::<Signal<CurrentUser>>();
     let user = current_user();
-    let acting_as = format!("Acting as {} · {}", user.name, user.role);
+    let acting_as = t!(
+        "forum-moderation-acting-as",
+        name: user.name.clone(),
+        role: user.role.clone()
+    );
     let report_count = REPORTS.len();
 
     rsx! {
         div { class: "motion-cascade forum-desk",
             div { class: "forum-desk-masthead",
                 div { class: "min-w-0",
-                    p { class: "forum-desk-eyebrow", "Staff tools" }
-                    h1 { class: "forum-desk-title", "Moderation" }
+                    p { class: "forum-desk-eyebrow", { t!("forum-moderation-eyebrow") } }
+                    h1 { class: "forum-desk-title", { t!("forum-moderation-title") } }
                     p { class: "forum-desk-sub", "{acting_as}" }
                 }
             }
 
             div { class: "motion-cascade ops-meter",
                 div { class: "ops-meter-item",
-                    p { class: "ops-meter-label", "Open reports" }
+                    p { class: "ops-meter-label", { t!("forum-moderation-open-reports") } }
                     p { class: "ops-meter-value is-accent", "{report_count}" }
                 }
                 span { class: "ops-meter-divider" }
                 div { class: "ops-meter-item",
-                    p { class: "ops-meter-label", "Locked" }
+                    p { class: "ops-meter-label", { t!("forum-moderation-locked") } }
                     p { class: "ops-meter-value", "2" }
                 }
                 span { class: "ops-meter-divider" }
                 div { class: "ops-meter-item",
-                    p { class: "ops-meter-label", "Auto-hidden" }
+                    p { class: "ops-meter-label", { t!("forum-moderation-auto-hidden") } }
                     p { class: "ops-meter-value", "1" }
                 }
                 span { class: "ops-meter-divider" }
                 div { class: "ops-meter-item",
-                    p { class: "ops-meter-label", "Avg. review" }
+                    p { class: "ops-meter-label", { t!("forum-moderation-avg-review") } }
                     p { class: "ops-meter-value", "18m" }
                 }
             }
 
             section { class: "mb-4",
                 div { class: "ops-section-head",
-                    h2 { class: "ops-section-title", "Report queue" }
-                    span { class: "ops-section-sub", "Highest severity first" }
+                    h2 { class: "ops-section-title", { t!("forum-moderation-report-queue") } }
+                    span { class: "ops-section-sub", { t!("forum-moderation-report-queue-sub") } }
                 }
                 div { class: "motion-cascade motion-cascade-tight forum-queue",
                     for report in REPORTS.iter().copied() {
@@ -2287,6 +2320,7 @@ pub fn ForumModeration() -> Element {
 
 #[component]
 fn ReportCard(report: Report) -> Element {
+    let _lang = i18n();
     let meta = report.meta();
     let severity = report.severity;
 
@@ -2303,13 +2337,13 @@ fn ReportCard(report: Report) -> Element {
                 p { class: "mt-1.5 text-sm leading-relaxed text-text-muted", "{report.detail}" }
                 p { class: "mt-2 text-xs text-text-secondary", "{meta}" }
                 div { class: "mt-4 flex flex-wrap gap-2",
-                    Button { variant: ButtonVariant::Danger, size: ButtonSize::Sm, "Hide post" }
+                    Button { variant: ButtonVariant::Danger, size: ButtonSize::Sm, { t!("forum-moderation-hide-post") } }
                     Button {
                         variant: ButtonVariant::Secondary,
                         size: ButtonSize::Sm,
-                        "Warn user"
+                        { t!("forum-moderation-warn-user") }
                     }
-                    Button { variant: ButtonVariant::Ghost, size: ButtonSize::Sm, "Dismiss" }
+                    Button { variant: ButtonVariant::Ghost, size: ButtonSize::Sm, { t!("forum-moderation-dismiss") } }
                 }
             }
         }
@@ -2318,6 +2352,7 @@ fn ReportCard(report: Report) -> Element {
 
 #[component]
 pub fn ForumAutoModeration() -> Element {
+    let _lang = i18n();
     let bot_name = use_signal(|| String::from("ServerSpot AutoMod"));
     let bot_tag = use_signal(|| String::from("BOT"));
     let bot_avatar = use_signal(String::new);
@@ -2351,31 +2386,27 @@ pub fn ForumAutoModeration() -> Element {
         div { class: "motion-cascade forum-desk",
             div { class: "forum-desk-masthead",
                 div { class: "min-w-0",
-                    p { class: "forum-desk-eyebrow", "Staff tools" }
-                    h1 { class: "forum-desk-title", "Auto Moderation" }
-                    p { class: "forum-desk-sub",
-                        "Give the bot an identity, then tune the filters and actions it runs."
-                    }
+                    p { class: "forum-desk-eyebrow", { t!("forum-moderation-eyebrow") } }
+                    h1 { class: "forum-desk-title", { t!("forum-auto-mod-title") } }
+                    p { class: "forum-desk-sub", { t!("forum-auto-mod-subtitle") } }
                 }
-                Button { "Save changes" }
+                Button { { t!("forum-auto-mod-save") } }
             }
 
             div { class: "motion-cascade forum-status-strip",
                 div { class: "min-w-0",
                     p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                        "Bot status"
+                        { t!("forum-auto-mod-status-label") }
                     }
                     p { class: "mt-1 text-base font-semibold tracking-tight",
-                        "Auto Mod is watching public boards"
+                        { t!("forum-auto-mod-status-title") }
                     }
-                    p { class: "mt-0.5 text-sm text-text-muted",
-                        "Actions run instantly; staff still get a queue entry for high severity."
-                    }
+                    p { class: "mt-0.5 text-sm text-text-muted", { t!("forum-auto-mod-status-desc") } }
                 }
                 div { class: "w-full shrink-0 sm:max-w-xs",
                     SettingRow {
-                        title: "Enable Auto Mod",
-                        description: "Turn the bot on or off across the forum.",
+                        title: t_key("forum-auto-mod-enable-title"),
+                        description: t_key("forum-auto-mod-enable-desc"),
                         enabled: true,
                     }
                 }
@@ -2384,32 +2415,30 @@ pub fn ForumAutoModeration() -> Element {
             div { class: "motion-cascade forum-editor-layout",
                 div { class: "forum-editor-main space-y-8",
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Bot identity" }
-                        p { class: "forum-editor-lede",
-                            "Name, badge, and avatar shown on automated notices."
-                        }
+                        h2 { class: "forum-editor-heading", { t!("forum-auto-mod-section-identity") } }
+                        p { class: "forum-editor-lede", { t!("forum-auto-mod-section-identity-lede") } }
                         div { class: "mt-4 space-y-4",
                             FormField {
-                                label: "Display name",
-                                hint: "Shown on every automated warning, mute, and hide notice.",
+                                label: t_key("forum-auto-mod-field-display-name"),
+                                hint: Some(t_key("forum-auto-mod-field-display-name-hint")),
                                 SignalInput {
                                     value: bot_name,
-                                    placeholder: "ServerSpot AutoMod",
+                                    placeholder: t_key("forum-auto-mod-name-placeholder"),
                                 }
                             }
                             div { class: "motion-cascade grid gap-4 sm:grid-cols-2",
                                 FormField {
-                                    label: "Badge label",
-                                    hint: "Short tag next to the name.",
-                                    SignalInput { value: bot_tag, placeholder: "BOT" }
+                                    label: t_key("forum-auto-mod-field-badge"),
+                                    hint: Some(t_key("forum-auto-mod-field-badge-hint")),
+                                    SignalInput { value: bot_tag, placeholder: t_key("forum-auto-mod-badge-placeholder") }
                                 }
-                                FormField { label: "Accent colour",
+                                FormField { label: t_key("forum-auto-mod-field-accent"),
                                     ColorPicker { value: bot_accent }
                                 }
                             }
                             MediaUploadField {
-                                label: "Avatar",
-                                hint: "Square image, PNG or WebP. Used in posts and DMs.",
+                                label: t_key("forum-auto-mod-field-avatar"),
+                                hint: t_key("forum-auto-mod-field-avatar-hint"),
                                 value: bot_avatar,
                                 tall: false,
                             }
@@ -2417,57 +2446,53 @@ pub fn ForumAutoModeration() -> Element {
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Message templates" }
-                        p { class: "forum-editor-lede",
-                            "Copy sent when the bot warns or mutes a player."
-                        }
+                        h2 { class: "forum-editor-heading", { t!("forum-auto-mod-section-templates") } }
+                        p { class: "forum-editor-lede", { t!("forum-auto-mod-section-templates-lede") } }
                         div { class: "mt-4 space-y-4",
                             FormField {
-                                label: "Warning message",
-                                hint: "Placeholders: {{author}}, {{rule}}, {{board}}.",
+                                label: t_key("forum-auto-mod-field-warn-message"),
+                                hint: Some(t_key("forum-auto-mod-field-warn-message-hint")),
                                 SignalTextarea {
                                     value: warn_message,
-                                    placeholder: "Your post was flagged…",
+                                    placeholder: t_key("forum-auto-mod-warn-placeholder"),
                                 }
                             }
                             FormField {
-                                label: "Mute message",
-                                hint: "Placeholders: {{author}}, {{duration}}, {{rule}}.",
+                                label: t_key("forum-auto-mod-field-mute-message"),
+                                hint: Some(t_key("forum-auto-mod-field-mute-message-hint")),
                                 SignalTextarea {
                                     value: mute_message,
-                                    placeholder: "You’ve been muted…",
+                                    placeholder: t_key("forum-auto-mod-mute-placeholder"),
                                 }
                             }
                         }
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Bot thresholds" }
-                        p { class: "forum-editor-lede",
-                            "Word list and numeric limits the filters use."
-                        }
+                        h2 { class: "forum-editor-heading", { t!("forum-auto-mod-section-thresholds") } }
+                        p { class: "forum-editor-lede", { t!("forum-auto-mod-section-thresholds-lede") } }
                         div { class: "mt-4 space-y-4",
                             FormField {
-                                label: "Blocked words",
-                                hint: "Comma-separated. Matching posts are held for review.",
+                                label: t_key("forum-auto-mod-field-blocked-words"),
+                                hint: Some(t_key("forum-auto-mod-field-blocked-words-hint")),
                                 SignalTextarea {
                                     value: blocked_words,
-                                    placeholder: "spam phrase, invite link…",
+                                    placeholder: t_key("forum-auto-mod-blocked-words-placeholder"),
                                 }
                             }
                             div { class: "motion-cascade grid gap-4 sm:grid-cols-3",
-                                FormField { label: "Max links",
+                                FormField { label: t_key("forum-auto-mod-field-max-links"),
                                     SignalInput { value: max_links, placeholder: "2" }
                                 }
                                 FormField {
-                                    label: "Mute (min)",
-                                    hint: "When Mute is chosen.",
+                                    label: t_key("forum-auto-mod-field-mute-min"),
+                                    hint: Some(t_key("forum-auto-mod-field-mute-min-hint")),
                                     SignalInput {
                                         value: mute_minutes,
                                         placeholder: "30",
                                     }
                                 }
-                                FormField { label: "New acct (hrs)",
+                                FormField { label: t_key("forum-auto-mod-field-new-acct-hrs"),
                                     SignalInput {
                                         value: new_account_hours,
                                         placeholder: "24",
@@ -2478,78 +2503,76 @@ pub fn ForumAutoModeration() -> Element {
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Filters" }
-                        p { class: "forum-editor-lede", "What the bot scans for on public boards." }
+                        h2 { class: "forum-editor-heading", { t!("forum-auto-mod-section-filters") } }
+                        p { class: "forum-editor-lede", { t!("forum-auto-mod-section-filters-lede") } }
                         div { class: "mt-2 divide-y divide-border-subtle",
                             SettingRow {
-                                title: "Block listed words & phrases",
-                                description: "Flag or remove posts that match your blocked list.",
+                                title: t_key("forum-auto-mod-filter-words-title"),
+                                description: t_key("forum-auto-mod-filter-words-desc"),
                                 enabled: true,
                             }
                             SettingRow {
-                                title: "Limit external links",
-                                description: "Stop posts that exceed the max link count.",
+                                title: t_key("forum-auto-mod-filter-links-title"),
+                                description: t_key("forum-auto-mod-filter-links-desc"),
                                 enabled: true,
                             }
                             SettingRow {
-                                title: "Detect duplicate spam",
-                                description: "Catch near-identical replies posted in a short window.",
+                                title: t_key("forum-auto-mod-filter-duplicate-title"),
+                                description: t_key("forum-auto-mod-filter-duplicate-desc"),
                                 enabled: true,
                             }
                             SettingRow {
-                                title: "Throttle brand-new accounts",
-                                description: "Require a waiting period before new accounts can post links.",
+                                title: t_key("forum-auto-mod-filter-new-acct-title"),
+                                description: t_key("forum-auto-mod-filter-new-acct-desc"),
                                 enabled: false,
                             }
                         }
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Actions" }
-                        p { class: "forum-editor-lede", "What happens when a filter trips." }
+                        h2 { class: "forum-editor-heading", { t!("forum-auto-mod-section-actions") } }
+                        p { class: "forum-editor-lede", { t!("forum-auto-mod-section-actions-lede") } }
                         div { class: "mt-2 divide-y divide-border-subtle",
                             SettingRow {
-                                title: "Auto-hide after three unique reports",
-                                description: "Hide the post from public view until a moderator reviews it.",
+                                title: t_key("forum-auto-mod-action-hide-title"),
+                                description: t_key("forum-auto-mod-action-hide-desc"),
                                 enabled: false,
                             }
                             SettingRow {
-                                title: "Warn on first offence",
-                                description: "Send an automated warning before muting or hiding.",
+                                title: t_key("forum-auto-mod-action-warn-title"),
+                                description: t_key("forum-auto-mod-action-warn-desc"),
                                 enabled: true,
                             }
                             SettingRow {
-                                title: "Shadow-mute repeat offenders",
-                                description: "Limit posting for accounts with three upheld reports in 7 days.",
+                                title: t_key("forum-auto-mod-action-shadow-mute-title"),
+                                description: t_key("forum-auto-mod-action-shadow-mute-desc"),
                                 enabled: false,
                             }
                             SettingRow {
-                                title: "Post as the bot in-thread",
-                                description: "Leave a public notice using the bot name and avatar when an action fires.",
+                                title: t_key("forum-auto-mod-action-bot-post-title"),
+                                description: t_key("forum-auto-mod-action-bot-post-desc"),
                                 enabled: true,
                             }
                         }
                     }
 
                     section { class: "forum-editor-section",
-                        h2 { class: "forum-editor-heading", "Notifications" }
-                        p { class: "forum-editor-lede",
-                            "Where staff and authors hear about auto-mod actions."
-                        }
+                        h2 { class: "forum-editor-heading", { t!("forum-auto-mod-section-notifications") } }
+                        p { class: "forum-editor-lede", { t!("forum-auto-mod-section-notifications-lede") } }
                         div { class: "mt-2 divide-y divide-border-subtle",
                             SettingRow {
-                                title: "Notify staff Discord channel",
-                                description: "Push high-severity auto-mod actions to your moderation webhook.",
+                                title: t_key("forum-auto-mod-notify-discord-title"),
+                                description: t_key("forum-auto-mod-notify-discord-desc"),
                                 enabled: true,
                             }
                             SettingRow {
-                                title: "DM the author",
-                                description: "Tell the player what rule was triggered and what happens next.",
+                                title: t_key("forum-auto-mod-notify-dm-title"),
+                                description: t_key("forum-auto-mod-notify-dm-desc"),
                                 enabled: true,
                             }
                             SettingRow {
-                                title: "Sign DMs with bot identity",
-                                description: "Use the bot name and avatar on private warnings instead of a generic system sender.",
+                                title: t_key("forum-auto-mod-notify-sign-dm-title"),
+                                description: t_key("forum-auto-mod-notify-sign-dm-desc"),
                                 enabled: true,
                             }
                         }
@@ -2559,7 +2582,7 @@ pub fn ForumAutoModeration() -> Element {
                 aside { class: "forum-editor-aside",
                     div { class: "forum-editor-preview",
                         p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                            "Preview"
+                            { t!("forum-board-preview") }
                         }
                         div { class: "mt-4 flex items-start gap-3",
                             if preview_avatar.trim().is_empty() {
@@ -2589,7 +2612,9 @@ pub fn ForumAutoModeration() -> Element {
                                 p { class: "mt-1.5 text-sm leading-relaxed text-text-secondary",
                                     "Hey NovaCraft — your post was flagged by Auto Mod for spam links. Please edit or remove it."
                                 }
-                                p { class: "mt-2 text-xs text-text-muted", "just now · automated" }
+                                p { class: "mt-2 text-xs text-text-muted",
+                                    { t!("forum-auto-mod-preview-meta") }
+                                }
                             }
                         }
                     }
@@ -2601,41 +2626,40 @@ pub fn ForumAutoModeration() -> Element {
 
 #[component]
 pub fn ForumSiteSettings() -> Element {
+    let _lang = i18n();
     let stats = placeholder_forum_stats();
     let public_path = use_signal(|| String::from(stats.public_path));
     let page_title = use_signal(|| String::from("Forums"));
 
     rsx! {
-        FeatureSettingsChrome { subtitle: "Path and defaults for the forum on your main website.",
-            DataPanel { title: "Forum path",
-                SettingsControl { label: "Public path",
-                    SignalInput { value: public_path, placeholder: "/forum".to_string() }
+        FeatureSettingsChrome { subtitle: t_key("forum-settings-subtitle"),
+            DataPanel { title: t_key("forum-settings-panel-path"),
+                SettingsControl { label: t_key("forum-settings-field-public-path"),
+                    SignalInput { value: public_path, placeholder: t_key("forum-settings-placeholder-path") }
                 }
                 SettingsField {
-                    label: "Full URL",
+                    label: t_key("forum-settings-field-full-url"),
                     value: format!("www.example.com{}", public_path()),
                 }
-                SettingsControl { label: "Page title",
-                    SignalInput { value: page_title, placeholder: "Forums".to_string() }
+                SettingsControl { label: t_key("forum-settings-field-page-title"),
+                    SignalInput { value: page_title, placeholder: t_key("forum-settings-placeholder-page-title") }
                 }
-                p { class: "pt-3 text-xs text-text-muted",
-                    "Domain and HTTPS are managed in Settings → General."
-                }
+                p { class: "pt-3 text-xs text-text-muted", { t!("forum-settings-domain-hint") } }
             }
-            DataPanel { title: "Community defaults",
+            DataPanel { title: t_key("forum-settings-panel-defaults"),
                 SettingRow {
-                    title: "Allow guest reading",
-                    description: "Anyone can browse public boards without an account.",
+                    title: t_key("forum-settings-guest-reading-title"),
+                    description: t_key("forum-settings-guest-reading-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Require login to reply",
-                    description: "Guests can read; posting needs a linked player account.",
+                    title: t_key("forum-settings-login-reply-title"),
+                    description: t_key("forum-settings-login-reply-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Markdown & mentions",
-                    description: "Enable formatting, @mentions, and spoiler tags.",
+                    title: t_key("forum-settings-markdown-title"),
+                    description: t_key("forum-settings-markdown-desc"),
                     enabled: true,
                 }
             }

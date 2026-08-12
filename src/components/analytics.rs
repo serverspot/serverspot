@@ -1,11 +1,13 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::page::{
     DataPanel, FeatureSettingsChrome, PageHeader, RowItem, SettingRow, SettingsControl, StatusChip,
 };
 use crate::components::ui::*;
+use crate::i18n::t_key;
 use crate::router::Route;
-
 fn normalize_points(values: &[f32], width: f32, height: f32, pad: f32) -> Vec<(f32, f32)> {
     if values.is_empty() {
         return Vec::new();
@@ -113,14 +115,13 @@ fn sparkline_svg(values: &[f32], color: &'static str, height: f32, class: &'stat
 
 #[derive(Clone, Copy, PartialEq)]
 struct ChartSeries {
-    label: &'static str,
+    label_key: &'static str,
     color: &'static str,
     values: &'static [f32],
     fill: bool,
     prefix: &'static str,
     suffix: &'static str,
 }
-
 #[component]
 fn ScopeChart(
     series: &'static [ChartSeries],
@@ -285,8 +286,8 @@ fn ScopeChartTip(
     labels: &'static [&'static str],
     hovered: Signal<Option<usize>>,
 ) -> Element {
-    let point_count = series.iter().map(|s| s.values.len()).max().unwrap_or(0);
-    let steps = point_count.saturating_sub(1).max(1) as f32;
+    let _lang = i18n();
+    let point_count = series.iter().map(|s| s.values.len()).max().unwrap_or(0);    let steps = point_count.saturating_sub(1).max(1) as f32;
     let Some(idx) = hovered().filter(|i| *i < point_count) else {
         return rsx! {};
     };
@@ -298,8 +299,10 @@ fn ScopeChartTip(
     } else {
         "analytics-tip"
     };
-    let heading = labels.get(idx).copied().unwrap_or("");
-
+    let heading = labels
+        .get(idx)
+        .map(|key| t_key(key))
+        .unwrap_or_default();
     rsx! {
         div { class: align, style: "--tip-x: {pct:.2}%",
             if !heading.is_empty() {
@@ -313,9 +316,8 @@ fn ScopeChartTip(
                                 class: "analytics-tip-swatch",
                                 style: "--dot-color: {s.color}",
                             }
-                            "{s.label}"
-                        }
-                        span { class: "analytics-tip-value", {format_metric(v, s.prefix, s.suffix)} }
+                            { t_key(s.label_key) }
+                        }                        span { class: "analytics-tip-value", {format_metric(v, s.prefix, s.suffix)} }
                     }
                 }
             }
@@ -342,14 +344,13 @@ impl Trend {
 
 #[component]
 fn MetricCard(
-    label: &'static str,
+    #[props(into)] label: String,
     value: &'static str,
-    delta: &'static str,
+    #[props(into)] delta: String,
     trend: Trend,
     #[props(default = "#38bdf8")] color: &'static str,
     points: &'static [f32],
-) -> Element {
-    rsx! {
+) -> Element {    rsx! {
         div { class: "analytics-metric",
             p { class: "analytics-metric-label", "{label}" }
             div { class: "analytics-metric-value-row",
@@ -363,12 +364,11 @@ fn MetricCard(
 
 #[component]
 fn DrillInRow(
-    title: &'static str,
-    meta: &'static str,
-    trailing: &'static str,
+    #[props(into)] title: String,
+    #[props(into)] meta: String,
+    #[props(into)] trailing: String,
     to: Route,
-) -> Element {
-    let navigator = use_navigator();
+) -> Element {    let navigator = use_navigator();
     let dest = to;
 
     rsx! {
@@ -402,15 +402,22 @@ const CSAT_SERIES: &[f32] = &[
     90., 91., 89., 92., 93., 91., 94., 93., 95., 94., 93., 95., 94., 94.,
 ];
 
-const OVERVIEW_DAYS: &[&str] = &["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
+const OVERVIEW_DAYS: &[&str] = &[
+    "analytics-weekday-mon",
+    "analytics-weekday-tue",
+    "analytics-weekday-wed",
+    "analytics-weekday-thu",
+    "analytics-weekday-fri",
+    "analytics-weekday-sat",
+    "analytics-weekday-sun",
+];
 const OVERVIEW_VISITORS_WEEK: &[f32] = &[690., 810., 845., 790., 860., 902., 842.];
 const OVERVIEW_PLAYERS_WEEK: &[f32] = &[198., 245., 260., 232., 268., 275., 254.];
 const OVERVIEW_REVENUE_WEEK: &[f32] = &[88., 95., 101., 97., 108., 104., 112.];
 
 const OVERVIEW_COMPOSITE: &[ChartSeries] = &[
     ChartSeries {
-        label: "Visitors",
+        label_key: "analytics-metric-visitors",
         color: "#38bdf8",
         values: OVERVIEW_VISITORS_WEEK,
         fill: true,
@@ -418,7 +425,7 @@ const OVERVIEW_COMPOSITE: &[ChartSeries] = &[
         suffix: "",
     },
     ChartSeries {
-        label: "Players",
+        label_key: "analytics-metric-players",
         color: "#5eead4",
         values: OVERVIEW_PLAYERS_WEEK,
         fill: true,
@@ -426,7 +433,7 @@ const OVERVIEW_COMPOSITE: &[ChartSeries] = &[
         suffix: "",
     },
     ChartSeries {
-        label: "Revenue",
+        label_key: "analytics-metric-revenue",
         color: "#fbbf24",
         values: OVERVIEW_REVENUE_WEEK,
         fill: false,
@@ -435,34 +442,44 @@ const OVERVIEW_COMPOSITE: &[ChartSeries] = &[
     },
 ];
 
-const CHANNELS: &[(&str, f32, &str, Route)] = &[
-    ("Website", 82.0, "6,104 users", Route::AnalyticsWebsite {}),
-    (
-        "Community",
-        64.0,
-        "890 active members",
-        Route::AnalyticsCommunity {},
-    ),
-    (
-        "Gaming",
-        91.0,
-        "412 peak players",
-        Route::AnalyticsGaming {},
-    ),
-];
+struct ChannelRowData {
+    name_key: &'static str,
+    meta_key: &'static str,
+    value: f32,
+    route: Route,
+}
 
+const CHANNELS: &[ChannelRowData] = &[
+    ChannelRowData {
+        name_key: "analytics-channel-website",
+        meta_key: "analytics-channel-website-meta",
+        value: 82.0,
+        route: Route::AnalyticsWebsite {},
+    },
+    ChannelRowData {
+        name_key: "analytics-channel-community",
+        meta_key: "analytics-channel-community-meta",
+        value: 64.0,
+        route: Route::AnalyticsCommunity {},
+    },
+    ChannelRowData {
+        name_key: "analytics-channel-gaming",
+        meta_key: "analytics-channel-gaming-meta",
+        value: 91.0,
+        route: Route::AnalyticsGaming {},
+    },
+];
 #[component]
 pub fn AnalyticsOverview() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
 
     rsx! {
         div { class: "analytics-console-masthead",
             div { class: "min-w-0",
-                p { class: "analytics-console-eyebrow", "Analytics" }
-                h1 { class: "analytics-console-title", "8,420 visitors this week" }
-                p { class: "analytics-console-sub",
-                    "£1,094 revenue · 3.8% conversion · 412 peak players"
-                }
+                p { class: "analytics-console-eyebrow", { t!("analytics-eyebrow") } }
+                h1 { class: "analytics-console-title", { t!("analytics-overview-title") } }
+                p { class: "analytics-console-sub", { t!("analytics-overview-sub") } }
             }
             div { class: "flex flex-wrap items-center gap-2",
                 Button {
@@ -471,21 +488,21 @@ pub fn AnalyticsOverview() -> Element {
                     onclick: move |_| {
                         navigator.push(Route::AnalyticsSiteSettings {});
                     },
-                    "Retention & privacy"
+                    { t!("analytics-retention-privacy") }
                 }
                 Button {
                     size: ButtonSize::Sm,
                     onclick: move |_| {
                         navigator.push(Route::AnalyticsWebsite {});
                     },
-                    "Website report"
+                    { t!("analytics-website-report") }
                 }
             }
         }
 
         section { class: "motion-cascade analytics-metrics mb-4",
             MetricCard {
-                label: "Revenue",
+                label: t_key("analytics-metric-revenue"),
                 value: "£1,094",
                 delta: "▲ 8.2%",
                 trend: Trend::Up,
@@ -493,7 +510,7 @@ pub fn AnalyticsOverview() -> Element {
                 points: REVENUE_SERIES,
             }
             MetricCard {
-                label: "Visitors",
+                label: t_key("analytics-metric-visitors"),
                 value: "8,420",
                 delta: "▲ 4.6%",
                 trend: Trend::Up,
@@ -501,7 +518,7 @@ pub fn AnalyticsOverview() -> Element {
                 points: VISITORS_SERIES,
             }
             MetricCard {
-                label: "Conversion",
+                label: t_key("analytics-metric-conversion"),
                 value: "3.8%",
                 delta: "▼ 0.2pt",
                 trend: Trend::Down,
@@ -509,9 +526,9 @@ pub fn AnalyticsOverview() -> Element {
                 points: CONVERSION_SERIES,
             }
             MetricCard {
-                label: "Ticket CSAT",
+                label: t_key("analytics-metric-csat"),
                 value: "94%",
-                delta: "flat",
+                delta: t_key("analytics-delta-flat"),
                 trend: Trend::Flat,
                 color: "#3ecf8e",
                 points: CSAT_SERIES,
@@ -519,28 +536,28 @@ pub fn AnalyticsOverview() -> Element {
         }
 
         div { class: "mb-4",
-            DataPanel { title: "Visitors, players, and revenue — last 7 days",
+            DataPanel { title: t_key("analytics-chart-composite-title"),
                 div { class: "analytics-chart-legend",
                     span { class: "analytics-chart-legend-item",
                         span {
                             class: "analytics-chart-legend-dot",
                             style: "--dot-color: #38bdf8;",
                         }
-                        "Visitors"
+                        { t!("analytics-metric-visitors") }
                     }
                     span { class: "analytics-chart-legend-item",
                         span {
                             class: "analytics-chart-legend-dot",
                             style: "--dot-color: #5eead4;",
                         }
-                        "Players"
+                        { t!("analytics-metric-players") }
                     }
                     span { class: "analytics-chart-legend-item",
                         span {
                             class: "analytics-chart-legend-dot",
                             style: "--dot-color: #fbbf24;",
                         }
-                        "Revenue"
+                        { t!("analytics-metric-revenue") }
                     }
                 }
                 ScopeChart {
@@ -551,61 +568,67 @@ pub fn AnalyticsOverview() -> Element {
                 }
                 div { class: "analytics-chart-axis",
                     for day in OVERVIEW_DAYS.iter() {
-                        span { "{day}" }
+                        span { { t_key(day) } }
                     }
                 }
             }
         }
 
         div { class: "motion-cascade grid gap-4 lg:grid-cols-2",
-            DataPanel { title: "Channels",
-                for (name, value, meta, to) in CHANNELS.iter().cloned() {
+            DataPanel { title: t_key("analytics-panel-channels"),
+                for channel in CHANNELS.iter() {
                     ChannelRow {
-                        name,
-                        value,
-                        meta,
-                        to,
+                        name_key: channel.name_key,
+                        meta_key: channel.meta_key,
+                        value: channel.value,
+                        to: channel.route.clone(),
                     }
                 }
             }
-            DataPanel { title: "Reports",
+            DataPanel { title: t_key("analytics-panel-reports"),
                 DrillInRow {
-                    title: "Website",
-                    meta: "Traffic, sources, and pages",
-                    trailing: "Open",
+                    title: t_key("analytics-channel-website"),
+                    meta: t_key("analytics-report-website-meta"),
+                    trailing: t_key("analytics-open"),
                     to: Route::AnalyticsWebsite {},
                 }
                 DrillInRow {
-                    title: "Community",
-                    meta: "Registrations and engagement",
-                    trailing: "Open",
+                    title: t_key("analytics-channel-community"),
+                    meta: t_key("analytics-report-community-meta"),
+                    trailing: t_key("analytics-open"),
                     to: Route::AnalyticsCommunity {},
                 }
                 DrillInRow {
-                    title: "Gaming",
-                    meta: "Player counts and server health",
-                    trailing: "Open",
+                    title: t_key("analytics-channel-gaming"),
+                    meta: t_key("analytics-report-gaming-meta"),
+                    trailing: t_key("analytics-open"),
                     to: Route::AnalyticsGaming {},
                 }
                 DrillInRow {
-                    title: "Retention & privacy",
-                    meta: "Configure data collection",
-                    trailing: "Open",
+                    title: t_key("analytics-retention-privacy"),
+                    meta: t_key("analytics-report-retention-meta"),
+                    trailing: t_key("analytics-open"),
                     to: Route::AnalyticsSiteSettings {},
                 }
             }
         }
     }
 }
-
 #[component]
-fn ChannelRow(name: &'static str, value: f32, meta: &'static str, to: Route) -> Element {
+fn ChannelRow(
+    name_key: &'static str,
+    meta_key: &'static str,
+    value: f32,
+    to: Route,
+) -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let dest = to;
     let pct = value.clamp(0.0, 100.0);
+    let name = t_key(name_key);
+    let meta = t_key(meta_key);
 
-    rsx! {
-        button {
+    rsx! {        button {
             r#type: "button",
             class: "analytics-row is-clickable",
             onclick: move |_| {
@@ -624,9 +647,9 @@ fn ChannelRow(name: &'static str, value: f32, meta: &'static str, to: Route) -> 
 }
 
 const WEEKLY_TRAFFIC: &[f32] = &[420., 460., 402., 512., 470., 605., 560.];
-const TRAFFIC_DAYS: &[&str] = &["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const TRAFFIC_DAYS: &[&str] = OVERVIEW_DAYS;
 const WEBSITE_TRAFFIC_SERIES: &[ChartSeries] = &[ChartSeries {
-    label: "Visits",
+    label_key: "analytics-metric-visits",
     color: "#38bdf8",
     values: WEEKLY_TRAFFIC,
     fill: true,
@@ -634,68 +657,96 @@ const WEBSITE_TRAFFIC_SERIES: &[ChartSeries] = &[ChartSeries {
     suffix: "",
 }];
 
-const TRAFFIC_SOURCES: &[(&str, &str, f32)] = &[
-    ("Direct", "Returning players", 38.0),
-    ("Discord", "Invite & announcements", 27.0),
-    ("Search", "Organic", 18.0),
-    ("Vote sites", "Reward campaigns", 17.0),
+struct TrafficSource {
+    name_key: &'static str,
+    meta_key: &'static str,
+    share: f32,
+}
+
+const TRAFFIC_SOURCES: &[TrafficSource] = &[
+    TrafficSource {
+        name_key: "analytics-source-direct",
+        meta_key: "analytics-source-direct-meta",
+        share: 38.0,
+    },
+    TrafficSource {
+        name_key: "analytics-source-discord",
+        meta_key: "analytics-source-discord-meta",
+        share: 27.0,
+    },
+    TrafficSource {
+        name_key: "analytics-source-search",
+        meta_key: "analytics-source-search-meta",
+        share: 18.0,
+    },
+    TrafficSource {
+        name_key: "analytics-source-vote-sites",
+        meta_key: "analytics-source-vote-sites-meta",
+        share: 17.0,
+    },
 ];
 
-const POPULAR_PAGES: &[(&str, &str, &[f32])] = &[
-    (
-        "/store",
-        "4.2k views this week",
-        &[520., 560., 540., 610., 640., 700., 720.],
-    ),
-    (
-        "/help/vote-rewards",
-        "2.1k views this week",
-        &[300., 280., 320., 310., 350., 330., 360.],
-    ),
-    (
-        "/leaderboards",
-        "1.4k views this week",
-        &[180., 200., 190., 210., 205., 240., 250.],
-    ),
-];
+struct PopularPage {
+    path: &'static str,
+    meta_key: &'static str,
+    series: &'static [f32],
+}
 
+const POPULAR_PAGES: &[PopularPage] = &[
+    PopularPage {
+        path: "/store",
+        meta_key: "analytics-page-store-meta",
+        series: &[520., 560., 540., 610., 640., 700., 720.],
+    },
+    PopularPage {
+        path: "/help/vote-rewards",
+        meta_key: "analytics-page-vote-rewards-meta",
+        series: &[300., 280., 320., 310., 350., 330., 360.],
+    },
+    PopularPage {
+        path: "/leaderboards",
+        meta_key: "analytics-page-leaderboards-meta",
+        series: &[180., 200., 190., 210., 205., 240., 250.],
+    },
+];
 #[component]
 pub fn AnalyticsWebsite() -> Element {
+    let _lang = i18n();
     rsx! {
         PageHeader {
-            title: "Website analytics",
-            subtitle: "Users, page views, traffic sources, and popular pages.",
+            title: t_key("analytics-website-title"),
+            subtitle: t_key("analytics-website-subtitle"),
         }
 
         section { class: "motion-cascade analytics-metrics mb-4",
             MetricCard {
-                label: "Users",
+                label: t_key("analytics-metric-users"),
                 value: "6,104",
-                delta: "▲ 5.1%",
+                delta: String::from("▲ 5.1%"),
                 trend: Trend::Up,
                 color: "#38bdf8",
                 points: VISITORS_SERIES,
             }
             MetricCard {
-                label: "Page views",
+                label: t_key("analytics-metric-page-views"),
                 value: "28.4k",
-                delta: "▲ 2.4%",
+                delta: String::from("▲ 2.4%"),
                 trend: Trend::Up,
                 color: "#87d1fe",
                 points: PLAYERS_SERIES,
             }
             MetricCard {
-                label: "Bounce rate",
+                label: t_key("analytics-metric-bounce-rate"),
                 value: "41%",
-                delta: "▲ 1.1pt",
+                delta: String::from("▲ 1.1pt"),
                 trend: Trend::Down,
                 color: "#f0a35e",
                 points: CONVERSION_SERIES,
             }
             MetricCard {
-                label: "Avg. session",
+                label: t_key("analytics-metric-avg-session"),
                 value: "3m 12s",
-                delta: "flat",
+                delta: t_key("analytics-delta-flat"),
                 trend: Trend::Flat,
                 color: "#3ecf8e",
                 points: CSAT_SERIES,
@@ -703,7 +754,7 @@ pub fn AnalyticsWebsite() -> Element {
         }
 
         div { class: "motion-cascade grid gap-4 lg:grid-cols-2",
-            DataPanel { title: "Weekly traffic",
+            DataPanel { title: t_key("analytics-panel-weekly-traffic"),
                 ScopeChart {
                     series: WEBSITE_TRAFFIC_SERIES,
                     labels: TRAFFIC_DAYS,
@@ -712,103 +763,92 @@ pub fn AnalyticsWebsite() -> Element {
                 }
                 div { class: "analytics-chart-axis",
                     for day in TRAFFIC_DAYS.iter() {
-                        span { "{day}" }
+                        span { { t_key(day) } }
                     }
                 }
             }
-            DataPanel { title: "Traffic sources",
-                for (name, meta, share) in TRAFFIC_SOURCES.iter().copied() {
+            DataPanel { title: t_key("analytics-panel-traffic-sources"),
+                for source in TRAFFIC_SOURCES.iter() {
                     div { class: "analytics-row",
                         div { class: "analytics-row-main",
-                            p { class: "analytics-row-label", "{name}" }
-                            p { class: "analytics-row-meta", "{meta}" }
+                            p { class: "analytics-row-label", { t_key(source.name_key) } }
+                            p { class: "analytics-row-meta", { t_key(source.meta_key) } }
                             div { class: "analytics-bar-track",
                                 div {
                                     class: "analytics-bar-fill",
-                                    style: "width: {share}%;",
+                                    style: "width: {source.share}%;",
                                 }
                             }
                         }
-                        span { class: "analytics-row-value", "{share}%" }
+                        span { class: "analytics-row-value", "{source.share}%" }
                     }
                 }
             }
         }
 
         div { class: "mt-4",
-            DataPanel { title: "Popular pages",
-                for (path, meta, series) in POPULAR_PAGES.iter().copied() {
+            DataPanel { title: t_key("analytics-panel-popular-pages"),
+                for page in POPULAR_PAGES.iter() {
                     div { class: "analytics-row",
                         div { class: "analytics-row-main",
-                            p { class: "analytics-row-label is-path", "{path}" }
-                            p { class: "analytics-row-meta", "{meta}" }
+                            p { class: "analytics-row-label is-path", "{page.path}" }
+                            p { class: "analytics-row-meta", { t_key(page.meta_key) } }
                         }
-                        {sparkline_svg(series, "#38bdf8", 26.0, "analytics-row-spark")}
+                        {sparkline_svg(page.series, "#38bdf8", 26.0, "analytics-row-spark")}
                     }
                 }
             }
         }
     }
 }
-
 const CHANNEL_ENGAGEMENT: &[(&str, &str, f32, &[f32])] = &[
+    ("analytics-channel-forum", "#5b9dff", 78.0, &[40., 65., 50., 80., 60., 90., 70.]),
     (
-        "Forum",
-        "#5b9dff",
-        78.0,
-        &[40., 65., 50., 80., 60., 90., 70.],
-    ),
-    (
-        "Support",
+        "analytics-channel-support",
         "#f0a35e",
         52.0,
         &[55., 45., 60., 50., 40., 58., 52.],
     ),
-    (
-        "Blog",
-        "#f071a5",
-        61.0,
-        &[30., 42., 38., 55., 48., 60., 61.],
-    ),
+    ("analytics-channel-blog", "#f071a5", 61.0, &[30., 42., 38., 55., 48., 60., 61.]),
 ];
-
 #[component]
 pub fn AnalyticsCommunity() -> Element {
+    let _lang = i18n();
     rsx! {
         PageHeader {
-            title: "Community analytics",
-            subtitle: "Forum activity, registrations, and cross-channel engagement.",
+            title: t_key("analytics-community-title"),
+            subtitle: t_key("analytics-community-subtitle"),
         }
 
         section { class: "motion-cascade analytics-metrics mb-4",
             MetricCard {
-                label: "Registrations",
+                label: t_key("analytics-metric-registrations"),
                 value: "146",
-                delta: "▲ 12",
+                delta: String::from("▲ 12"),
                 trend: Trend::Up,
                 color: "#3ecf8e",
                 points: PLAYERS_SERIES,
             }
             MetricCard {
-                label: "Forum posts",
+                label: t_key("analytics-metric-forum-posts"),
                 value: "512",
-                delta: "▲ 38",
+                delta: String::from("▲ 38"),
                 trend: Trend::Up,
                 color: "#f071a5",
                 points: VISITORS_SERIES,
             }
             MetricCard {
-                label: "Active members",
+                label: t_key("analytics-metric-active-members"),
                 value: "890",
-                delta: "▲ 3.2%",
+                delta: String::from("▲ 3.2%"),
                 trend: Trend::Up,
                 color: "#5b9dff",
                 points: REVENUE_SERIES,
             }
             MetricCard {
-                label: "Engagement",
+                label: t_key("analytics-metric-engagement"),
                 value: "64%",
-                delta: "flat",
+                delta: t_key("analytics-delta-flat"),
                 trend: Trend::Flat,
                 color: "#87d1fe",
                 points: CSAT_SERIES,
@@ -816,12 +856,12 @@ pub fn AnalyticsCommunity() -> Element {
         }
 
         div { class: "motion-cascade grid gap-4 lg:grid-cols-2",
-            DataPanel { title: "Engagement by channel",
-                for (label, color, value, series) in CHANNEL_ENGAGEMENT.iter().copied() {
+            DataPanel { title: t_key("analytics-panel-engagement-by-channel"),
+                for (label_key, color, value, series) in CHANNEL_ENGAGEMENT.iter().copied() {
                     div { class: "analytics-row",
                         div { class: "analytics-row-main",
-                            p { class: "analytics-row-label", "{label}" }
-                            p { class: "analytics-row-meta", "Last 7 days" }
+                            p { class: "analytics-row-label", { t_key(label_key) } }
+                            p { class: "analytics-row-meta", { t!("analytics-last-7-days") } }
                             div { class: "analytics-bar-track",
                                 div {
                                     class: "analytics-bar-fill",
@@ -834,39 +874,39 @@ pub fn AnalyticsCommunity() -> Element {
                     }
                 }
             }
-            DataPanel { title: "This week",
+            DataPanel { title: t_key("analytics-panel-this-week"),
                 RowItem {
-                    title: "New forum threads",
-                    meta: "Survival and Suggestions leading",
-                    trailing: "+38",
+                    title: t_key("analytics-week-new-threads"),
+                    meta: t_key("analytics-week-new-threads-meta"),
+                    trailing: String::from("+38"),
                 }
                 RowItem {
-                    title: "Verified emails",
-                    meta: "Registration funnel",
-                    trailing: "91%",
+                    title: t_key("analytics-week-verified-accounts"),
+                    meta: t_key("analytics-week-verified-accounts-meta"),
+                    trailing: String::from("91%"),
                 }
                 RowItem {
-                    title: "Returning visitors",
-                    meta: "7-day window",
-                    trailing: "54%",
+                    title: t_key("analytics-week-returning-visitors"),
+                    meta: t_key("analytics-week-returning-visitors-meta"),
+                    trailing: String::from("54%"),
                 }
                 RowItem {
-                    title: "Application starts",
-                    meta: "Staff recruitment",
-                    trailing: "11",
+                    title: t_key("analytics-week-application-starts"),
+                    meta: t_key("analytics-week-application-starts-meta"),
+                    trailing: String::from("11"),
                 }
             }
         }
     }
 }
-
 struct ServerTelemetry {
     name: &'static str,
-    status: &'static str,
+    status_key: &'static str,
     status_tone: &'static str,
-    online: &'static str,
+    online_avg: Option<u32>,
+    online_key: Option<&'static str>,
     uptime: &'static str,
-    load: &'static str,
+    load_key: &'static str,
     pulse: &'static [f32],
     color: &'static str,
 }
@@ -874,83 +914,87 @@ struct ServerTelemetry {
 const SERVERS: &[ServerTelemetry] = &[
     ServerTelemetry {
         name: "Survival",
-        status: "Healthy",
+        status_key: "analytics-server-status-healthy",
         status_tone: "#3ecf8e",
-        online: "186 avg",
+        online_avg: Some(186),
+        online_key: None,
         uptime: "99.9%",
-        load: "Economy climbing",
+        load_key: "analytics-server-survival-load",
         pulse: &[10., 12., 40., 12., 10., 55., 14., 10., 38., 12.],
         color: "#3ecf8e",
     },
     ServerTelemetry {
         name: "Skyblock",
-        status: "Healthy",
+        status_key: "analytics-server-status-healthy",
         status_tone: "#3ecf8e",
-        online: "94 avg",
+        online_avg: Some(94),
+        online_key: None,
         uptime: "99.7%",
-        load: "Vote claims up",
+        load_key: "analytics-server-skyblock-load",
         pulse: &[12., 42., 12., 10., 48., 12., 10., 44., 12., 10.],
         color: "#5eead4",
     },
     ServerTelemetry {
         name: "Creative",
-        status: "Steady",
+        status_key: "analytics-server-status-steady",
         status_tone: "#38bdf8",
-        online: "41 avg",
+        online_avg: Some(41),
+        online_key: None,
         uptime: "99.4%",
-        load: "Builder spike weekends",
+        load_key: "analytics-server-creative-load",
         pulse: &[8., 10., 30., 10., 8., 32., 10., 8., 28., 10.],
         color: "#38bdf8",
     },
     ServerTelemetry {
         name: "Lobby",
-        status: "OK",
+        status_key: "analytics-server-status-ok",
         status_tone: "#fbbf24",
-        online: "Queue normal",
+        online_avg: None,
+        online_key: Some("analytics-queue-normal"),
         uptime: "99.8%",
-        load: "No incidents",
+        load_key: "analytics-server-lobby-load",
         pulse: &[14., 16., 18., 15., 17., 16., 18., 15., 17., 16.],
         color: "#fbbf24",
     },
 ];
-
 #[component]
 pub fn AnalyticsGaming() -> Element {
+    let _lang = i18n();
     rsx! {
         PageHeader {
-            title: "Gaming analytics",
-            subtitle: "Player counts, votes, leaderboards, and server telemetry.",
+            title: t_key("analytics-gaming-title"),
+            subtitle: t_key("analytics-gaming-subtitle"),
         }
 
         section { class: "motion-cascade analytics-metrics mb-4",
             MetricCard {
-                label: "Peak players",
+                label: t_key("analytics-metric-peak-players"),
                 value: "412",
-                delta: "▲ 6.4%",
+                delta: String::from("▲ 6.4%"),
                 trend: Trend::Up,
                 color: "#5eead4",
                 points: PLAYERS_SERIES,
             }
             MetricCard {
-                label: "Votes",
+                label: t_key("analytics-metric-votes"),
                 value: "1,480",
-                delta: "▲ 9.8%",
+                delta: String::from("▲ 9.8%"),
                 trend: Trend::Up,
                 color: "#fbbf24",
                 points: REVENUE_SERIES,
             }
             MetricCard {
-                label: "Leaderboard hits",
+                label: t_key("analytics-metric-leaderboard-hits"),
                 value: "9.2k",
-                delta: "▲ 3.0%",
+                delta: String::from("▲ 3.0%"),
                 trend: Trend::Up,
                 color: "#38bdf8",
                 points: VISITORS_SERIES,
             }
             MetricCard {
-                label: "Server uptime",
+                label: t_key("analytics-metric-server-uptime"),
                 value: "99.8%",
-                delta: "flat",
+                delta: t_key("analytics-delta-flat"),
                 trend: Trend::Flat,
                 color: "#3ecf8e",
                 points: CSAT_SERIES,
@@ -959,104 +1003,113 @@ pub fn AnalyticsGaming() -> Element {
 
         section { class: "analytics-panel",
             div { class: "analytics-panel-head",
-                h2 { class: "text-sm font-semibold text-text", "Servers" }
-                span { class: "text-xs text-text-muted", "Averages over the last 7 days" }
+                h2 { class: "text-sm font-semibold text-text", { t!("analytics-panel-servers") } }
+                span { class: "text-xs text-text-muted", { t!("analytics-servers-meta") } }
             }
             div { class: "motion-cascade motion-cascade-tight analytics-table",
                 div { class: "analytics-table-row is-head",
-                    span { "Server" }
-                    span { "Status" }
-                    span { "Online" }
-                    span { "Uptime" }
-                    span { "Trend" }
-                    span { "Note" }
+                    span { { t!("analytics-col-server") } }
+                    span { { t!("analytics-col-status") } }
+                    span { { t!("analytics-col-online") } }
+                    span { { t!("analytics-col-uptime") } }
+                    span { { t!("analytics-col-trend") } }
+                    span { { t!("analytics-col-note") } }
                 }
                 for server in SERVERS.iter() {
-                    div { key: "{server.name}", class: "analytics-table-row",
-                        span { class: "analytics-table-name", "{server.name}" }
-                        span {
-                            StatusChip {
-                                label: server.status,
-                                tone: server.status_tone,
+                    {
+                        let online_label = if let Some(count) = server.online_avg {
+                            t!("analytics-online-avg", count: count)
+                        } else {
+                            t_key(server.online_key.unwrap_or("analytics-queue-normal"))
+                        };
+                        rsx! {
+                            div { key: "{server.name}", class: "analytics-table-row",
+                                span { class: "analytics-table-name", "{server.name}" }
+                                span {
+                                    StatusChip {
+                                        label: t_key(server.status_key),
+                                        tone: server.status_tone,
+                                    }
+                                }
+                                span { "{online_label}" }
+                                span { class: "tabular-nums", "{server.uptime}" }
+                                span { {sparkline_svg(server.pulse, server.color, 24.0, "analytics-row-spark")} }
+                                span { class: "text-text-muted", { t_key(server.load_key) } }
                             }
                         }
-                        span { "{server.online}" }
-                        span { class: "tabular-nums", "{server.uptime}" }
-                        span { {sparkline_svg(server.pulse, server.color, 24.0, "analytics-row-spark")} }
-                        span { class: "text-text-muted", "{server.load}" }
                     }
                 }
             }
         }
     }
 }
-
 #[component]
 pub fn AnalyticsSiteSettings() -> Element {
+    let _lang = i18n();
     let retention_value = use_signal(|| "90".to_string());
     let retention_days: u32 = retention_value().parse().unwrap_or(90);
 
     let options = vec![
-        SelectOption::new("30", "30 days"),
-        SelectOption::new("90", "90 days"),
-        SelectOption::new("180", "180 days"),
-        SelectOption::new("365", "365 days"),
+        SelectOption::new("30", t_key("analytics-retention-30")),
+        SelectOption::new("90", t_key("analytics-retention-90")),
+        SelectOption::new("180", t_key("analytics-retention-180")),
+        SelectOption::new("365", t_key("analytics-retention-365")),
     ];
 
     rsx! {
-        FeatureSettingsChrome { subtitle: "Control how long raw analytics events are kept and how visitors are tracked.",
-            DataPanel { title: "Data retention window",
+        FeatureSettingsChrome { subtitle: t_key("analytics-settings-subtitle"),
+            DataPanel { title: t_key("analytics-settings-retention-title"),
                 p { class: "py-3 text-sm text-text-muted",
-                    "Raw event data older than the window below is automatically purged. Aggregated readouts are kept indefinitely."
+                    { t!("analytics-settings-retention-intro") }
                 }
-                SettingsControl { label: "Retention window",
+                SettingsControl { label: t_key("analytics-settings-retention-label"),
                     SignalSelect {
                         value: retention_value,
                         options,
-                        placeholder: "Retention window".to_string(),
+                        placeholder: t_key("analytics-settings-retention-label"),
                     }
                 }
                 p { class: "pt-3 text-xs text-text-muted",
-                    "Currently retaining raw events for {retention_days} days · applies to website, community, and gaming data."
+                    { t!("analytics-settings-retention-foot", days: retention_days) }
                 }
             }
-            DataPanel { title: "Collection & privacy",
+            DataPanel { title: t_key("analytics-settings-privacy-title"),
                 SettingRow {
-                    title: "Anonymize IP addresses",
-                    description: "Truncate the last octet before any event is stored.",
+                    title: t_key("analytics-settings-anonymize-ip-title"),
+                    description: t_key("analytics-settings-anonymize-ip-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Respect Do Not Track",
-                    description: "Skip collection entirely for visitors sending DNT signals.",
+                    title: t_key("analytics-settings-dnt-title"),
+                    description: t_key("analytics-settings-dnt-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Cookieless session tracking",
-                    description: "Use a rotating server-side session key instead of cookies.",
+                    title: t_key("analytics-settings-cookieless-title"),
+                    description: t_key("analytics-settings-cookieless-desc"),
                     enabled: false,
                 }
                 SettingRow {
-                    title: "Include in GDPR exports",
-                    description: "Bundle analytics events with player data export requests.",
+                    title: t_key("analytics-settings-gdpr-title"),
+                    description: t_key("analytics-settings-gdpr-desc"),
                     enabled: true,
                 }
             }
-            DataPanel { title: "Recent data requests",
+            DataPanel { title: t_key("analytics-settings-requests-title"),
                 RowItem {
-                    title: "Export request · NovaCraft",
-                    meta: "GDPR data export · Fulfilled",
-                    trailing: "2d ago",
+                    title: t!("analytics-request-export", name: "NovaCraft"),
+                    meta: t_key("analytics-request-export-meta"),
+                    trailing: t_key("analytics-request-ago-2d"),
                 }
                 RowItem {
-                    title: "Deletion request · QuietLeaf",
-                    meta: "Right to erasure · Fulfilled",
-                    trailing: "5d ago",
+                    title: t!("analytics-request-deletion", name: "QuietLeaf"),
+                    meta: t_key("analytics-request-deletion-meta"),
+                    trailing: t_key("analytics-request-ago-5d"),
                 }
                 RowItem {
-                    title: "Retention sweep",
-                    meta: "Purged events older than 90 days",
-                    trailing: "Nightly",
+                    title: t_key("analytics-request-retention-sweep"),
+                    meta: t_key("analytics-request-retention-sweep-meta"),
+                    trailing: t_key("analytics-request-nightly"),
                 }
             }
         }

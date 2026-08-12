@@ -151,7 +151,7 @@ pub fn Button(
     #[props(default)] size: ButtonSize,
     #[props(default = "")] class: &'static str,
     #[props(default = "")] style: &'static str,
-    #[props(default = "")] tip: &'static str,
+    #[props(default = "", into)] tip: String,
     #[props(default = "")] aria_label: &'static str,
     #[props(default)] disabled: bool,
     #[props(default)] full_width: bool,
@@ -169,7 +169,7 @@ pub fn Button(
     let resolved_aria = if !aria_label.is_empty() {
         aria_label
     } else if has_tip {
-        tip
+        tip.as_str()
     } else {
         ""
     };
@@ -180,7 +180,7 @@ pub fn Button(
             class: "{class_name}",
             style: if style.is_empty() { "" } else { style },
             disabled,
-            title: if has_tip { tip } else { "" },
+            title: if has_tip { "{tip}" } else { "" },
             "aria-label": if resolved_aria.is_empty() { "" } else { resolved_aria },
             onclick: move |evt| onclick.call(evt),
             {children}

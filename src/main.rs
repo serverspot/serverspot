@@ -1,5 +1,6 @@
 mod components;
 mod gravatar;
+mod i18n;
 mod nav;
 mod router;
 mod server_funcs;
@@ -9,6 +10,7 @@ mod user;
 mod backend;
 
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
 
 use components::community::{
     placeholder_applications, placeholder_leaderboard_boards, placeholder_vote_rewards,
@@ -20,6 +22,8 @@ use components::store::{placeholder_categories, placeholder_coupons, placeholder
 use components::support::placeholder_articles;
 use router::Route;
 use user::placeholder_current_user;
+
+use crate::i18n::{apply_user_locale, init_i18n_config};
 
 pub const FAVICON: Asset = asset!("/assets/favicon.svg");
 pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
@@ -35,8 +39,14 @@ fn main() {
 
 #[component]
 fn App() -> Element {
+    use_init_i18n(|| init_i18n_config());
     let current_user = use_signal(placeholder_current_user);
     use_context_provider(|| current_user);
+
+    use_effect(move || {
+        apply_user_locale(&current_user.read().locale);
+    });
+
     let boards = use_signal(placeholder_boards);
     use_context_provider(|| boards);
     let threads = use_signal(placeholder_threads);

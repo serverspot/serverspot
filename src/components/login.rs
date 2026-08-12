@@ -1,4 +1,6 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::brand::BrandMark;
 use crate::components::page::PoweredByFooter;
@@ -7,6 +9,7 @@ use crate::router::Route;
 
 #[component]
 pub fn Login() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let mut show_password = use_signal(|| false);
 
@@ -19,32 +22,40 @@ pub fn Login() -> Element {
 
                 header { class: "login-hero",
                     BrandMark { class: "login-mark" }
-                    h1 { class: "login-brand-name", "ServerSpot" }
-                    p { class: "login-hero-line", "Admin panel" }
+                    h1 { class: "login-brand-name", { t!("brand-name") } }
+                    p { class: "login-hero-line", { t!("login-admin-panel") } }
                 }
 
                 form {
                     class: "login-form",
                     onsubmit: move |evt| {
                         evt.prevent_default();
-                        navigator.push(Route::Dashboard {});
+                        navigator.push(Route::LoginOtp {});
                     },
 
                     div { class: "login-field",
-                        label { class: "login-label", r#for: "login-email", "Email" }
+                        label { class: "login-label", r#for: "login-username", { t!("login-field-username") } }
                         input {
-                            id: "login-email",
-                            r#type: "email",
-                            autocomplete: "email",
+                            id: "login-username",
+                            r#type: "text",
+                            autocomplete: "username",
                             class: "login-input",
-                            placeholder: "you@novacraft.gg",
+                            placeholder: "admin",
+                            spellcheck: "false",
                         }
                     }
 
                     div { class: "login-field",
                         div { class: "login-field-top",
-                            label { class: "login-label", r#for: "login-password", "Password" }
-                            button { r#type: "button", class: "login-link", "Forgot?" }
+                            label { class: "login-label", r#for: "login-password", { t!("login-field-password") } }
+                            button {
+                                r#type: "button",
+                                class: "login-link",
+                                onclick: move |_| {
+                                    navigator.push(Route::LoginReset {});
+                                },
+                                { t!("login-forgot-password") }
+                            }
                         }
                         div { class: "login-password",
                             input {
@@ -57,12 +68,12 @@ pub fn Login() -> Element {
                             button {
                                 r#type: "button",
                                 class: "login-reveal",
-                                "aria-label": if show_password() { "Hide password" } else { "Show password" },
+                                "aria-label": if show_password() { t!("login-password-hide-aria") } else { t!("login-password-show-aria") },
                                 onclick: move |_| show_password.set(!show_password()),
                                 if show_password() {
-                                    "Hide"
+                                    { t!("login-password-hide") }
                                 } else {
-                                    "Show"
+                                    { t!("login-password-show") }
                                 }
                             }
                         }
@@ -70,26 +81,315 @@ pub fn Login() -> Element {
 
                     label { class: "login-remember",
                         input { r#type: "checkbox", class: "login-checkbox" }
-                        span { "Keep me signed in" }
+                        span { { t!("login-remember-me") } }
                     }
 
                     Button {
                         full_width: true,
                         onclick: move |_| {
-                            navigator.push(Route::Dashboard {});
+                            navigator.push(Route::LoginOtp {});
                         },
-                        "Sign in"
+                        { t!("login-sign-in") }
                     }
 
-                    div { class: "login-divider", "or" }
+                    div { class: "login-divider", { t!("login-divider-or") } }
 
                     button { r#type: "button", class: "login-oauth",
                         DiscordMark {}
-                        "Continue with Discord"
+                        { t!("login-oauth-discord") }
                     }
                 }
 
-                p { class: "login-foot", "Need access? Ask your server owner for an invite." }
+                p { class: "login-foot", { t!("login-footer-need-access") } }
+            }
+
+            PoweredByFooter {}
+        }
+    }
+}
+
+#[component]
+pub fn LoginOtp() -> Element {
+    let _lang = i18n();
+    let navigator = use_navigator();
+    let mut code = use_signal(String::new);
+    let ready = use_memo(move || code.read().len() == 6);
+
+    rsx! {
+        div { class: "login-page",
+            div { class: "login-atmosphere", "aria-hidden": "true" }
+            div { class: "login-grid", "aria-hidden": "true" }
+
+            div { class: "login-stage",
+                header { class: "login-hero",
+                    BrandMark { class: "login-mark" }
+                    h1 { class: "login-brand-name", { t!("login-otp-title") } }
+                    p { class: "login-hero-line", { t!("login-otp-subtitle") } }
+                }
+
+                form {
+                    class: "login-form",
+                    onsubmit: move |evt| {
+                        evt.prevent_default();
+                        if code.read().len() == 6 {
+                            navigator.push(Route::Dashboard {});
+                        }
+                    },
+
+                    p { class: "login-otp-copy",
+                        { t!("login-otp-instructions") }
+                    }
+
+                    label { class: "login-otp-field", r#for: "login-otp",
+                        span { class: "sr-only", { t!("login-otp-field-aria") } }
+                        div { class: "login-otp-cells", "aria-hidden": "true",
+                            for i in 0..6 {
+                                {
+                                    let ch = code.read().chars().nth(i);
+                                    let filled = ch.is_some();
+                                    let active = code.read().len() == i;
+                                    rsx! {
+                                        span {
+                                            class: if filled {
+                                                "login-otp-cell is-filled"
+                                            } else if active {
+                                                "login-otp-cell is-active"
+                                            } else {
+                                                "login-otp-cell"
+                                            },
+                                            if let Some(digit) = ch {
+                                                "{digit}"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        input {
+                            id: "login-otp",
+                            class: "login-otp-input",
+                            r#type: "text",
+                            inputmode: "numeric",
+                            autocomplete: "one-time-code",
+                            maxlength: "6",
+                            spellcheck: "false",
+                            autofocus: true,
+                            value: "{code}",
+                            oninput: move |evt| {
+                                let digits: String = evt
+                                    .value()
+                                    .chars()
+                                    .filter(|c| c.is_ascii_digit())
+                                    .take(6)
+                                    .collect();
+                                let done = digits.len() == 6;
+                                code.set(digits);
+                                if done {
+                                    navigator.push(Route::Dashboard {});
+                                }
+                            },
+                        }
+                    }
+
+                    Button {
+                        full_width: true,
+                        disabled: !ready(),
+                        onclick: move |_| {
+                            if code.read().len() == 6 {
+                                navigator.push(Route::Dashboard {});
+                            }
+                        },
+                        { t!("login-otp-verify") }
+                    }
+
+                    div { class: "login-otp-actions",
+                        button { r#type: "button", class: "login-link", { t!("login-otp-resend") } }
+                        button {
+                            r#type: "button",
+                            class: "login-link",
+                            onclick: move |_| {
+                                navigator.push(Route::Login {});
+                            },
+                            { t!("login-back-to-sign-in") }
+                        }
+                    }
+                }
+
+                p { class: "login-foot", { t!("login-otp-footer") } }
+            }
+
+            PoweredByFooter {}
+        }
+    }
+}
+
+#[component]
+pub fn LoginReset() -> Element {
+    let _lang = i18n();
+    let navigator = use_navigator();
+    let mut username = use_signal(String::new);
+    let mut password = use_signal(String::new);
+    let mut confirm = use_signal(String::new);
+    let mut code = use_signal(String::new);
+    let mut show_password = use_signal(|| false);
+    let ready = use_memo(move || {
+        !username.read().trim().is_empty()
+            && code.read().len() == 6
+            && !password.read().is_empty()
+            && password() == confirm()
+    });
+
+    rsx! {
+        div { class: "login-page",
+            div { class: "login-atmosphere", "aria-hidden": "true" }
+            div { class: "login-grid", "aria-hidden": "true" }
+
+            div { class: "login-stage",
+                header { class: "login-hero",
+                    BrandMark { class: "login-mark" }
+                    h1 { class: "login-brand-name", { t!("login-reset-title") } }
+                    p { class: "login-hero-line", { t!("login-admin-panel") } }
+                }
+
+                form {
+                    class: "login-form",
+                    onsubmit: move |evt| {
+                        evt.prevent_default();
+                        if ready() {
+                            navigator.push(Route::Login {});
+                        }
+                    },
+
+                    p { class: "login-otp-copy",
+                        { t!("login-reset-instructions") }
+                    }
+
+                    div { class: "login-field",
+                        label { class: "login-label", r#for: "reset-username", { t!("login-field-username") } }
+                        input {
+                            id: "reset-username",
+                            r#type: "text",
+                            autocomplete: "username",
+                            class: "login-input",
+                            placeholder: "admin",
+                            spellcheck: "false",
+                            value: "{username}",
+                            oninput: move |evt| username.set(evt.value()),
+                        }
+                    }
+
+                    div { class: "login-field",
+                        span { class: "login-label", { t!("login-reset-field-code") } }
+                        label { class: "login-otp-field", r#for: "reset-otp",
+                            div { class: "login-otp-cells", "aria-hidden": "true",
+                                for i in 0..6 {
+                                    {
+                                        let ch = code.read().chars().nth(i);
+                                        let filled = ch.is_some();
+                                        let active = code.read().len() == i;
+                                        rsx! {
+                                            span {
+                                                class: if filled {
+                                                    "login-otp-cell is-filled"
+                                                } else if active {
+                                                    "login-otp-cell is-active"
+                                                } else {
+                                                    "login-otp-cell"
+                                                },
+                                                if let Some(digit) = ch {
+                                                    "{digit}"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            input {
+                                id: "reset-otp",
+                                class: "login-otp-input",
+                                r#type: "text",
+                                inputmode: "numeric",
+                                autocomplete: "one-time-code",
+                                maxlength: "6",
+                                spellcheck: "false",
+                                value: "{code}",
+                                oninput: move |evt| {
+                                    let digits: String = evt
+                                        .value()
+                                        .chars()
+                                        .filter(|c| c.is_ascii_digit())
+                                        .take(6)
+                                        .collect();
+                                    code.set(digits);
+                                },
+                            }
+                        }
+                    }
+
+                    div { class: "login-field",
+                        label { class: "login-label", r#for: "reset-password", { t!("login-reset-field-new-password") } }
+                        div { class: "login-password",
+                            input {
+                                id: "reset-password",
+                                r#type: if show_password() { "text" } else { "password" },
+                                autocomplete: "new-password",
+                                class: "login-input",
+                                placeholder: "••••••••",
+                                value: "{password}",
+                                oninput: move |evt| password.set(evt.value()),
+                            }
+                            button {
+                                r#type: "button",
+                                class: "login-reveal",
+                                "aria-label": if show_password() { t!("login-password-hide-aria") } else { t!("login-password-show-aria") },
+                                onclick: move |_| show_password.set(!show_password()),
+                                if show_password() {
+                                    { t!("login-password-hide") }
+                                } else {
+                                    { t!("login-password-show") }
+                                }
+                            }
+                        }
+                    }
+
+                    div { class: "login-field",
+                        label { class: "login-label", r#for: "reset-confirm", { t!("login-reset-field-confirm-password") } }
+                        input {
+                            id: "reset-confirm",
+                            r#type: if show_password() { "text" } else { "password" },
+                            autocomplete: "new-password",
+                            class: "login-input",
+                            placeholder: "••••••••",
+                            value: "{confirm}",
+                            oninput: move |evt| confirm.set(evt.value()),
+                        }
+                    }
+
+                    Button {
+                        full_width: true,
+                        disabled: !ready(),
+                        onclick: move |_| {
+                            if ready() {
+                                navigator.push(Route::Login {});
+                            }
+                        },
+                        { t!("login-reset-submit") }
+                    }
+
+                    div { class: "login-otp-actions",
+                        button { r#type: "button", class: "login-link", { t!("login-otp-resend") } }
+                        button {
+                            r#type: "button",
+                            class: "login-link",
+                            onclick: move |_| {
+                                navigator.push(Route::Login {});
+                            },
+                            { t!("login-back-to-sign-in") }
+                        }
+                    }
+                }
+
+                p { class: "login-foot", { t!("login-reset-footer") } }
             }
 
             PoweredByFooter {}

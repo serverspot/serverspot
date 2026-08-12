@@ -1,6 +1,6 @@
 use crate::router::Route;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Section {
     Dashboard,
     Store,
@@ -18,7 +18,7 @@ pub enum Section {
 
 #[derive(Clone)]
 pub struct SubLink {
-    pub label: &'static str,
+    pub label_id: &'static str,
     pub route: Route,
 }
 
@@ -161,224 +161,224 @@ impl Section {
         match self {
             Section::Dashboard => &[
                 SubLink {
-                    label: "Overview",
+                    label_id: "nav-sub-overview",
                     route: Route::Dashboard {},
                 },
                 SubLink {
-                    label: "Activity",
+                    label_id: "nav-sub-activity",
                     route: Route::DashboardActivity {},
                 },
             ],
             Section::Store => &[
                 SubLink {
-                    label: "Overview",
+                    label_id: "nav-sub-overview",
                     route: Route::StoreOverview {},
                 },
                 SubLink {
-                    label: "Products",
+                    label_id: "nav-sub-products",
                     route: Route::StoreProducts {},
                 },
                 SubLink {
-                    label: "Categories",
+                    label_id: "nav-sub-categories",
                     route: Route::StoreCategories {},
                 },
                 SubLink {
-                    label: "Coupons",
+                    label_id: "nav-sub-coupons",
                     route: Route::StoreCoupons {},
                 },
                 SubLink {
-                    label: "Orders",
+                    label_id: "nav-sub-orders",
                     route: Route::StoreOrders {},
                 },
                 SubLink {
-                    label: "Settings",
+                    label_id: "nav-sub-settings",
                     route: Route::StoreSettings {},
                 },
             ],
             Section::Forum => &[
                 SubLink {
-                    label: "Overview",
+                    label_id: "nav-sub-overview",
                     route: Route::ForumOverview {},
                 },
                 SubLink {
-                    label: "Boards",
+                    label_id: "nav-sub-boards",
                     route: Route::ForumBoards {},
                 },
                 SubLink {
-                    label: "Threads",
+                    label_id: "nav-sub-threads",
                     route: Route::ForumThreads {},
                 },
                 SubLink {
-                    label: "Moderation",
+                    label_id: "nav-sub-moderation",
                     route: Route::ForumModeration {},
                 },
                 SubLink {
-                    label: "Auto Moderation",
+                    label_id: "nav-sub-auto-moderation",
                     route: Route::ForumAutoModeration {},
                 },
                 SubLink {
-                    label: "Settings",
+                    label_id: "nav-sub-settings",
                     route: Route::ForumSiteSettings {},
                 },
             ],
             Section::Support => &[
                 SubLink {
-                    label: "Overview",
+                    label_id: "nav-sub-overview",
                     route: Route::SupportOverview {},
                 },
                 SubLink {
-                    label: "Tickets",
+                    label_id: "nav-sub-tickets",
                     route: Route::SupportTickets {},
                 },
                 SubLink {
-                    label: "Help centre",
+                    label_id: "nav-sub-help-centre",
                     route: Route::SupportHelpCentre {},
                 },
                 SubLink {
-                    label: "Automation",
+                    label_id: "nav-sub-automation",
                     route: Route::SupportAutomation {},
                 },
                 SubLink {
-                    label: "Settings",
+                    label_id: "nav-sub-settings",
                     route: Route::SupportSiteSettings {},
                 },
             ],
             Section::Content => &[
                 SubLink {
-                    label: "Overview",
+                    label_id: "nav-sub-overview",
                     route: Route::ContentOverview {},
                 },
                 SubLink {
-                    label: "Posts",
+                    label_id: "nav-sub-posts",
                     route: Route::ContentBlog {},
                 },
                 SubLink {
-                    label: "Settings",
+                    label_id: "nav-sub-settings",
                     route: Route::ContentSiteSettings {},
                 },
             ],
             Section::Players => &[
                 SubLink {
-                    label: "Overview",
+                    label_id: "nav-sub-overview",
                     route: Route::PlayersOverview {},
                 },
                 SubLink {
-                    label: "Profiles",
+                    label_id: "nav-sub-profiles",
                     route: Route::CommunityPlayers {},
                 },
                 SubLink {
-                    label: "Settings",
+                    label_id: "nav-sub-settings",
                     route: Route::PlayersSiteSettings {},
                 },
             ],
             Section::Leaderboards => &[
                 SubLink {
-                    label: "Overview",
+                    label_id: "nav-sub-overview",
                     route: Route::LeaderboardsOverview {},
                 },
                 SubLink {
-                    label: "Boards",
+                    label_id: "nav-sub-boards",
                     route: Route::CommunityLeaderboards {},
                 },
                 SubLink {
-                    label: "Settings",
+                    label_id: "nav-sub-settings",
                     route: Route::LeaderboardsSiteSettings {},
                 },
             ],
             Section::Votes => &[
                 SubLink {
-                    label: "Overview",
+                    label_id: "nav-sub-overview",
                     route: Route::VotesOverview {},
                 },
                 SubLink {
-                    label: "Rewards",
+                    label_id: "nav-sub-rewards",
                     route: Route::CommunityVotes {},
                 },
                 SubLink {
-                    label: "Settings",
+                    label_id: "nav-sub-settings",
                     route: Route::VotesSiteSettings {},
                 },
             ],
             Section::Applications => &[
                 SubLink {
-                    label: "Overview",
+                    label_id: "nav-sub-overview",
                     route: Route::ApplicationsOverview {},
                 },
                 SubLink {
-                    label: "Inbox",
+                    label_id: "nav-sub-inbox",
                     route: Route::CommunityApplications {},
                 },
                 SubLink {
-                    label: "Settings",
+                    label_id: "nav-sub-settings",
                     route: Route::ApplicationsSiteSettings {},
                 },
             ],
             Section::Analytics => &[
                 SubLink {
-                    label: "Overview",
+                    label_id: "nav-sub-overview",
                     route: Route::AnalyticsOverview {},
                 },
                 SubLink {
-                    label: "Website",
+                    label_id: "nav-sub-website",
                     route: Route::AnalyticsWebsite {},
                 },
                 SubLink {
-                    label: "Community",
+                    label_id: "nav-sub-community",
                     route: Route::AnalyticsCommunity {},
                 },
                 SubLink {
-                    label: "Gaming",
+                    label_id: "nav-sub-gaming",
                     route: Route::AnalyticsGaming {},
                 },
                 SubLink {
-                    label: "Settings",
+                    label_id: "nav-sub-settings",
                     route: Route::AnalyticsSiteSettings {},
                 },
             ],
             Section::Settings => &[
                 SubLink {
-                    label: "General",
+                    label_id: "nav-sub-general",
                     route: Route::SettingsGeneral {},
                 },
                 SubLink {
-                    label: "Authentication",
+                    label_id: "nav-sub-authentication",
                     route: Route::AccountsAuth {},
                 },
                 SubLink {
-                    label: "Staff",
+                    label_id: "nav-sub-staff",
                     route: Route::AccountsStaff {},
                 },
                 SubLink {
-                    label: "Roles",
+                    label_id: "nav-sub-roles",
                     route: Route::AccountsRoles {},
                 },
                 SubLink {
-                    label: "Localisation",
+                    label_id: "nav-sub-localisation",
                     route: Route::SettingsLocalisation {},
                 },
                 SubLink {
-                    label: "Developer",
+                    label_id: "nav-sub-developer",
                     route: Route::SettingsDeveloper {},
                 },
                 SubLink {
-                    label: "Integrations",
+                    label_id: "nav-sub-integrations",
                     route: Route::SettingsIntegrations {},
                 },
                 SubLink {
-                    label: "Security",
+                    label_id: "nav-sub-security",
                     route: Route::SettingsSecurity {},
                 },
                 SubLink {
-                    label: "Hosting",
+                    label_id: "nav-sub-hosting",
                     route: Route::SettingsHosting {},
                 },
                 SubLink {
-                    label: "Theme",
+                    label_id: "nav-sub-theme",
                     route: Route::SettingsTheme {},
                 },
             ],
             Section::Account => &[SubLink {
-                label: "Profile",
+                label_id: "nav-sub-profile",
                 route: Route::Account {},
             }],
         }
@@ -387,7 +387,7 @@ impl Section {
 
 pub fn section_for(route: &Route) -> Section {
     match route {
-        Route::Login {} => Section::Dashboard,
+        Route::Login {} | Route::LoginOtp {} | Route::LoginReset {} => Section::Dashboard,
         Route::Dashboard {} | Route::DashboardActivity {} => Section::Dashboard,
         Route::StoreOverview {}
         | Route::StoreProducts {}
@@ -512,6 +512,8 @@ pub fn subnav_active(current: &Route, target: &Route) -> bool {
 pub fn crumb_for(route: &Route) -> &'static str {
     match route {
         Route::Login {} => "Login",
+        Route::LoginOtp {} => "Verification",
+        Route::LoginReset {} => "Reset password",
         Route::Dashboard {} => "Overview",
         Route::DashboardActivity {} => "Activity",
         Route::StoreOverview {} => "Overview",

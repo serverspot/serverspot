@@ -842,6 +842,21 @@
     flex-shrink: 0;
   }
 
+  .stg-tile-brand.is-mark {
+    width: 1.55rem;
+    height: 1.55rem;
+    object-fit: contain;
+  }
+
+  .stg-tile-brand.is-rust {
+    object-fit: cover;
+    object-position: 0% 50%;
+  }
+
+  .stg-tile-badge:has(.is-mark) {
+    background: #0b0c10;
+  }
+
   .stg-tile-status {
     flex-shrink: 0;
     padding: 0.2rem 0.55rem;

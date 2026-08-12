@@ -1,8 +1,11 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::page::StatPill;
 use crate::components::settings::{IconKey, SectionIntro, ToggleField};
 use crate::components::ui::*;
+use crate::i18n::t_key;
 use crate::router::Route;
 
 const AUTH_ACCENT: &str = "#5b9dff";
@@ -10,8 +13,8 @@ const STAFF_ACCENT: &str = "#69bdf2";
 const ROLES_ACCENT: &str = "#fb923c";
 
 struct AuthLane {
-    name: &'static str,
-    desc: &'static str,
+    name_key: &'static str,
+    desc_key: &'static str,
     usage_pct: u8,
     enabled: bool,
     accent: &'static str,
@@ -19,29 +22,29 @@ struct AuthLane {
 
 const AUTH_LANES: &[AuthLane] = &[
     AuthLane {
-        name: "Email & password",
-        desc: "Default sign-in method for all new accounts.",
+        name_key: "accounts-auth-lane-password-name",
+        desc_key: "accounts-auth-lane-password-desc",
         usage_pct: 100,
         enabled: true,
         accent: "#5b9dff",
     },
     AuthLane {
-        name: "Two-factor authentication",
-        desc: "Authenticator app required for staff roles.",
+        name_key: "accounts-auth-lane-2fa-name",
+        desc_key: "accounts-auth-lane-2fa-desc",
         usage_pct: 62,
         enabled: true,
         accent: "#3ecf8e",
     },
     AuthLane {
-        name: "Magic link",
-        desc: "Passwordless sign-in via emailed one-time link.",
+        name_key: "accounts-auth-lane-magic-link-name",
+        desc_key: "accounts-auth-lane-magic-link-desc",
         usage_pct: 24,
         enabled: true,
         accent: "#87d1fe",
     },
     AuthLane {
-        name: "Single sign-on (SAML)",
-        desc: "Enterprise SSO for staff-only login.",
+        name_key: "accounts-auth-lane-saml-name",
+        desc_key: "accounts-auth-lane-saml-desc",
         usage_pct: 4,
         enabled: false,
         accent: "#c4b5fd",
@@ -50,33 +53,35 @@ const AUTH_LANES: &[AuthLane] = &[
 
 #[component]
 pub fn AccountsAuth() -> Element {
+    let _lang = i18n();
+
     rsx! {
         div {
             class: "motion-cascade contents",
             style: "--stg-accent: {AUTH_ACCENT};",
             SectionIntro {
-                eyebrow: "Identity",
-                title: "Authentication",
-                description: "Sign-in methods, OAuth providers, and linking website accounts to in-game identities.",
+                eyebrow: t_key("accounts-auth-eyebrow"),
+                title: t_key("accounts-auth-title"),
+                description: t_key("accounts-auth-description"),
                 accent: AUTH_ACCENT,
                 action: rsx! {
                     Button {
                         IconPlus {}
-                        "Invite user"
+                        { t!("accounts-auth-invite-user") }
                     }
                 },
             }
 
             section { class: "motion-cascade stat-strip mb-6",
-                StatPill { label: "Accounts", value: "3,481", accent: AUTH_ACCENT }
-                StatPill { label: "2FA enabled", value: "62%", accent: AUTH_ACCENT }
+                StatPill { label: t_key("accounts-auth-stat-accounts"), value: "3,481", accent: AUTH_ACCENT }
+                StatPill { label: t_key("accounts-auth-stat-2fa-enabled"), value: "62%", accent: AUTH_ACCENT }
                 StatPill {
-                    label: "OAuth logins",
+                    label: t_key("accounts-auth-stat-oauth-logins"),
                     value: "842",
                     accent: AUTH_ACCENT,
                 }
                 StatPill {
-                    label: "Linked players",
+                    label: t_key("accounts-auth-stat-linked-players"),
                     value: "1,204",
                     accent: AUTH_ACCENT,
                 }
@@ -85,9 +90,9 @@ pub fn AccountsAuth() -> Element {
             section { class: "stg-site-panel",
                 div { class: "stg-site-panel-head",
                     div { class: "min-w-0",
-                        h2 { class: "stg-site-panel-title", "Sign-in methods" }
+                        h2 { class: "stg-site-panel-title", { t!("accounts-auth-signin-title") } }
                         p { class: "stg-site-panel-sub",
-                            "How players and staff authenticate on the website."
+                            { t!("accounts-auth-signin-sub") }
                         }
                     }
                 }
@@ -100,8 +105,8 @@ pub fn AccountsAuth() -> Element {
                                 span { class: "acct-lane-bar" }
                                 span { class: "acct-lane-icon", IconKey {} }
                                 div { class: "acct-lane-body",
-                                    p { class: "acct-lane-title", "{lane.name}" }
-                                    p { class: "acct-lane-desc", "{lane.desc}" }
+                                    p { class: "acct-lane-title", { t_key(lane.name_key) } }
+                                    p { class: "acct-lane-desc", { t_key(lane.desc_key) } }
                                 }
                                 div { class: "acct-lane-usage",
                                     div { class: "acct-lane-usage-track",
@@ -111,7 +116,7 @@ pub fn AccountsAuth() -> Element {
                                         }
                                     }
                                     p { class: "acct-lane-usage-label",
-                                        "{lane.usage_pct}% of accounts"
+                                        { t!("accounts-auth-usage-pct", pct: lane.usage_pct) }
                                     }
                                 }
                                 ToggleField { enabled: lane.enabled }
@@ -124,14 +129,14 @@ pub fn AccountsAuth() -> Element {
             section { class: "stg-site-panel",
                 div { class: "stg-site-panel-head",
                     div { class: "min-w-0",
-                        h2 { class: "stg-site-panel-title", "Connections" }
+                        h2 { class: "stg-site-panel-title", { t!("accounts-auth-connections-title") } }
                         p { class: "stg-site-panel-sub",
-                            "External OAuth providers for login and account sync."
+                            { t!("accounts-auth-connections-sub") }
                         }
                     }
                     Button { size: ButtonSize::Sm,
                         IconPlus {}
-                        "Add provider"
+                        { t!("accounts-auth-add-provider") }
                     }
                 }
                 div { class: "stg-site-panel-body",
@@ -159,40 +164,40 @@ pub fn AccountsAuth() -> Element {
             section { class: "stg-site-panel",
                 div { class: "stg-site-panel-head",
                     div { class: "min-w-0",
-                        h2 { class: "stg-site-panel-title", "Account linking" }
+                        h2 { class: "stg-site-panel-title", { t!("accounts-auth-linking-title") } }
                         p { class: "stg-site-panel-sub",
-                            "Connect website accounts with in-game identities across servers."
+                            { t!("accounts-auth-linking-sub") }
                         }
                     }
                     Button {
                         variant: ButtonVariant::Secondary,
                         size: ButtonSize::Sm,
-                        "Generate codes"
+                        { t!("accounts-auth-generate-codes") }
                     }
                 }
                 div { class: "stg-site-panel-body",
                     div { class: "motion-cascade acct-flow mb-5",
                         AcctFlowStep {
                             num: "1",
-                            title: "Generate a code",
-                            desc: "Player requests a one-time link code from your website.",
+                            title: t_key("accounts-auth-flow-step1-title"),
+                            desc: t_key("accounts-auth-flow-step1-desc"),
                             connector: true,
                         }
                         AcctFlowStep {
                             num: "2",
-                            title: "Enter it in-game",
-                            desc: "Player types /link CODE on any connected server.",
+                            title: t_key("accounts-auth-flow-step2-title"),
+                            desc: t_key("accounts-auth-flow-step2-desc"),
                             connector: true,
                         }
                         AcctFlowStep {
                             num: "3",
-                            title: "Confirmed",
-                            desc: "Accounts are linked instantly and stay in sync.",
+                            title: t_key("accounts-auth-flow-step3-title"),
+                            desc: t_key("accounts-auth-flow-step3-desc"),
                             connector: false,
                         }
                     }
                     div { class: "mb-2 flex items-center justify-between gap-3",
-                        h3 { class: "text-sm font-semibold text-text", "Recent links" }
+                        h3 { class: "text-sm font-semibold text-text", { t!("accounts-auth-recent-links") } }
                         span { class: "text-xs text-text-muted", "1,204 linked · 18 pending" }
                     }
                     div { class: "motion-cascade motion-cascade-tight acct-link-list",
@@ -200,19 +205,19 @@ pub fn AccountsAuth() -> Element {
                             badge: "MC",
                             title: "NovaCraft · Survival",
                             meta: "Minecraft · Verified with code N7K2",
-                            status: "Linked",
+                            status_key: "accounts-auth-status-linked",
                         }
                         AcctLinkRow {
                             badge: "MC",
                             title: "SkyBuilder · Skyblock",
                             meta: "Minecraft · Verified with code Q1M9",
-                            status: "Linked",
+                            status_key: "accounts-auth-status-linked",
                         }
                         AcctLinkRow {
                             badge: "MC",
                             title: "AetherFox · Creative",
-                            meta: "Awaiting in-game confirmation",
-                            status: "Pending",
+                            meta: t_key("accounts-auth-link-meta-awaiting"),
+                            status_key: "accounts-auth-status-pending",
                         }
                     }
                 }
@@ -224,8 +229,8 @@ pub fn AccountsAuth() -> Element {
 #[component]
 fn AcctFlowStep(
     num: &'static str,
-    title: &'static str,
-    desc: &'static str,
+    #[props(into)] title: String,
+    #[props(into)] desc: String,
     #[props(default)] connector: bool,
 ) -> Element {
     rsx! {
@@ -245,7 +250,7 @@ fn AcctLinkRow(
     badge: &'static str,
     #[props(into)] title: String,
     #[props(into)] meta: String,
-    status: &'static str,
+    status_key: &'static str,
 ) -> Element {
     rsx! {
         div { class: "acct-link-row",
@@ -254,7 +259,7 @@ fn AcctLinkRow(
                 p { class: "truncate text-sm font-medium text-text", "{title}" }
                 p { class: "mt-0.5 text-xs text-text-muted", "{meta}" }
             }
-            span { class: "shrink-0 text-xs text-text-secondary", "{status}" }
+            span { class: "shrink-0 text-xs text-text-secondary", { t_key(status_key) } }
         }
     }
 }
@@ -437,109 +442,111 @@ fn OauthBrandIcon(id: OauthProviderId) -> Element {
 struct StaffMember {
     initials: &'static str,
     name: &'static str,
-    email: &'static str,
-    role: &'static str,
+    username: &'static str,
+    role_key: &'static str,
     role_accent: &'static str,
     last_active: &'static str,
-    status: &'static str,
+    status_key: &'static str,
 }
 
 const STAFF_MEMBERS: &[StaffMember] = &[
     StaffMember {
         initials: "AC",
         name: "Alex Chen",
-        email: "alex@novacraft.gg",
-        role: "Owner",
+        username: "alex",
+        role_key: "accounts-staff-role-owner",
         role_accent: "#fb7185",
         last_active: "Just now",
-        status: "Online",
+        status_key: "accounts-staff-status-online",
     },
     StaffMember {
         initials: "JR",
         name: "Jordan Reyes",
-        email: "jordan@novacraft.gg",
-        role: "Admin",
+        username: "jordan",
+        role_key: "accounts-staff-role-admin",
         role_accent: "#fb923c",
         last_active: "12 min ago",
-        status: "Online",
+        status_key: "accounts-staff-status-online",
     },
     StaffMember {
         initials: "MK",
         name: "Maya Khan",
-        email: "maya@novacraft.gg",
-        role: "Admin",
+        username: "maya",
+        role_key: "accounts-staff-role-admin",
         role_accent: "#fb923c",
         last_active: "2 hours ago",
-        status: "Away",
+        status_key: "accounts-staff-status-away",
     },
     StaffMember {
         initials: "TS",
         name: "Theo Santos",
-        email: "theo@novacraft.gg",
-        role: "Moderator",
+        username: "theo",
+        role_key: "accounts-staff-role-moderator",
         role_accent: "#5b9dff",
         last_active: "Yesterday",
-        status: "Offline",
+        status_key: "accounts-staff-status-offline",
     },
     StaffMember {
         initials: "LP",
         name: "Lena Park",
-        email: "lena@novacraft.gg",
-        role: "Moderator",
+        username: "lena",
+        role_key: "accounts-staff-role-moderator",
         role_accent: "#5b9dff",
         last_active: "3 days ago",
-        status: "Offline",
+        status_key: "accounts-staff-status-offline",
     },
 ];
 
 struct StaffInvite {
-    email: &'static str,
-    role: &'static str,
+    username: &'static str,
+    role_key: &'static str,
     sent: &'static str,
 }
 
 const STAFF_INVITES: &[StaffInvite] = &[
     StaffInvite {
-        email: "sam@novacraft.gg",
-        role: "Moderator",
+        username: "sam",
+        role_key: "accounts-staff-role-moderator",
         sent: "2 hours ago",
     },
     StaffInvite {
-        email: "ria@studio.gg",
-        role: "Admin",
+        username: "ria",
+        role_key: "accounts-staff-role-admin",
         sent: "Yesterday",
     },
 ];
 
 #[component]
 pub fn AccountsStaff() -> Element {
+    let _lang = i18n();
+
     rsx! {
         div {
             class: "motion-cascade contents",
             style: "--stg-accent: {STAFF_ACCENT};",
             SectionIntro {
-                eyebrow: "Team",
-                title: "Staff",
-                description: "People with access to this admin panel, and outstanding invites.",
+                eyebrow: t_key("accounts-staff-eyebrow"),
+                title: t_key("accounts-staff-title"),
+                description: t_key("accounts-staff-description"),
                 accent: STAFF_ACCENT,
                 action: rsx! {
                     Button {
                         IconPlus {}
-                        "Invite staff"
+                        { t!("accounts-staff-invite-staff") }
                     }
                 },
             }
 
             section { class: "motion-cascade stat-strip mb-6",
-                StatPill { label: "Active staff", value: "5", accent: STAFF_ACCENT }
+                StatPill { label: t_key("accounts-staff-stat-active"), value: "5", accent: STAFF_ACCENT }
                 StatPill {
-                    label: "Pending invites",
+                    label: t_key("accounts-staff-stat-pending-invites"),
                     value: "2",
                     accent: STAFF_ACCENT,
                 }
-                StatPill { label: "Admins", value: "3", accent: STAFF_ACCENT }
+                StatPill { label: t_key("accounts-staff-stat-admins"), value: "3", accent: STAFF_ACCENT }
                 StatPill {
-                    label: "2FA coverage",
+                    label: t_key("accounts-staff-stat-2fa-coverage"),
                     value: "100%",
                     accent: STAFF_ACCENT,
                 }
@@ -548,9 +555,9 @@ pub fn AccountsStaff() -> Element {
             section { class: "stg-site-panel",
                 div { class: "stg-site-panel-head",
                     div { class: "min-w-0",
-                        h2 { class: "stg-site-panel-title", "Team roster" }
+                        h2 { class: "stg-site-panel-title", { t!("accounts-staff-roster-title") } }
                         p { class: "stg-site-panel-sub",
-                            "Staff accounts that can sign in to the admin panel."
+                            { t!("accounts-staff-roster-sub") }
                         }
                     }
                 }
@@ -565,16 +572,16 @@ pub fn AccountsStaff() -> Element {
                                 }
                                 div { class: "min-w-0 flex-1",
                                     p { class: "acct-staff-name", "{member.name}" }
-                                    p { class: "acct-staff-email", "{member.email}" }
+                                    p { class: "acct-staff-email", "@{member.username}" }
                                 }
                                 span {
                                     class: "acct-staff-role",
                                     style: "--staff-accent: {member.role_accent};",
-                                    "{member.role}"
+                                    { t_key(member.role_key) }
                                 }
                                 span { class: "acct-staff-meta", "{member.last_active}" }
-                                span { class: if member.status == "Online" { "acct-staff-status is-online" } else if member.status == "Away" { "acct-staff-status is-away" } else { "acct-staff-status" },
-                                    "{member.status}"
+                                span { class: if member.status_key == "accounts-staff-status-online" { "acct-staff-status is-online" } else if member.status_key == "accounts-staff-status-away" { "acct-staff-status is-away" } else { "acct-staff-status" },
+                                    { t_key(member.status_key) }
                                 }
                             }
                         }
@@ -585,9 +592,9 @@ pub fn AccountsStaff() -> Element {
             section { class: "stg-site-panel",
                 div { class: "stg-site-panel-head",
                     div { class: "min-w-0",
-                        h2 { class: "stg-site-panel-title", "Pending invites" }
+                        h2 { class: "stg-site-panel-title", { t!("accounts-staff-pending-title") } }
                         p { class: "stg-site-panel-sub",
-                            "Invites expire after 7 days if they are not accepted."
+                            { t!("accounts-staff-pending-sub") }
                         }
                     }
                 }
@@ -597,14 +604,18 @@ pub fn AccountsStaff() -> Element {
                             div { class: "acct-staff-row",
                                 span { class: "acct-staff-avatar is-invite", "··" }
                                 div { class: "min-w-0 flex-1",
-                                    p { class: "acct-staff-name", "{invite.email}" }
-                                    p { class: "acct-staff-email", "Invited as {invite.role}" }
+                                    p { class: "acct-staff-name", "@{invite.username}" }
+                                    p { class: "acct-staff-email",
+                                        { t!("accounts-staff-invited-as", role: t_key(invite.role_key)) }
+                                    }
                                 }
-                                span { class: "acct-staff-meta", "Sent {invite.sent}" }
+                                span { class: "acct-staff-meta",
+                                    { t!("accounts-staff-sent", when: invite.sent) }
+                                }
                                 Button {
                                     variant: ButtonVariant::Ghost,
                                     size: ButtonSize::Sm,
-                                    "Resend"
+                                    { t!("common-resend") }
                                 }
                             }
                         }
@@ -615,26 +626,26 @@ pub fn AccountsStaff() -> Element {
             section { class: "stg-site-panel",
                 div { class: "stg-site-panel-head",
                     div { class: "min-w-0",
-                        h2 { class: "stg-site-panel-title", "Access rules" }
+                        h2 { class: "stg-site-panel-title", { t!("accounts-staff-access-title") } }
                         p { class: "stg-site-panel-sub",
-                            "Baseline requirements for anyone with a staff role."
+                            { t!("accounts-staff-access-sub") }
                         }
                     }
                 }
                 div { class: "stg-site-panel-body",
                     ToggleField {
-                        label: "Require two-factor authentication",
-                        hint: "Staff must enable an authenticator app before accessing the panel.",
+                        label: t_key("accounts-staff-toggle-2fa-label"),
+                        hint: t_key("accounts-staff-toggle-2fa-hint"),
                         enabled: true,
                     }
                     ToggleField {
-                        label: "Restrict staff login to known IPs",
-                        hint: "Block admin sign-in from addresses outside your allowlist.",
+                        label: t_key("accounts-staff-toggle-ip-label"),
+                        hint: t_key("accounts-staff-toggle-ip-hint"),
                         enabled: false,
                     }
                     ToggleField {
-                        label: "Notify owners on new staff invites",
-                        hint: "Send an alert when anyone invites a new team member.",
+                        label: t_key("accounts-staff-toggle-notify-label"),
+                        hint: t_key("accounts-staff-toggle-notify-hint"),
                         enabled: true,
                     }
                 }
@@ -644,47 +655,47 @@ pub fn AccountsStaff() -> Element {
 }
 
 struct RoleRung {
-    name: &'static str,
-    meta: &'static str,
+    name_key: &'static str,
+    meta_key: &'static str,
     level: u8,
-    members: &'static str,
+    members_key: &'static str,
     accent: &'static str,
 }
 
 const ROLE_LADDER: &[RoleRung] = &[
     RoleRung {
-        name: "Owner",
-        meta: "Full access",
+        name_key: "accounts-roles-role-owner",
+        meta_key: "accounts-roles-meta-owner",
         level: 100,
-        members: "1 member",
+        members_key: "accounts-roles-members-owner",
         accent: "#fb7185",
     },
     RoleRung {
-        name: "Admin",
-        meta: "Manage staff & settings",
+        name_key: "accounts-roles-role-admin",
+        meta_key: "accounts-roles-meta-admin",
         level: 80,
-        members: "4 members",
+        members_key: "accounts-roles-members-admin",
         accent: "#fb923c",
     },
     RoleRung {
-        name: "Moderator",
-        meta: "Forums & tickets",
+        name_key: "accounts-roles-role-moderator",
+        meta_key: "accounts-roles-meta-moderator",
         level: 40,
-        members: "11 members",
+        members_key: "accounts-roles-members-moderator",
         accent: "#f5c14a",
     },
     RoleRung {
-        name: "Helper",
-        meta: "Limited support tools",
+        name_key: "accounts-roles-role-helper",
+        meta_key: "accounts-roles-meta-helper",
         level: 20,
-        members: "18 members",
+        members_key: "accounts-roles-members-helper",
         accent: "#5b9dff",
     },
     RoleRung {
-        name: "Member",
-        meta: "Default community access",
+        name_key: "accounts-roles-role-member",
+        meta_key: "accounts-roles-meta-member",
         level: 1,
-        members: "3,427 members",
+        members_key: "accounts-roles-members-member",
         accent: "#87d1fe",
     },
 ];
@@ -709,6 +720,7 @@ const GRANTS: &[[bool; 5]] = &[
 
 #[component]
 pub fn AccountsRoles() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let max_level = 100f32;
 
@@ -717,9 +729,9 @@ pub fn AccountsRoles() -> Element {
             class: "motion-cascade contents",
             style: "--stg-accent: {ROLES_ACCENT};",
             SectionIntro {
-                eyebrow: "Access",
-                title: "Permissions & roles",
-                description: "Fully configurable permission system with hierarchy and groups.",
+                eyebrow: t_key("accounts-roles-eyebrow"),
+                title: t_key("accounts-roles-title"),
+                description: t_key("accounts-roles-description"),
                 accent: ROLES_ACCENT,
                 action: rsx! {
                     Button {
@@ -727,7 +739,7 @@ pub fn AccountsRoles() -> Element {
                             navigator.push(Route::AccountsRoleNew {});
                         },
                         IconPlus {}
-                        "Create role"
+                        { t!("accounts-roles-create-role") }
                     }
                 },
             }
@@ -741,14 +753,16 @@ pub fn AccountsRoles() -> Element {
                                 span { class: "acct-ladder-dot", style: "--rung-accent: {rung.accent};" }
                                 div { class: "acct-ladder-bar-wrap",
                                     div { class: "acct-ladder-top",
-                                        p { class: "acct-ladder-name", "{rung.name}" }
+                                        p { class: "acct-ladder-name", { t_key(rung.name_key) } }
                                         span {
                                             class: "acct-ladder-level",
                                             style: "--rung-accent: {rung.accent};",
-                                            "Level {rung.level}"
+                                            { t!("accounts-roles-level", level: rung.level) }
                                         }
                                     }
-                                    p { class: "acct-ladder-meta", "{rung.meta} · {rung.members}" }
+                                    p { class: "acct-ladder-meta",
+                                        { t!("accounts-roles-rung-meta", meta: t_key(rung.meta_key), members: t_key(rung.members_key)) }
+                                    }
                                     div { class: "acct-ladder-bar-track",
                                         div {
                                             class: "acct-ladder-bar-fill",
@@ -766,9 +780,9 @@ pub fn AccountsRoles() -> Element {
                 table { class: "acct-matrix-table",
                     thead {
                         tr {
-                            th { "Permission" }
+                            th { { t!("accounts-roles-matrix-permission") } }
                             for rung in ROLE_LADDER {
-                                th { "{rung.name}" }
+                                th { { t_key(rung.name_key) } }
                             }
                         }
                     }
@@ -794,6 +808,7 @@ pub fn AccountsRoles() -> Element {
 
 #[component]
 pub fn AccountsRoleNew() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let name = use_signal(String::new);
     let color = use_signal(|| ROLES_ACCENT.to_string());
@@ -802,7 +817,7 @@ pub fn AccountsRoleNew() -> Element {
 
     let granted_count = perms.read().iter().filter(|granted| **granted).count();
     let preview_name = if name().trim().is_empty() {
-        String::from("New role")
+        t_key("accounts-roles-new-role-default")
     } else {
         name()
     };
@@ -815,20 +830,20 @@ pub fn AccountsRoleNew() -> Element {
                 onclick: move |_| {
                     navigator.push(Route::AccountsRoles {});
                 },
-                "← Roles"
+                { t!("accounts-roles-back") }
             }
             Button {
                 onclick: move |_| {
                     navigator.push(Route::AccountsRoles {});
                 },
-                "Save role"
+                { t!("accounts-roles-save-role") }
             }
         }
 
         SectionIntro {
-            eyebrow: "Access",
-            title: "New role",
-            description: "Define a name, colour, hierarchy level, and starting permissions.",
+            eyebrow: t_key("accounts-roles-eyebrow"),
+            title: t_key("accounts-roles-new-title"),
+            description: t_key("accounts-roles-new-description"),
             accent: ROLES_ACCENT,
         }
 
@@ -836,18 +851,18 @@ pub fn AccountsRoleNew() -> Element {
             div { class: "flex flex-col gap-4",
                 div { class: "ui-card p-4",
                     div { class: "stg-field",
-                        label { class: "stg-field-label", "Role name" }
+                        label { class: "stg-field-label", { t!("accounts-roles-field-name") } }
                         SignalInput {
                             value: name,
-                            placeholder: "e.g. Community Manager",
+                            placeholder: t_key("accounts-roles-placeholder-name"),
                         }
                     }
                     div { class: "stg-field",
-                        label { class: "stg-field-label", "Colour" }
+                        label { class: "stg-field-label", { t!("accounts-roles-field-colour") } }
                         ColorPicker { value: color }
                     }
                     div { class: "stg-field",
-                        label { class: "stg-field-label", "Hierarchy level ({level})" }
+                        label { class: "stg-field-label", { t!("accounts-roles-field-hierarchy", level: level()) } }
                         input {
                             r#type: "range",
                             min: "1",
@@ -863,7 +878,7 @@ pub fn AccountsRoleNew() -> Element {
                     }
                 }
                 div { class: "ui-card p-4",
-                    p { class: "mb-3 text-sm font-semibold text-text", "Starting permissions" }
+                    p { class: "mb-3 text-sm font-semibold text-text", { t!("accounts-roles-starting-permissions") } }
                     div { class: "motion-cascade motion-cascade-tight acct-role-perm-list",
                         for (i, perm) in PERMISSIONS.iter().enumerate() {
                             {
@@ -886,14 +901,14 @@ pub fn AccountsRoleNew() -> Element {
             }
             div { class: "acct-role-preview", style: "--role-accent: {color};",
                 p { class: "mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted",
-                    "Preview"
+                    { t!("accounts-roles-preview") }
                 }
                 span { class: "acct-role-preview-badge",
                     span { class: "acct-role-preview-badge-dot" }
                     "{preview_name}"
                 }
                 p { class: "acct-role-preview-hint",
-                    "Level {level} · {granted_count} permissions granted"
+                    { t!("accounts-roles-preview-hint", level: level(), count: granted_count) }
                 }
             }
         }

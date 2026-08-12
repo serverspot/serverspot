@@ -1,23 +1,35 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::page::{
     DataPanel, FeatureSettingsChrome, SettingRow, SettingsControl, SettingsField, StatusChip,
 };
 use crate::components::ui::*;
+use crate::i18n::t_key;
 use crate::router::Route;
 
 const STORE_ACCENT: &str = "#3ecf8e";
 const WEEK_REVENUE: &[u32] = &[78, 112, 94, 156, 128, 142, 102];
-const WEEK_LABELS: &[&str] = &["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const WEEK_FULL_LABELS: &[&str] = &[
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
+const WEEKDAY_KEYS: &[&str] = &[
+    "store-weekday-mon",
+    "store-weekday-tue",
+    "store-weekday-wed",
+    "store-weekday-thu",
+    "store-weekday-fri",
+    "store-weekday-sat",
+    "store-weekday-sun",
 ];
+const WEEKDAY_FULL_KEYS: &[&str] = &[
+    "store-weekday-monday",
+    "store-weekday-tuesday",
+    "store-weekday-wednesday",
+    "store-weekday-thursday",
+    "store-weekday-friday",
+    "store-weekday-saturday",
+    "store-weekday-sunday",
+];
+const ALL_SERVERS_KEY: &str = "all-servers";
 
 #[derive(Clone, PartialEq)]
 pub struct Product {
@@ -75,12 +87,12 @@ enum OrderStatus {
 }
 
 impl OrderStatus {
-    fn label(self) -> &'static str {
+    fn label(self) -> String {
         match self {
-            Self::All => "All",
-            Self::Paid => "Paid",
-            Self::Pending => "Pending",
-            Self::Refunded => "Refunded",
+            Self::All => t_key("store-order-status-all"),
+            Self::Paid => t_key("store-order-status-paid"),
+            Self::Pending => t_key("store-order-status-pending"),
+            Self::Refunded => t_key("store-order-status-refunded"),
         }
     }
 
@@ -102,11 +114,27 @@ enum PaymentFilter {
 }
 
 impl PaymentFilter {
-    fn label(self) -> &'static str {
+    fn store_key(self) -> &'static str {
         match self {
-            Self::All => "All gateways",
-            Self::Stripe => "Stripe",
-            Self::PayPal => "PayPal",
+            Self::All => "all",
+            Self::Stripe => "stripe",
+            Self::PayPal => "paypal",
+        }
+    }
+
+    fn from_store_key(key: &str) -> Self {
+        match key {
+            "stripe" => Self::Stripe,
+            "paypal" => Self::PayPal,
+            _ => Self::All,
+        }
+    }
+
+    fn label(self) -> String {
+        match self {
+            Self::All => t_key("store-payment-filter-all"),
+            Self::Stripe => t_key("store-payment-filter-stripe"),
+            Self::PayPal => t_key("store-payment-filter-paypal"),
         }
     }
 
@@ -128,12 +156,30 @@ enum DeliveryFilter {
 }
 
 impl DeliveryFilter {
-    fn label(self) -> &'static str {
+    fn store_key(self) -> &'static str {
         match self {
-            Self::All => "All delivery",
-            Self::Delivered => "Delivered",
-            Self::Queued => "Queued",
-            Self::Issue => "Issues",
+            Self::All => "all",
+            Self::Delivered => "delivered",
+            Self::Queued => "queued",
+            Self::Issue => "issue",
+        }
+    }
+
+    fn from_store_key(key: &str) -> Self {
+        match key {
+            "delivered" => Self::Delivered,
+            "queued" => Self::Queued,
+            "issue" => Self::Issue,
+            _ => Self::All,
+        }
+    }
+
+    fn label(self) -> String {
+        match self {
+            Self::All => t_key("store-delivery-filter-all"),
+            Self::Delivered => t_key("store-delivery-filter-delivered"),
+            Self::Queued => t_key("store-delivery-filter-queued"),
+            Self::Issue => t_key("store-delivery-filter-issue"),
         }
     }
 
@@ -515,7 +561,8 @@ fn placeholder_orders() -> Vec<Order> {
 }
 
 #[component]
-fn StoreFormField(label: &'static str, children: Element) -> Element {
+fn StoreFormField(#[props(into)] label: String, children: Element) -> Element {
+    let _lang = i18n();
     rsx! {
         label { class: "block",
             span { class: "mb-1.5 block text-xs font-medium text-text-secondary", "{label}" }
@@ -525,7 +572,117 @@ fn StoreFormField(label: &'static str, children: Element) -> Element {
 }
 
 #[component]
+fn PaymentFilterSelect(mut value: Signal<PaymentFilter>) -> Element {
+    let _lang = i18n();
+    let mut open = use_signal(|| false);
+    let options = [
+        PaymentFilter::All,
+        PaymentFilter::Stripe,
+        PaymentFilter::PayPal,
+    ];
+    let display = value().label();
+    let is_open = open();
+
+    rsx! {
+        div {
+            class: if is_open { "ui-dropdown is-open" } else { "ui-dropdown" },
+            button {
+                r#type: "button",
+                class: if is_open { "ui-dropdown-trigger ui-squircle is-open" } else { "ui-dropdown-trigger ui-squircle" },
+                "aria-haspopup": "listbox",
+                "aria-expanded": if is_open { "true" } else { "false" },
+                onclick: move |_| {
+                    let next = !open();
+                    open.set(next);
+                },
+                span { class: "ui-dropdown-value", "{display}" }
+                span { class: "ui-dropdown-caret", "aria-hidden": "true" }
+            }
+            if is_open {
+                div { class: "ui-dropdown-menu ui-squircle", role: "listbox",
+                    for filter in options {
+                        {
+                            let selected = value() == filter;
+                            rsx! {
+                                button {
+                                    key: "{filter.store_key()}",
+                                    r#type: "button",
+                                    class: if selected { "ui-dropdown-option is-selected" } else { "ui-dropdown-option" },
+                                    role: "option",
+                                    "aria-selected": if selected { "true" } else { "false" },
+                                    onclick: move |_| {
+                                        value.set(filter);
+                                        open.set(false);
+                                    },
+                                    "{filter.label()}"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn DeliveryFilterSelect(mut value: Signal<DeliveryFilter>) -> Element {
+    let _lang = i18n();
+    let mut open = use_signal(|| false);
+    let options = [
+        DeliveryFilter::All,
+        DeliveryFilter::Delivered,
+        DeliveryFilter::Queued,
+        DeliveryFilter::Issue,
+    ];
+    let display = value().label();
+    let is_open = open();
+
+    rsx! {
+        div {
+            class: if is_open { "ui-dropdown is-open" } else { "ui-dropdown" },
+            button {
+                r#type: "button",
+                class: if is_open { "ui-dropdown-trigger ui-squircle is-open" } else { "ui-dropdown-trigger ui-squircle" },
+                "aria-haspopup": "listbox",
+                "aria-expanded": if is_open { "true" } else { "false" },
+                onclick: move |_| {
+                    let next = !open();
+                    open.set(next);
+                },
+                span { class: "ui-dropdown-value", "{display}" }
+                span { class: "ui-dropdown-caret", "aria-hidden": "true" }
+            }
+            if is_open {
+                div { class: "ui-dropdown-menu ui-squircle", role: "listbox",
+                    for filter in options {
+                        {
+                            let selected = value() == filter;
+                            rsx! {
+                                button {
+                                    key: "{filter.store_key()}",
+                                    r#type: "button",
+                                    class: if selected { "ui-dropdown-option is-selected" } else { "ui-dropdown-option" },
+                                    role: "option",
+                                    "aria-selected": if selected { "true" } else { "false" },
+                                    onclick: move |_| {
+                                        value.set(filter);
+                                        open.set(false);
+                                    },
+                                    "{filter.label()}"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
 fn ProductMediaGallery(mut media: Signal<Vec<String>>) -> Element {
+    let _lang = i18n();
     let items = media();
     let count = items.len();
 
@@ -533,17 +690,15 @@ fn ProductMediaGallery(mut media: Signal<Vec<String>>) -> Element {
         div { class: "space-y-2",
             div { class: "flex items-start justify-between gap-3",
                 div {
-                    p { class: "text-xs font-medium text-text-secondary", "Media" }
-                    p { class: "text-xs text-text-muted",
-                        "Cover image first, then gallery shots for products and packages."
-                    }
+                    p { class: "text-xs font-medium text-text-secondary", { t!("store-media-title") } }
+                    p { class: "text-xs text-text-muted", { t!("store-media-hint") } }
                 }
                 if count > 0 {
                     Button {
                         variant: ButtonVariant::Danger,
                         size: ButtonSize::Sm,
                         onclick: move |_| media.set(Vec::new()),
-                        "Clear all"
+                        { t!("store-media-clear-all") }
                     }
                 }
             }
@@ -555,12 +710,12 @@ fn ProductMediaGallery(mut media: Signal<Vec<String>>) -> Element {
                             div { class: if index == 0 { "store-media-thumb is-cover" } else { "store-media-thumb" },
                                 img { src: "{src}", alt: "", class: "store-media-thumb-img" }
                                 if index == 0 {
-                                    span { class: "store-media-cover-label", "Cover" }
+                                    span { class: "store-media-cover-label", { t!("store-media-cover") } }
                                 }
                                 button {
                                     r#type: "button",
                                     class: "store-media-remove",
-                                    title: "Remove",
+                                    title: t!("store-media-remove"),
                                     onclick: move |_| {
                                         media.with_mut(|list| {
                                             if remove_index < list.len() {
@@ -576,7 +731,7 @@ fn ProductMediaGallery(mut media: Signal<Vec<String>>) -> Element {
                 }
                 label { class: "store-media-add",
                     span { class: "pointer-events-none text-center text-xs leading-relaxed text-text-muted",
-                        "Upload images"
+                        { t!("store-media-upload") }
                     }
                     input {
                         r#type: "file",
@@ -610,6 +765,7 @@ fn ProductMediaGallery(mut media: Signal<Vec<String>>) -> Element {
 
 #[component]
 pub fn StoreOverview() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let mut hovered_day = use_signal(|| Option::<usize>::None);
     let max_bar = *WEEK_REVENUE.iter().max().unwrap_or(&1);
@@ -622,50 +778,54 @@ pub fn StoreOverview() -> Element {
         .unwrap_or(0);
     let focus_i = hovered_day().unwrap_or(WEEK_REVENUE.len().saturating_sub(1));
     let focus_value = WEEK_REVENUE.get(focus_i).copied().unwrap_or(0);
-    let focus_label = WEEK_FULL_LABELS.get(focus_i).copied().unwrap_or("Today");
+    let peak_day = t_key(WEEKDAY_FULL_KEYS[peak_i]);
+    let focus_label = WEEKDAY_FULL_KEYS
+        .get(focus_i)
+        .map(|key| t_key(key))
+        .unwrap_or_else(|| t_key("dashboard-day-today"));
 
     rsx! {
         div { class: "mb-8 flex flex-wrap items-end justify-between gap-4",
             div { class: "min-w-0",
-                p { class: "text-sm text-text-muted", "Live storefront · www.example.com/store" }
+                p { class: "text-sm text-text-muted", { t!("store-overview-eyebrow") } }
                 h1 { class: "mt-1 text-3xl font-semibold tracking-tight sm:text-4xl",
-                    "Store"
+                    { t!("store-overview-title") }
                 }
             }
             div { class: "flex flex-wrap gap-2",
-                Button { variant: ButtonVariant::Secondary, size: ButtonSize::Sm, "View site" }
+                Button { variant: ButtonVariant::Secondary, size: ButtonSize::Sm, { t!("store-overview-view-site") } }
                 Button {
                     size: ButtonSize::Sm,
                     onclick: move |_| {
                         navigator.push(Route::StoreProducts {});
                     },
                     IconPlus {}
-                    "Add product"
+                    { t!("store-overview-add-product") }
                 }
             }
         }
 
         section { class: "store-hero mb-6",
             div { class: "store-hero-main",
-                p { class: "text-sm text-text-muted", "Revenue this month" }
+                p { class: "text-sm text-text-muted", { t!("store-overview-revenue-month") } }
                 p { class: "mt-2 text-5xl font-semibold tabular-nums tracking-tight text-success sm:text-6xl",
                     "£4,281"
                 }
                 p { class: "mt-2 text-sm text-text-secondary",
-                    "£{week_total} this week · peak {WEEK_FULL_LABELS[peak_i]}"
+                    { t!("store-overview-week-summary", amount: week_total, day: peak_day) }
                 }
             }
             div { class: "store-hero-side",
                 div { class: "flex items-start justify-between gap-3",
                     div {
                         p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                            "This week"
+                            { t!("store-overview-this-week") }
                         }
                         p { class: "mt-1 text-sm text-text-secondary",
                             if hovered_day().is_some() {
                                 "{focus_label}"
                             } else {
-                                "Hover a day"
+                                { t!("store-overview-hover-day") }
                             }
                         }
                     }
@@ -673,7 +833,7 @@ pub fn StoreOverview() -> Element {
                         p { class: "text-lg font-semibold tabular-nums tracking-tight text-text",
                             "£{focus_value}"
                         }
-                        p { class: "text-[11px] text-text-muted", "daily revenue" }
+                        p { class: "text-[11px] text-text-muted", { t!("store-overview-daily-revenue") } }
                     }
                 }
                 div {
@@ -686,8 +846,8 @@ pub fn StoreOverview() -> Element {
                                 .round() as u32;
                             let today = i + 1 == WEEK_REVENUE.len();
                             let active = hovered_day() == Some(i) || (hovered_day().is_none() && today);
-                            let day = WEEK_LABELS[i];
-                            let full = WEEK_FULL_LABELS[i];
+                            let day = t_key(WEEKDAY_KEYS[i]);
+                            let full = t_key(WEEKDAY_FULL_KEYS[i]);
                             let amount = *value;
                             rsx! {
                                 button {
@@ -716,16 +876,16 @@ pub fn StoreOverview() -> Element {
                 onclick: move |_| {
                     navigator.push(Route::StoreOrders {});
                 },
-                p { class: "text-xs text-text-muted", "Orders today" }
+                p { class: "text-xs text-text-muted", { t!("store-overview-orders-today") } }
                 p { class: "mt-2 text-3xl font-semibold tabular-nums", "14" }
-                p { class: "mt-1 text-xs text-success", "3 waiting delivery" }
+                p { class: "mt-1 text-xs text-success", { t!("store-overview-waiting-delivery", count: 3) } }
             }
             button {
                 class: "store-pulse-card",
                 onclick: move |_| {
                     navigator.push(Route::StoreProducts {});
                 },
-                p { class: "text-xs text-text-muted", "Top seller" }
+                p { class: "text-xs text-text-muted", { t!("store-overview-top-seller") } }
                 p { class: "mt-2 text-xl font-semibold tracking-tight", "VIP Rank" }
                 p { class: "mt-1 text-xs text-text-secondary", "42 sold · £1,260" }
             }
@@ -734,20 +894,20 @@ pub fn StoreOverview() -> Element {
                 onclick: move |_| {
                     navigator.push(Route::StoreSettings {});
                 },
-                p { class: "text-xs text-text-muted", "Attention" }
-                p { class: "mt-2 text-xl font-semibold tracking-tight", "PayPal sandbox" }
-                p { class: "mt-1 text-xs text-warning", "Switch to live keys" }
+                p { class: "text-xs text-text-muted", { t!("store-overview-attention") } }
+                p { class: "mt-2 text-xl font-semibold tracking-tight", { t!("store-overview-paypal-sandbox") } }
+                p { class: "mt-1 text-xs text-warning", { t!("store-overview-switch-live-keys") } }
             }
         }
 
         section { class: "mb-3 flex items-baseline justify-between gap-3",
-            h2 { class: "text-sm font-semibold text-text", "Just checked out" }
+            h2 { class: "text-sm font-semibold text-text", { t!("store-overview-just-checked-out") } }
             button {
                 class: "text-xs text-text-muted transition-colors hover:text-text",
                 onclick: move |_| {
                     navigator.push(Route::StoreOrders {});
                 },
-                "All orders"
+                { t!("store-overview-all-orders") }
             }
         }
         div { class: "motion-cascade motion-cascade-tight store-checkout-feed",
@@ -784,6 +944,7 @@ fn StoreFeedRow(
     #[props(into)] when: String,
     #[props(into)] email: String,
 ) -> Element {
+    let _lang = i18n();
     rsx! {
         div { class: "store-checkout-row",
             Avatar { email, size: 36, alt: title.clone() }
@@ -801,6 +962,7 @@ fn StoreFeedRow(
 
 #[component]
 pub fn StoreProducts() -> Element {
+    let _lang = i18n();
     let products = use_context::<Signal<Vec<Product>>>();
     let categories = use_context::<Signal<Vec<Category>>>();
     let navigator = use_navigator();
@@ -851,15 +1013,15 @@ pub fn StoreProducts() -> Element {
     rsx! {
         div { class: "mb-6 flex flex-wrap items-end justify-between gap-4",
             div { class: "min-w-0",
-                p { class: "text-sm text-text-muted", "Merchandising" }
-                h1 { class: "mt-1 text-3xl font-semibold tracking-tight", "Products" }
+                p { class: "text-sm text-text-muted", { t!("store-products-eyebrow") } }
+                h1 { class: "mt-1 text-3xl font-semibold tracking-tight", { t!("store-products-title") } }
             }
             Button {
                 onclick: move |_| {
                     navigator.push(Route::StoreProductNew {});
                 },
                 IconPlus {}
-                "Add product"
+                { t!("store-action-add-product") }
             }
         }
 
@@ -867,7 +1029,7 @@ pub fn StoreProducts() -> Element {
             SearchInput {
                 class: "lg:max-w-sm",
                 value: query,
-                placeholder: "Search the catalog…",
+                placeholder: t!("store-products-search-placeholder"),
             }
         }
 
@@ -913,11 +1075,11 @@ pub fn StoreProducts() -> Element {
                                                     },
                                                     div { class: "store-product-tile-top",
                                                         if !product.visible {
-                                                            span { class: "text-xs text-text-muted", "Hidden" }
+                                                            span { class: "text-xs text-text-muted", { t!("store-product-hidden") } }
                                                         } else if low {
-                                                            span { class: "text-xs text-warning", "Low stock" }
+                                                            span { class: "text-xs text-warning", { t!("store-product-low-stock") } }
                                                         } else {
-                                                            span { class: "text-xs text-text-muted", "{product.sold} sold" }
+                                                            span { class: "text-xs text-text-muted", { t!("store-product-sold-count", count: product.sold) } }
                                                         }
                                                     }
                                                     p { class: "mt-3 text-lg font-semibold tracking-tight text-text", "{product.name}" }
@@ -941,6 +1103,7 @@ pub fn StoreProducts() -> Element {
 
 #[component]
 pub fn StoreProductNew() -> Element {
+    let _lang = i18n();
     rsx! {
         ProductEditor { product_id: None }
     }
@@ -948,6 +1111,7 @@ pub fn StoreProductNew() -> Element {
 
 #[component]
 pub fn StoreProductEdit(id: u64) -> Element {
+    let _lang = i18n();
     rsx! {
         ProductEditor { product_id: Some(id) }
     }
@@ -973,6 +1137,7 @@ fn slugify(value: &str) -> String {
 
 #[component]
 fn ProductEditor(product_id: Option<u64>) -> Element {
+    let _lang = i18n();
     let mut products = use_context::<Signal<Vec<Product>>>();
     let navigator = use_navigator();
     let is_new = product_id.is_none();
@@ -1025,11 +1190,11 @@ fn ProductEditor(product_id: Option<u64>) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::StoreProducts {});
                     },
-                    "← Products"
+                    { t!("store-back-products") }
                 }
             }
-            h1 { class: "text-3xl font-semibold tracking-tight", "Product not found" }
-            p { class: "mt-2 text-sm text-text-muted", "This product may have been deleted." }
+            h1 { class: "text-3xl font-semibold tracking-tight", { t!("store-product-not-found") } }
+            p { class: "mt-2 text-sm text-text-muted", { t!("store-product-not-found-hint") } }
         };
     }
 
@@ -1107,7 +1272,7 @@ fn ProductEditor(product_id: Option<u64>) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::StoreProducts {});
                     },
-                    "← Products"
+                    { t!("store-back-products") }
                 }
                 div { class: "flex flex-wrap items-center gap-2",
                     if let Some(id) = product_id {
@@ -1118,7 +1283,7 @@ fn ProductEditor(product_id: Option<u64>) -> Element {
                                 products.with_mut(|list| list.retain(|p| p.id != id));
                                 navigator.push(Route::StoreProducts {});
                             },
-                            "Delete"
+                            { t!("common-delete") }
                         }
                     }
                     Button {
@@ -1127,45 +1292,45 @@ fn ProductEditor(product_id: Option<u64>) -> Element {
                         onclick: move |_| {
                             navigator.push(Route::StoreProducts {});
                         },
-                        "Cancel"
+                        { t!("common-cancel") }
                     }
                     Button { size: ButtonSize::Sm, onclick: save,
                         if is_new {
-                            "Create product"
+                            { t!("store-action-create-product") }
                         } else {
-                            "Save changes"
+                            { t!("common-save-changes") }
                         }
                     }
                 }
             }
 
             div { class: "mb-8",
-                p { class: "text-sm text-text-muted", "Merchandising" }
+                p { class: "text-sm text-text-muted", { t!("store-products-eyebrow") } }
                 h1 { class: "mt-1 text-3xl font-semibold tracking-tight",
                     if is_new {
-                        "New product"
+                        { t!("store-product-new-title") }
                     } else {
-                        "Edit product"
+                        { t!("store-product-edit-title") }
                     }
                 }
                 p { class: "mt-2 max-w-2xl text-sm text-text-muted",
-                    "Configure storefront media, pricing, visibility, and delivery for products and packages."
+                    { t!("store-product-editor-description") }
                 }
             }
 
             div { class: "store-editor-layout",
                 div { class: "store-editor-main space-y-8",
                     section { class: "store-editor-section",
-                        h2 { class: "store-editor-heading", "Basics" }
+                        h2 { class: "store-editor-heading", { t!("store-section-basics") } }
                         p { class: "store-editor-lede",
-                            "Name and how this listing appears in the catalog."
+                            { t!("store-section-basics-lede") }
                         }
                         div { class: "mt-4 space-y-4",
-                            StoreFormField { label: "Name",
+                            StoreFormField { label: t!("store-field-name"),
                                 SignalInput { value: name, placeholder: "VIP Rank" }
                             }
                             div { class: "motion-cascade grid gap-4 sm:grid-cols-2",
-                                StoreFormField { label: "Slug",
+                                StoreFormField { label: t!("store-field-slug"),
                                     input {
                                         r#type: "text",
                                         class: "ui-input ui-squircle h-10 w-full px-4 text-sm outline-none",
@@ -1177,7 +1342,7 @@ fn ProductEditor(product_id: Option<u64>) -> Element {
                                         },
                                     }
                                 }
-                                StoreFormField { label: "Category",
+                                StoreFormField { label: t!("store-field-category"),
                                     SignalSelect {
                                         value: category,
                                         options: category_options
@@ -1188,19 +1353,19 @@ fn ProductEditor(product_id: Option<u64>) -> Element {
                                     }
                                 }
                             }
-                            StoreFormField { label: "Description",
+                            StoreFormField { label: t!("store-field-description"),
                                 SignalTextarea {
                                     value: description,
-                                    placeholder: "What players unlock when they buy this package…",
+                                    placeholder: t!("store-placeholder-description"),
                                 }
                             }
                         }
                     }
 
                     section { class: "store-editor-section",
-                        h2 { class: "store-editor-heading", "Media" }
+                        h2 { class: "store-editor-heading", { t!("store-section-media") } }
                         p { class: "store-editor-lede",
-                            "Cover image and gallery for the storefront product page."
+                            { t!("store-section-media-lede") }
                         }
                         div { class: "mt-4",
                             ProductMediaGallery { media }
@@ -1208,87 +1373,87 @@ fn ProductEditor(product_id: Option<u64>) -> Element {
                     }
 
                     section { class: "store-editor-section",
-                        h2 { class: "store-editor-heading", "Pricing & stock" }
+                        h2 { class: "store-editor-heading", { t!("store-section-pricing") } }
                         p { class: "store-editor-lede",
-                            "Checkout price, optional sale price, and inventory."
+                            { t!("store-section-pricing-lede") }
                         }
                         div { class: "mt-4 grid gap-4 sm:grid-cols-3",
-                            StoreFormField { label: "Price",
+                            StoreFormField { label: t!("store-field-price"),
                                 SignalInput { value: price, placeholder: "£29.99" }
                             }
-                            StoreFormField { label: "Sale price",
+                            StoreFormField { label: t!("store-field-sale-price"),
                                 SignalInput {
                                     value: sale_price,
-                                    placeholder: "Optional",
+                                    placeholder: t!("store-placeholder-optional"),
                                 }
                             }
-                            StoreFormField { label: "Stock",
+                            StoreFormField { label: t!("store-field-stock"),
                                 SignalInput { value: stock, placeholder: "Unlimited" }
                             }
                         }
                     }
 
                     section { class: "store-editor-section",
-                        h2 { class: "store-editor-heading", "Delivery" }
+                        h2 { class: "store-editor-heading", { t!("store-section-delivery") } }
                         p { class: "store-editor-lede",
-                            "Commands run after payment, on revoke, and where packages land."
+                            { t!("store-section-delivery-lede") }
                         }
                         div { class: "mt-4 space-y-4",
-                            StoreFormField { label: "Target servers",
+                            StoreFormField { label: t!("store-field-target-servers"),
                                 SignalMultiSelect {
                                     value: servers,
-                                    placeholder: "Select servers",
+                                    placeholder: t!("store-placeholder-select-servers"),
                                     options: ["Lobby", "Survival", "Skyblock", "Creative"]
                                         .into_iter()
                                         .map(|name| SelectOption::new(name, name))
                                         .collect(),
                                 }
                             }
-                            StoreFormField { label: "Delivery commands",
+                            StoreFormField { label: t!("store-field-delivery-commands"),
                                 SignalTextarea {
                                     value: commands,
                                     placeholder: "lp user {{player}} parent add vip",
                                 }
                             }
-                            StoreFormField { label: "Revoke commands",
+                            StoreFormField { label: t!("store-field-revoke-commands"),
                                 SignalTextarea {
                                     value: revoke_commands,
                                     placeholder: "lp user {{player}} parent remove vip",
                                 }
                             }
-                            StoreFormField { label: "Expires after (days)",
+                            StoreFormField { label: t!("store-field-expires-days"),
                                 SignalInput {
                                     value: expiry_days,
-                                    placeholder: "Leave blank for permanent",
+                                    placeholder: t!("store-placeholder-permanent"),
                                 }
                             }
                         }
                     }
 
                     section { class: "store-editor-section",
-                        h2 { class: "store-editor-heading", "Visibility & purchase rules" }
+                        h2 { class: "store-editor-heading", { t!("store-section-visibility") } }
                         p { class: "store-editor-lede",
-                            "Control catalog presence and checkout behaviour."
+                            { t!("store-section-visibility-lede") }
                         }
                         div { class: "mt-2 divide-y divide-border-subtle",
                             ProductToggleRow {
-                                title: "Show in store",
-                                description: "Hidden products stay off the public catalog.",
+                                title: t!("store-toggle-show-in-store"),
+                                description: t!("store-toggle-show-in-store-hint"),
                                 enabled: visible,
                             }
                             ProductToggleRow {
-                                title: "Featured",
-                                description: "Highlight this package on the storefront home.",
+                                title: t!("store-toggle-featured"),
+                                description: t!("store-toggle-featured-hint"),
                                 enabled: featured,
                             }
                             ProductToggleRow {
-                                title: "Allow gifts",
-                                description: "Buyers can send this package to another username.",
+                                title: t!("store-toggle-allow-gifts"),
+                                description: t!("store-toggle-allow-gifts-hint"),
                                 enabled: giftable,
                             }
                             ProductToggleRow {
-                                title: "Require online",
-                                description: "Only deliver when the player is connected.",
+                                title: t!("store-toggle-require-online"),
+                                description: t!("store-toggle-require-online-hint"),
                                 enabled: require_online,
                             }
                         }
@@ -1298,11 +1463,11 @@ fn ProductEditor(product_id: Option<u64>) -> Element {
                 aside { class: "store-editor-aside",
                     div { class: "store-editor-summary",
                         p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                            "Preview"
+                            { t!("store-preview") }
                         }
                         p { class: "mt-3 text-xl font-semibold tracking-tight text-text",
                             if name().trim().is_empty() {
-                                "Untitled product"
+                                { t!("store-preview-untitled-product") }
                             } else {
                                 "{name}"
                             }
@@ -1313,39 +1478,39 @@ fn ProductEditor(product_id: Option<u64>) -> Element {
                             "{price}"
                         }
                         if !sale_price().trim().is_empty() {
-                            p { class: "mt-1 text-sm text-accent", "Sale {sale_price}" }
+                            p { class: "mt-1 text-sm text-accent", { t!("store-preview-sale", price: sale_price()) } }
                         }
-                        p { class: "mt-4 text-xs text-text-muted", "Stock · {stock}" }
+                        p { class: "mt-4 text-xs text-text-muted", { t!("store-preview-stock", stock: stock()) } }
                         if !is_new {
-                            p { class: "mt-1 text-xs text-text-muted", "{sold} sold" }
+                            p { class: "mt-1 text-xs text-text-muted", { t!("store-product-sold-count", count: sold) } }
                         }
                         ul { class: "mt-5 space-y-1.5 text-xs text-text-secondary",
                             li {
                                 if visible() {
-                                    "Visible in catalog"
+                                    { t!("store-preview-visible") }
                                 } else {
-                                    "Hidden from catalog"
+                                    { t!("store-preview-hidden") }
                                 }
                             }
                             li {
                                 if featured() {
-                                    "Featured listing"
+                                    { t!("store-preview-featured") }
                                 } else {
-                                    "Standard listing"
+                                    { t!("store-preview-standard") }
                                 }
                             }
                             li {
                                 if giftable() {
-                                    "Gifting enabled"
+                                    { t!("store-preview-gifting-on") }
                                 } else {
-                                    "Gifting off"
+                                    { t!("store-preview-gifting-off") }
                                 }
                             }
                             li {
                                 if require_online() {
-                                    "Requires online player"
+                                    { t!("store-preview-requires-online") }
                                 } else {
-                                    "Offline delivery ok"
+                                    { t!("store-preview-offline-ok") }
                                 }
                             }
                         }
@@ -1358,10 +1523,11 @@ fn ProductEditor(product_id: Option<u64>) -> Element {
 
 #[component]
 fn ProductToggleRow(
-    title: &'static str,
-    description: &'static str,
+    #[props(into)] title: String,
+    #[props(into)] description: String,
     mut enabled: Signal<bool>,
 ) -> Element {
+    let _lang = i18n();
     rsx! {
         div { class: "flex items-start justify-between gap-4 py-4",
             div { class: "min-w-0",
@@ -1377,9 +1543,9 @@ fn ProductToggleRow(
                     enabled.set(next);
                 },
                 if enabled() {
-                    "On"
+                    { t!("common-on") }
                 } else {
-                    "Off"
+                    { t!("common-off") }
                 }
             }
         }
@@ -1480,6 +1646,7 @@ pub(crate) fn placeholder_categories() -> Vec<Category> {
 
 #[component]
 pub fn StoreCategories() -> Element {
+    let _lang = i18n();
     let categories = use_context::<Signal<Vec<Category>>>();
     let navigator = use_navigator();
     let list = categories();
@@ -1487,20 +1654,20 @@ pub fn StoreCategories() -> Element {
     rsx! {
         div { class: "mb-8 flex flex-wrap items-end justify-between gap-4",
             div { class: "min-w-0",
-                p { class: "text-sm text-text-muted", "Storefront structure" }
-                h1 { class: "mt-1 text-3xl font-semibold tracking-tight", "Categories" }
+                p { class: "text-sm text-text-muted", { t!("store-categories-eyebrow") } }
+                h1 { class: "mt-1 text-3xl font-semibold tracking-tight", { t!("store-categories-title") } }
             }
             Button {
                 onclick: move |_| {
                     navigator.push(Route::StoreCategoryNew {});
                 },
                 IconPlus {}
-                "Add category"
+                { t!("store-action-add-category") }
             }
         }
 
         p { class: "mb-6 max-w-xl text-sm text-text-secondary",
-            "Lanes players browse on the shop. Click a category to edit it. Cumulative ranks only charge the upgrade difference."
+            { t!("store-categories-description") }
         }
 
         div { class: "motion-cascade store-category-lanes",
@@ -1525,11 +1692,11 @@ pub fn StoreCategories() -> Element {
                                 if category.cumulative || !category.parent.is_empty() {
                                     p { class: "mt-1.5 text-[11px] text-text-secondary",
                                         if category.cumulative && !category.parent.is_empty() {
-                                            "Cumulative · Child of {category.parent}"
+                                            { t!("store-category-cumulative-child", parent: category.parent.clone()) }
                                         } else if category.cumulative {
-                                            "Cumulative upgrades"
+                                            { t!("store-category-cumulative") }
                                         } else {
-                                            "Child of {category.parent}"
+                                            { t!("store-category-child-of", parent: category.parent.clone()) }
                                         }
                                     }
                                 }
@@ -1538,9 +1705,9 @@ pub fn StoreCategories() -> Element {
                                 p { class: "text-3xl font-semibold tabular-nums tracking-tight", "{count}" }
                                 p { class: "mt-0.5 text-[11px] text-text-muted",
                                     if category.visible {
-                                        "products · Edit"
+                                        { t!("store-category-products-edit") }
                                     } else {
-                                        "hidden · Edit"
+                                        { t!("store-category-hidden-edit") }
                                     }
                                 }
                             }
@@ -1554,6 +1721,7 @@ pub fn StoreCategories() -> Element {
 
 #[component]
 pub fn StoreCategoryNew() -> Element {
+    let _lang = i18n();
     rsx! {
         CategoryEditor { category_id: None }
     }
@@ -1561,6 +1729,7 @@ pub fn StoreCategoryNew() -> Element {
 
 #[component]
 pub fn StoreCategoryEdit(id: u64) -> Element {
+    let _lang = i18n();
     rsx! {
         CategoryEditor { category_id: Some(id) }
     }
@@ -1568,6 +1737,7 @@ pub fn StoreCategoryEdit(id: u64) -> Element {
 
 #[component]
 fn CategoryEditor(category_id: Option<u64>) -> Element {
+    let _lang = i18n();
     let mut categories = use_context::<Signal<Vec<Category>>>();
     let mut products = use_context::<Signal<Vec<Product>>>();
     let navigator = use_navigator();
@@ -1610,11 +1780,11 @@ fn CategoryEditor(category_id: Option<u64>) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::StoreCategories {});
                     },
-                    "← Categories"
+                    { t!("store-back-categories") }
                 }
             }
-            h1 { class: "text-3xl font-semibold tracking-tight", "Category not found" }
-            p { class: "mt-2 text-sm text-text-muted", "This category may have been deleted." }
+            h1 { class: "text-3xl font-semibold tracking-tight", { t!("store-category-not-found") } }
+            p { class: "mt-2 text-sm text-text-muted", { t!("store-category-not-found-hint") } }
         };
     }
 
@@ -1697,7 +1867,7 @@ fn CategoryEditor(category_id: Option<u64>) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::StoreCategories {});
                     },
-                    "← Categories"
+                    { t!("store-back-categories") }
                 }
                 div { class: "flex flex-wrap items-center gap-2",
                     if let Some(id) = category_id {
@@ -1721,7 +1891,7 @@ fn CategoryEditor(category_id: Option<u64>) -> Element {
                                     });
                                 navigator.push(Route::StoreCategories {});
                             },
-                            "Delete"
+                            { t!("common-delete") }
                         }
                     }
                     Button {
@@ -1730,83 +1900,83 @@ fn CategoryEditor(category_id: Option<u64>) -> Element {
                         onclick: move |_| {
                             navigator.push(Route::StoreCategories {});
                         },
-                        "Cancel"
+                        { t!("common-cancel") }
                     }
                     Button { size: ButtonSize::Sm, onclick: save,
                         if is_new {
-                            "Create category"
+                            { t!("store-action-create-category") }
                         } else {
-                            "Save changes"
+                            { t!("common-save-changes") }
                         }
                     }
                 }
             }
 
             div { class: "mb-8",
-                p { class: "text-sm text-text-muted", "Storefront structure" }
+                p { class: "text-sm text-text-muted", { t!("store-categories-eyebrow") } }
                 h1 { class: "mt-1 text-3xl font-semibold tracking-tight",
                     if is_new {
-                        "New category"
+                        { t!("store-category-new-title") }
                     } else {
-                        "Edit category"
+                        { t!("store-category-edit-title") }
                     }
                 }
                 p { class: "mt-2 max-w-2xl text-sm text-text-muted",
-                    "Control how this lane appears on the storefront and whether upgrades are cumulative."
+                    { t!("store-category-editor-description") }
                 }
             }
 
             div { class: "store-editor-layout",
                 div { class: "store-editor-main space-y-8",
                     section { class: "store-editor-section",
-                        h2 { class: "store-editor-heading", "Basics" }
+                        h2 { class: "store-editor-heading", { t!("store-section-basics") } }
                         p { class: "store-editor-lede",
-                            "Name, description, and where this lane sits in the menu."
+                            { t!("store-category-basics-lede") }
                         }
                         div { class: "mt-4 space-y-4",
-                            StoreFormField { label: "Name",
+                            StoreFormField { label: t!("store-field-name"),
                                 SignalInput { value: name, placeholder: "Ranks" }
                             }
-                            StoreFormField { label: "Description",
+                            StoreFormField { label: t!("store-field-description"),
                                 SignalInput {
                                     value: note,
                                     placeholder: "Keys & openers",
                                 }
                             }
-                            StoreFormField { label: "Parent category",
+                            StoreFormField { label: t!("store-field-parent-category"),
                                 SignalSelect {
                                     value: parent,
                                     options: parent_options,
-                                    placeholder: "None",
+                                    placeholder: t!("store-placeholder-none"),
                                 }
                             }
                         }
                     }
 
                     section { class: "store-editor-section",
-                        h2 { class: "store-editor-heading", "Appearance" }
+                        h2 { class: "store-editor-heading", { t!("store-section-appearance") } }
                         p { class: "store-editor-lede",
-                            "Accent used on the category lane and storefront chips."
+                            { t!("store-section-appearance-lede") }
                         }
                         div { class: "mt-4",
-                            StoreFormField { label: "Accent colour",
+                            StoreFormField { label: t!("store-field-accent-colour"),
                                 ColorPicker { value: accent }
                             }
                         }
                     }
 
                     section { class: "store-editor-section",
-                        h2 { class: "store-editor-heading", "Visibility & pricing rules" }
-                        p { class: "store-editor-lede", "Catalog presence and upgrade behaviour." }
+                        h2 { class: "store-editor-heading", { t!("store-section-visibility-pricing") } }
+                        p { class: "store-editor-lede", { t!("store-section-visibility-pricing-lede") } }
                         div { class: "mt-2 divide-y divide-border-subtle",
                             ProductToggleRow {
-                                title: "Show in store",
-                                description: "Hidden categories stay off the public menu.",
+                                title: t!("store-toggle-show-in-store"),
+                                description: t!("store-toggle-show-category-hint"),
                                 enabled: visible,
                             }
                             ProductToggleRow {
-                                title: "Cumulative upgrades",
-                                description: "Players pay only the difference when upgrading tiers.",
+                                title: t!("store-toggle-cumulative"),
+                                description: t!("store-toggle-cumulative-hint"),
                                 enabled: cumulative,
                             }
                         }
@@ -1816,7 +1986,7 @@ fn CategoryEditor(category_id: Option<u64>) -> Element {
                 aside { class: "store-editor-aside",
                     div { class: "store-editor-summary",
                         p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                            "Preview"
+                            { t!("store-preview") }
                         }
                         div {
                             class: "mt-4 store-category-lane",
@@ -1825,14 +1995,14 @@ fn CategoryEditor(category_id: Option<u64>) -> Element {
                             div { class: "min-w-0 flex-1",
                                 p { class: "text-base font-semibold tracking-tight text-text",
                                     if name().trim().is_empty() {
-                                        "Untitled category"
+                                        { t!("store-preview-untitled-category") }
                                     } else {
                                         "{name}"
                                     }
                                 }
                                 p { class: "mt-1 text-xs text-text-muted",
                                     if note().trim().is_empty() {
-                                        "No description yet"
+                                        { t!("store-preview-no-description") }
                                     } else {
                                         "{note}"
                                     }
@@ -1842,27 +2012,27 @@ fn CategoryEditor(category_id: Option<u64>) -> Element {
                         ul { class: "mt-5 space-y-1.5 text-xs text-text-secondary",
                             li {
                                 if parent().trim().is_empty() {
-                                    "Top-level category"
+                                    { t!("store-preview-top-level") }
                                 } else {
-                                    "Child of {parent}"
+                                    { t!("store-preview-child-of", parent: parent()) }
                                 }
                             }
                             li {
                                 if visible() {
-                                    "Visible in store"
+                                    { t!("store-preview-visible-store") }
                                 } else {
-                                    "Hidden from store"
+                                    { t!("store-preview-hidden-store") }
                                 }
                             }
                             li {
                                 if cumulative() {
-                                    "Cumulative upgrades on"
+                                    { t!("store-preview-cumulative-on") }
                                 } else {
-                                    "Standard pricing"
+                                    { t!("store-preview-standard-pricing") }
                                 }
                             }
                             if !is_new {
-                                li { "{product_count} products" }
+                                li { { t!("store-preview-products-count", count: product_count) } }
                             }
                         }
                     }
@@ -1906,22 +2076,25 @@ impl Coupon {
         let mut parts: Vec<String> = Vec::new();
         let min = self.min_order.trim();
         if !min.is_empty() && min != "0" && min != "0.00" {
-            parts.push(format!("Min £{min}"));
+            parts.push(t!("store-coupon-meta-min", amount: min.to_string()));
         }
         if !self.ends.trim().is_empty() {
-            parts.push(format!("Ends {}", format_display_date(self.ends.trim())));
+            parts.push(t!(
+                "store-coupon-meta-ends",
+                date: format_display_date(self.ends.trim())
+            ));
         }
         if !self.note.trim().is_empty() {
             parts.push(self.note.clone());
         }
         if self.uses > 0 {
-            parts.push(format!("{} uses", self.uses));
+            parts.push(t!("store-coupon-meta-uses", count: self.uses));
         }
         if !self.active {
-            parts.push(String::from("Paused"));
+            parts.push(t_key("store-coupon-meta-paused"));
         }
         if parts.is_empty() {
-            String::from("No limits")
+            t_key("store-coupon-meta-no-limits")
         } else {
             parts.join(" · ")
         }
@@ -1995,6 +2168,7 @@ pub(crate) fn placeholder_coupons() -> Vec<Coupon> {
 
 #[component]
 pub fn StoreCoupons() -> Element {
+    let _lang = i18n();
     let coupons = use_context::<Signal<Vec<Coupon>>>();
     let navigator = use_navigator();
     let list_len = use_memo(move || coupons.read().len());
@@ -2018,22 +2192,22 @@ pub fn StoreCoupons() -> Element {
     rsx! {
         div { class: "mb-8 flex flex-wrap items-end justify-between gap-4",
             div { class: "min-w-0",
-                p { class: "text-sm text-text-muted", "Checkout codes" }
-                h1 { class: "mt-1 text-3xl font-semibold tracking-tight", "Coupons" }
+                p { class: "text-sm text-text-muted", { t!("store-coupons-eyebrow") } }
+                h1 { class: "mt-1 text-3xl font-semibold tracking-tight", { t!("store-coupons-title") } }
             }
             Button {
                 onclick: move |_| {
                     navigator.push(Route::StoreCouponNew {});
                 },
                 IconPlus {}
-                "Add coupon"
+                { t!("store-action-add-coupon") }
             }
         }
 
         if !active().is_empty() {
             section { class: "mb-8",
                 p { class: "mb-3 text-xs font-medium uppercase tracking-wide text-text-muted",
-                    "Active"
+                    { t!("store-coupons-active") }
                 }
                 div { class: "motion-cascade store-coupon-rack",
                     for coupon in active() {
@@ -2046,7 +2220,7 @@ pub fn StoreCoupons() -> Element {
         if !inactive().is_empty() {
             section {
                 p { class: "mb-3 text-xs font-medium uppercase tracking-wide text-text-muted",
-                    "Expired / paused"
+                    { t!("store-coupons-inactive") }
                 }
                 div { class: "motion-cascade store-coupon-rack store-coupon-rack-muted",
                     for coupon in inactive() {
@@ -2057,13 +2231,14 @@ pub fn StoreCoupons() -> Element {
         }
 
         if list_len() == 0 {
-            p { class: "text-sm text-text-muted", "No coupons yet. Create one to get started." }
+            p { class: "text-sm text-text-muted", { t!("store-coupons-empty") } }
         }
     }
 }
 
 #[component]
 pub fn StoreCouponNew() -> Element {
+    let _lang = i18n();
     rsx! {
         CouponEditor { coupon_id: None }
     }
@@ -2071,6 +2246,7 @@ pub fn StoreCouponNew() -> Element {
 
 #[component]
 pub fn StoreCouponEdit(id: u64) -> Element {
+    let _lang = i18n();
     rsx! {
         CouponEditor { coupon_id: Some(id) }
     }
@@ -2078,6 +2254,7 @@ pub fn StoreCouponEdit(id: u64) -> Element {
 
 #[component]
 fn CouponEditor(coupon_id: Option<u64>) -> Element {
+    let _lang = i18n();
     let mut coupons = use_context::<Signal<Vec<Coupon>>>();
     let navigator = use_navigator();
     let is_new = coupon_id.is_none();
@@ -2111,11 +2288,11 @@ fn CouponEditor(coupon_id: Option<u64>) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::StoreCoupons {});
                     },
-                    "← Coupons"
+                    { t!("store-back-coupons") }
                 }
             }
-            h1 { class: "text-3xl font-semibold tracking-tight", "Coupon not found" }
-            p { class: "mt-2 text-sm text-text-muted", "This coupon may have been deleted." }
+            h1 { class: "text-3xl font-semibold tracking-tight", { t!("store-coupon-not-found") } }
+            p { class: "mt-2 text-sm text-text-muted", { t!("store-coupon-not-found-hint") } }
         };
     }
 
@@ -2177,7 +2354,7 @@ fn CouponEditor(coupon_id: Option<u64>) -> Element {
         offer: {
             let value = offer().trim().to_string();
             if value.is_empty() {
-                String::from("Describe the offer")
+                t_key("store-coupon-preview-describe-offer")
             } else {
                 value
             }
@@ -2207,7 +2384,7 @@ fn CouponEditor(coupon_id: Option<u64>) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::StoreCoupons {});
                     },
-                    "← Coupons"
+                    { t!("store-back-coupons") }
                 }
                 div { class: "flex flex-wrap items-center gap-2",
                     if let Some(id) = coupon_id {
@@ -2218,7 +2395,7 @@ fn CouponEditor(coupon_id: Option<u64>) -> Element {
                                 coupons.with_mut(|list| list.retain(|c| c.id != id));
                                 navigator.push(Route::StoreCoupons {});
                             },
-                            "Delete"
+                            { t!("common-delete") }
                         }
                     }
                     Button {
@@ -2227,54 +2404,54 @@ fn CouponEditor(coupon_id: Option<u64>) -> Element {
                         onclick: move |_| {
                             navigator.push(Route::StoreCoupons {});
                         },
-                        "Cancel"
+                        { t!("common-cancel") }
                     }
                     Button { size: ButtonSize::Sm, onclick: save,
                         if is_new {
-                            "Create coupon"
+                            { t!("store-action-create-coupon") }
                         } else {
-                            "Save changes"
+                            { t!("common-save-changes") }
                         }
                     }
                 }
             }
 
             div { class: "mb-8",
-                p { class: "text-sm text-text-muted", "Checkout codes" }
+                p { class: "text-sm text-text-muted", { t!("store-coupons-eyebrow") } }
                 h1 { class: "mt-1 text-3xl font-semibold tracking-tight",
                     if is_new {
-                        "New coupon"
+                        { t!("store-coupon-new-title") }
                     } else {
-                        "Edit coupon"
+                        { t!("store-coupon-edit-title") }
                     }
                 }
                 p { class: "mt-2 max-w-2xl text-sm text-text-muted",
-                    "Players enter this code at checkout to apply the discount."
+                    { t!("store-coupon-editor-description") }
                 }
             }
 
             div { class: "store-editor-layout",
                 div { class: "store-editor-main space-y-8",
                     section { class: "store-editor-section",
-                        h2 { class: "store-editor-heading", "Basics" }
+                        h2 { class: "store-editor-heading", { t!("store-section-basics") } }
                         p { class: "store-editor-lede",
-                            "Code players type, and how the offer is described."
+                            { t!("store-coupon-basics-lede") }
                         }
                         div { class: "mt-4 space-y-4",
-                            StoreFormField { label: "Coupon code",
+                            StoreFormField { label: t!("store-field-coupon-code"),
                                 SignalInput { value: code, placeholder: "SUMMER20" }
                             }
-                            StoreFormField { label: "Offer summary",
+                            StoreFormField { label: t!("store-field-offer-summary"),
                                 SignalInput {
                                     value: offer,
                                     placeholder: "20% off lifetime ranks",
                                 }
                             }
                             div { class: "motion-cascade grid gap-4 sm:grid-cols-2",
-                                StoreFormField { label: "Discount (%)",
+                                StoreFormField { label: t!("store-field-discount-percent"),
                                     SignalInput { value: discount, placeholder: "20" }
                                 }
-                                StoreFormField { label: "Minimum order (£)",
+                                StoreFormField { label: t!("store-field-min-order"),
                                     SignalInput {
                                         value: min_order,
                                         placeholder: "10.00",
@@ -2285,19 +2462,19 @@ fn CouponEditor(coupon_id: Option<u64>) -> Element {
                     }
 
                     section { class: "store-editor-section",
-                        h2 { class: "store-editor-heading", "Limits & notes" }
+                        h2 { class: "store-editor-heading", { t!("store-section-limits-notes") } }
                         p { class: "store-editor-lede",
-                            "Optional end date and staff-facing notes shown on the ticket."
+                            { t!("store-section-limits-notes-lede") }
                         }
                         div { class: "mt-4 space-y-4",
-                            StoreFormField { label: "Ends",
+                            StoreFormField { label: t!("store-field-ends"),
                                 SignalDatePicker {
                                     value: ends,
-                                    placeholder: "No end date",
+                                    placeholder: t!("store-placeholder-no-end-date"),
                                     allow_clear: true,
                                 }
                             }
-                            StoreFormField { label: "Note",
+                            StoreFormField { label: t!("store-field-note"),
                                 SignalInput {
                                     value: note,
                                     placeholder: "crates only · attributed",
@@ -2307,18 +2484,18 @@ fn CouponEditor(coupon_id: Option<u64>) -> Element {
                     }
 
                     section { class: "store-editor-section",
-                        h2 { class: "store-editor-heading", "Appearance & status" }
+                        h2 { class: "store-editor-heading", { t!("store-section-appearance-status") } }
                         p { class: "store-editor-lede",
-                            "Ticket colour and whether the code can still be redeemed."
+                            { t!("store-section-appearance-status-lede") }
                         }
                         div { class: "mt-4 space-y-4",
-                            StoreFormField { label: "Accent colour",
+                            StoreFormField { label: t!("store-field-accent-colour"),
                                 ColorPicker { value: accent }
                             }
                             div { class: "divide-y divide-border-subtle border-t border-border-subtle",
                                 ProductToggleRow {
-                                    title: "Active",
-                                    description: "Paused coupons stay in the list but cannot be redeemed.",
+                                    title: t!("store-toggle-active"),
+                                    description: t!("store-toggle-active-hint"),
                                     enabled: active,
                                 }
                             }
@@ -2329,7 +2506,7 @@ fn CouponEditor(coupon_id: Option<u64>) -> Element {
                 aside { class: "store-editor-aside",
                     div { class: "store-editor-summary",
                         p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                            "Preview"
+                            { t!("store-preview") }
                         }
                         div { class: "mt-4",
                             StoreCouponTicket { coupon: preview }
@@ -2337,20 +2514,20 @@ fn CouponEditor(coupon_id: Option<u64>) -> Element {
                         ul { class: "mt-5 space-y-1.5 text-xs text-text-secondary",
                             li {
                                 if discount().trim().is_empty() {
-                                    "No percent set"
+                                    { t!("store-preview-no-percent") }
                                 } else {
-                                    "{discount}% discount"
+                                    { t!("store-preview-discount-percent", percent: discount()) }
                                 }
                             }
                             li {
                                 if active() {
-                                    "Redeemable"
+                                    { t!("store-preview-redeemable") }
                                 } else {
-                                    "Paused / expired"
+                                    { t!("store-preview-paused-expired") }
                                 }
                             }
                             if !is_new {
-                                li { "{uses} uses" }
+                                li { { t!("store-coupon-uses-count", count: uses) } }
                             }
                         }
                     }
@@ -2362,6 +2539,7 @@ fn CouponEditor(coupon_id: Option<u64>) -> Element {
 
 #[component]
 fn StoreCouponTicket(coupon: Coupon) -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let coupon_id = coupon.id;
     let meta = coupon.meta_line();
@@ -2393,12 +2571,13 @@ fn StoreCouponTicket(coupon: Coupon) -> Element {
 
 #[component]
 pub fn StoreOrders() -> Element {
+    let _lang = i18n();
     let orders = use_signal(placeholder_orders);
     let mut query = use_signal(String::new);
     let mut status = use_signal(|| OrderStatus::All);
-    let mut payment = use_signal(|| String::from(PaymentFilter::All.label()));
-    let mut delivery = use_signal(|| String::from(DeliveryFilter::All.label()));
-    let mut server = use_signal(|| String::from("All servers"));
+    let mut payment = use_signal(|| PaymentFilter::All);
+    let mut delivery = use_signal(|| DeliveryFilter::All);
+    let mut server = use_signal(|| ALL_SERVERS_KEY.to_string());
     let mut selected = use_signal(|| Option::<u64>::None);
     let mut visible = use_signal(|| ORDER_PAGE_SIZE);
 
@@ -2407,31 +2586,8 @@ pub fn StoreOrders() -> Element {
         visible.set(ORDER_PAGE_SIZE);
     });
 
-    let payment_filter = use_memo(move || {
-        [
-            PaymentFilter::All,
-            PaymentFilter::Stripe,
-            PaymentFilter::PayPal,
-        ]
-        .into_iter()
-        .find(|filter| filter.label() == payment())
-        .unwrap_or(PaymentFilter::All)
-    });
-
-    let delivery_filter = use_memo(move || {
-        [
-            DeliveryFilter::All,
-            DeliveryFilter::Delivered,
-            DeliveryFilter::Queued,
-            DeliveryFilter::Issue,
-        ]
-        .into_iter()
-        .find(|filter| filter.label() == delivery())
-        .unwrap_or(DeliveryFilter::All)
-    });
-
     let server_options = use_memo(move || {
-        std::iter::once(String::from("All servers"))
+        std::iter::once(ALL_SERVERS_KEY.to_string())
             .chain(
                 orders
                     .read()
@@ -2469,8 +2625,8 @@ pub fn StoreOrders() -> Element {
         let q = query().trim().to_lowercase();
         let status_now = status();
         let server_now = server();
-        let payment_filter = payment_filter();
-        let delivery_filter = delivery_filter();
+        let payment_filter = payment();
+        let delivery_filter = delivery();
         orders
             .read()
             .iter()
@@ -2478,7 +2634,7 @@ pub fn StoreOrders() -> Element {
                 let status_ok = status_now == OrderStatus::All || order.status == status_now;
                 let payment_ok = payment_filter.matches(&order.method);
                 let delivery_ok = delivery_filter.matches(&order.delivery);
-                let server_ok = server_now == "All servers" || order.server == server_now;
+                let server_ok = server_now == ALL_SERVERS_KEY || order.server == server_now;
                 let search_ok = q.is_empty()
                     || order.player.to_lowercase().contains(&q)
                     || order.product.to_lowercase().contains(&q)
@@ -2497,9 +2653,9 @@ pub fn StoreOrders() -> Element {
     let remaining = matched.saturating_sub(limit);
     let can_load_more = remaining > 0;
     let filters_active = status() != OrderStatus::All
-        || payment_filter() != PaymentFilter::All
-        || delivery_filter() != DeliveryFilter::All
-        || server() != "All servers"
+        || payment() != PaymentFilter::All
+        || delivery() != DeliveryFilter::All
+        || server() != ALL_SERVERS_KEY
         || !query().trim().is_empty();
 
     let selected_order = {
@@ -2512,10 +2668,10 @@ pub fn StoreOrders() -> Element {
     rsx! {
         div { class: "mb-6 flex flex-wrap items-end justify-between gap-4",
             div { class: "min-w-0",
-                p { class: "text-sm text-text-muted", "Register" }
-                h1 { class: "mt-1 text-3xl font-semibold tracking-tight", "Orders" }
+                p { class: "text-sm text-text-muted", { t!("store-orders-eyebrow") } }
+                h1 { class: "mt-1 text-3xl font-semibold tracking-tight", { t!("store-orders-title") } }
                 p { class: "mt-2 text-sm text-text-secondary",
-                    "Search tickets, filter by status or gateway, and inspect delivery."
+                    { t!("store-orders-sub") }
                 }
             }
             if filters_active {
@@ -2525,37 +2681,37 @@ pub fn StoreOrders() -> Element {
                     onclick: move |_| {
                         query.set(String::new());
                         status.set(OrderStatus::All);
-                        payment.set(String::from(PaymentFilter::All.label()));
-                        delivery.set(String::from(DeliveryFilter::All.label()));
-                        server.set(String::from("All servers"));
+                        payment.set(PaymentFilter::All);
+                        delivery.set(DeliveryFilter::All);
+                        server.set(ALL_SERVERS_KEY.to_string());
                         selected.set(None);
                         visible.set(ORDER_PAGE_SIZE);
                     },
-                    "Clear filters"
+                    { t!("store-orders-clear-filters") }
                 }
             }
         }
 
         div { class: "store-order-summary mb-5",
             div { class: "store-order-summary-card",
-                p { class: "text-xs text-text-muted", "Showing" }
+                p { class: "text-xs text-text-muted", { t!("store-orders-showing") } }
                 p { class: "mt-1 text-2xl font-semibold tabular-nums", "{limit}" }
-                p { class: "mt-0.5 text-xs text-text-muted", "of {matched}" }
+                p { class: "mt-0.5 text-xs text-text-muted", { t!("store-orders-of", count: matched) } }
             }
             div { class: "store-order-summary-card",
-                p { class: "text-xs text-text-muted", "Paid" }
+                p { class: "text-xs text-text-muted", { t!("store-order-status-paid") } }
                 p { class: "mt-1 text-2xl font-semibold tabular-nums text-success",
                     "{paid_count()}"
                 }
             }
             div { class: "store-order-summary-card",
-                p { class: "text-xs text-text-muted", "Pending" }
+                p { class: "text-xs text-text-muted", { t!("store-order-status-pending") } }
                 p { class: "mt-1 text-2xl font-semibold tabular-nums text-warning",
                     "{pending_count()}"
                 }
             }
             div { class: "store-order-summary-card",
-                p { class: "text-xs text-text-muted", "Refunded" }
+                p { class: "text-xs text-text-muted", { t!("store-order-status-refunded") } }
                 p {
                     class: "mt-1 text-2xl font-semibold tabular-nums",
                     style: "color: #f87171;",
@@ -2568,7 +2724,7 @@ pub fn StoreOrders() -> Element {
             SearchInput {
                 class: "store-order-search",
                 value: query,
-                placeholder: "Search player, product, email, or order #…",
+                placeholder: t!("store-orders-search-placeholder"),
             }
             div { class: "store-order-filter-row",
                 for chip in [OrderStatus::All, OrderStatus::Paid, OrderStatus::Pending, OrderStatus::Refunded] {
@@ -2589,34 +2745,19 @@ pub fn StoreOrders() -> Element {
                 }
             }
             div { class: "store-order-selects",
-                SignalSelect {
-                    value: payment,
-                    options: [
-                                            PaymentFilter::All,
-                                            PaymentFilter::Stripe,
-                                            PaymentFilter::PayPal,
-                                        ]
-                        .into_iter()
-                        .map(|filter| SelectOption::new(filter.label(), filter.label()))
-                        .collect(),
-                }
-                SignalSelect {
-                    value: delivery,
-                    options: [
-                        DeliveryFilter::All,
-                        DeliveryFilter::Delivered,
-                        DeliveryFilter::Queued,
-                        DeliveryFilter::Issue,
-                    ]
-                        .into_iter()
-                        .map(|filter| SelectOption::new(filter.label(), filter.label()))
-                        .collect(),
-                }
+                PaymentFilterSelect { value: payment }
+                DeliveryFilterSelect { value: delivery }
                 SignalSelect {
                     value: server,
                     options: server_options()
                         .into_iter()
-                        .map(|name| SelectOption::new(name.clone(), name))
+                        .map(|name| {
+                            if name == ALL_SERVERS_KEY {
+                                SelectOption::new(name.clone(), t_key("store-orders-all-servers"))
+                            } else {
+                                SelectOption::new(name.clone(), name)
+                            }
+                        })
                         .collect(),
                 }
             }
@@ -2626,9 +2767,9 @@ pub fn StoreOrders() -> Element {
             div { class: "store-orders-rail",
                 if matched == 0 {
                     div { class: "store-orders-empty",
-                        p { class: "text-sm font-medium text-text", "No orders match" }
+                        p { class: "text-sm font-medium text-text", { t!("store-orders-empty") } }
                         p { class: "mt-1 text-sm text-text-muted",
-                            "Try a different search or clear the filters."
+                            { t!("store-orders-empty-hint") }
                         }
                     }
                 } else {
@@ -2662,7 +2803,7 @@ pub fn StoreOrders() -> Element {
                                 let next = *visible.peek() + ORDER_PAGE_SIZE;
                                 visible.set(next.min(matched));
                             },
-                            "Load more · {remaining} remaining"
+                            { t!("store-orders-load-more", remaining: remaining) }
                         }
                     }
                 }
@@ -2673,7 +2814,7 @@ pub fn StoreOrders() -> Element {
                     div { class: "flex flex-wrap items-start justify-between gap-3",
                         div {
                             p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                                "Ticket"
+                                { t!("store-orders-ticket") }
                             }
                             h2 { class: "mt-2 text-2xl font-semibold tracking-tight",
                                 "#{order.id}"
@@ -2693,37 +2834,34 @@ pub fn StoreOrders() -> Element {
                         }
                         div { class: "min-w-0",
                             p { class: "truncate text-sm font-medium text-text", "{order.player}" }
-                            p { class: "mt-0.5 truncate text-xs text-text-muted",
-                                "{order.email}"
-                            }
                         }
                     }
                     div { class: "motion-cascade store-order-detail-grid mt-6",
-                        StoreDetailStat { label: "Amount", value: "{order.amount}" }
-                        StoreDetailStat { label: "Placed", value: "{order.when} ago" }
-                        StoreDetailStat { label: "Payment", value: "{order.method}" }
-                        StoreDetailStat { label: "Server", value: "{order.server}" }
-                        StoreDetailStat { label: "Delivery", value: "{order.delivery}" }
-                        StoreDetailStat { label: "Product", value: "{order.product}" }
+                        StoreDetailStat { label: t!("store-orders-stat-amount"), value: "{order.amount}" }
+                        StoreDetailStat { label: t!("store-orders-stat-placed"), value: t!("store-orders-stat-placed-ago", when: order.when.clone()) }
+                        StoreDetailStat { label: t!("store-orders-stat-payment"), value: "{order.method}" }
+                        StoreDetailStat { label: t!("store-orders-stat-server"), value: "{order.server}" }
+                        StoreDetailStat { label: t!("store-orders-stat-delivery"), value: "{order.delivery}" }
+                        StoreDetailStat { label: t!("store-orders-stat-product"), value: "{order.product}" }
                     }
                     div { class: "mt-8 flex flex-wrap gap-2",
-                        Button { size: ButtonSize::Sm, "Refund" }
+                        Button { size: ButtonSize::Sm, { t!("store-orders-refund") } }
                         Button {
                             size: ButtonSize::Sm,
                             variant: ButtonVariant::Secondary,
-                            "Resend delivery"
+                            { t!("store-orders-resend-delivery") }
                         }
                         Button {
                             size: ButtonSize::Sm,
                             variant: ButtonVariant::Ghost,
-                            "Copy order ID"
+                            { t!("store-orders-copy-id") }
                         }
                     }
                 } else {
                     div { class: "flex h-full min-h-56 flex-col justify-center",
-                        p { class: "text-sm font-medium text-text", "Pick an order" }
+                        p { class: "text-sm font-medium text-text", { t!("store-orders-pick") } }
                         p { class: "mt-1 max-w-xs text-sm text-text-muted",
-                            "Open a ticket from the register to inspect payment and delivery."
+                            { t!("store-orders-pick-hint") }
                         }
                     }
                 }
@@ -2733,7 +2871,8 @@ pub fn StoreOrders() -> Element {
 }
 
 #[component]
-fn StoreDetailStat(label: &'static str, #[props(into)] value: String) -> Element {
+fn StoreDetailStat(#[props(into)] label: String, #[props(into)] value: String) -> Element {
+    let _lang = i18n();
     rsx! {
         div {
             p { class: "text-xs text-text-muted", "{label}" }
@@ -2744,11 +2883,12 @@ fn StoreDetailStat(label: &'static str, #[props(into)] value: String) -> Element
 
 #[component]
 fn StoreGatewayRow(
-    name: &'static str,
-    status: &'static str,
-    detail: &'static str,
+    #[props(into)] name: String,
+    #[props(into)] status: String,
+    #[props(into)] detail: String,
     connected: bool,
 ) -> Element {
+    let _lang = i18n();
     rsx! {
         div { class: "store-gateway-row",
             div { class: "store-gateway-row-copy min-w-0",
@@ -2765,9 +2905,9 @@ fn StoreGatewayRow(
                 size: ButtonSize::Sm,
                 variant: if connected { ButtonVariant::Secondary } else { ButtonVariant::Primary },
                 if connected {
-                    "Manage"
+                    { t!("store-gateway-manage") }
                 } else {
-                    "Connect"
+                    { t!("store-gateway-connect") }
                 }
             }
         }
@@ -2776,93 +2916,94 @@ fn StoreGatewayRow(
 
 #[component]
 pub fn StoreSettings() -> Element {
+    let _lang = i18n();
     let public_path = use_signal(|| String::from("/store"));
     let page_title = use_signal(|| String::from("Store"));
     let nav_labels = use_signal(|| String::from("Shop, Ranks, Crates, Gifts"));
 
     rsx! {
-        FeatureSettingsChrome { subtitle: "Storefront, payment gateways, and the rules your checkout enforces.",
-            DataPanel { title: "Storefront",
-                SettingsControl { label: "Public path",
+        FeatureSettingsChrome { subtitle: t!("store-settings-subtitle"),
+            DataPanel { title: t!("store-settings-panel-storefront"),
+                SettingsControl { label: t!("store-settings-field-public-path"),
                     SignalInput { value: public_path, placeholder: "/store".to_string() }
                 }
                 SettingsField {
-                    label: "Full URL",
+                    label: t!("store-settings-field-full-url"),
                     value: format!("www.example.com{}", public_path()),
                 }
-                SettingsControl { label: "Page title",
+                SettingsControl { label: t!("store-settings-field-page-title"),
                     SignalInput { value: page_title, placeholder: "Store".to_string() }
                 }
-                SettingsControl { label: "Section navigation",
+                SettingsControl { label: t!("store-settings-field-nav"),
                     SignalInput {
                         value: nav_labels,
                         placeholder: "Shop, Ranks, Crates, Gifts".to_string(),
                     }
                 }
                 p { class: "pt-3 text-xs text-text-muted",
-                    "Comma-separated labels become the storefront nav. Domain and HTTPS live under Settings → General."
+                    { t!("store-settings-nav-hint") }
                 }
             }
-            DataPanel { title: "Gateways",
+            DataPanel { title: t!("store-settings-panel-gateways"),
                 p { class: "py-3 text-sm text-text-muted",
-                    "Stripe and PayPal · checkout uses GBP · fees depend on each provider."
+                    { t!("store-settings-gateways-intro") }
                 }
                 div { class: "motion-cascade motion-cascade-tight store-gateway-list",
                     StoreGatewayRow {
-                        name: "Stripe",
-                        status: "Live",
-                        detail: "Cards, Apple Pay, Google Pay",
+                        name: t_key("store-payment-filter-stripe"),
+                        status: t!("store-settings-gateway-live"),
+                        detail: t!("store-settings-gateway-stripe-detail"),
                         connected: true,
                     }
                     StoreGatewayRow {
-                        name: "PayPal",
-                        status: "Sandbox",
-                        detail: "Checkout still on test credentials",
+                        name: t_key("store-payment-filter-paypal"),
+                        status: t!("store-settings-gateway-sandbox"),
+                        detail: t!("store-settings-gateway-paypal-detail"),
                         connected: true,
                     }
                 }
             }
-            DataPanel { title: "Checkout behaviour",
+            DataPanel { title: t!("store-settings-panel-checkout"),
                 SettingRow {
-                    title: "Guest checkout",
-                    description: "Allow purchases with email only — no full account required.",
+                    title: t!("store-settings-rule-guest-checkout"),
+                    description: t!("store-settings-rule-guest-checkout-desc"),
                     enabled: false,
                 }
                 SettingRow {
-                    title: "Save payment methods",
-                    description: "Returning players can reuse cards stored with Stripe.",
+                    title: t!("store-settings-rule-save-payment"),
+                    description: t!("store-settings-rule-save-payment-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Test mode",
-                    description: "Route new checkouts through sandbox gateways.",
+                    title: t!("store-settings-rule-test-mode"),
+                    description: t!("store-settings-rule-test-mode-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Email receipts",
-                    description: "Send receipt and delivery summary after every paid order.",
+                    title: t!("store-settings-rule-receipts"),
+                    description: t!("store-settings-rule-receipts-desc"),
                     enabled: true,
                 }
             }
-            DataPanel { title: "Purchase rules",
+            DataPanel { title: t!("store-settings-panel-purchase-rules"),
                 SettingRow {
-                    title: "Require login to purchase",
-                    description: "Players need a linked account before checkout.",
+                    title: t!("store-settings-rule-require-login"),
+                    description: t!("store-settings-rule-require-login-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Allow gift purchases",
-                    description: "Buyers can send packages to another username.",
+                    title: t!("store-settings-rule-gift-purchases"),
+                    description: t!("store-settings-rule-gift-purchases-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Creator codes",
-                    description: "Show a creator field on checkout for attributed discounts.",
+                    title: t!("store-settings-rule-creator-codes"),
+                    description: t!("store-settings-rule-creator-codes-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Low stock alerts",
-                    description: "Notify staff when limited products drop below five units.",
+                    title: t!("store-settings-rule-low-stock"),
+                    description: t!("store-settings-rule-low-stock-desc"),
                     enabled: true,
                 }
             }

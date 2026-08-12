@@ -1,9 +1,11 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::page::{PageHeader, StatusChip};
 use crate::components::ui::*;
+use crate::i18n::{community_case_joined, community_status_last_seen, t_key};
 use crate::router::Route;
-
 pub const PLAYERS_LEADERBOARDS_CSS: Asset = asset!("/css-partials/players-leaderboards.css");
 
 #[component]
@@ -34,13 +36,13 @@ pub enum PlayerRank {
 }
 
 impl PlayerRank {
-    pub fn label(self) -> &'static str {
+    pub fn label(self) -> String {
         match self {
-            PlayerRank::Member => "Member",
-            PlayerRank::Vip => "VIP",
-            PlayerRank::Elite => "Elite",
-            PlayerRank::Moderator => "Moderator",
-            PlayerRank::Admin => "Admin",
+            PlayerRank::Member => t_key("community-rank-member"),
+            PlayerRank::Vip => t_key("community-rank-vip"),
+            PlayerRank::Elite => t_key("community-rank-elite"),
+            PlayerRank::Moderator => t_key("community-rank-moderator"),
+            PlayerRank::Admin => t_key("community-rank-admin"),
         }
     }
 
@@ -63,11 +65,11 @@ pub enum PlayerStatus {
 }
 
 impl PlayerStatus {
-    pub fn label(self) -> &'static str {
+    pub fn label(self) -> String {
         match self {
-            PlayerStatus::Online => "Online",
-            PlayerStatus::Away => "Away",
-            PlayerStatus::Offline => "Offline",
+            PlayerStatus::Online => t_key("community-status-online"),
+            PlayerStatus::Away => t_key("community-status-away"),
+            PlayerStatus::Offline => t_key("community-status-offline"),
         }
     }
 
@@ -250,18 +252,17 @@ pub fn placeholder_players() -> Vec<Player> {
 }
 
 const PLAYER_RANK_FILTERS: &[(&str, Option<PlayerRank>)] = &[
-    ("All", None),
-    ("Admins", Some(PlayerRank::Admin)),
-    ("Moderators", Some(PlayerRank::Moderator)),
-    ("Elite", Some(PlayerRank::Elite)),
-    ("VIP", Some(PlayerRank::Vip)),
-    ("Members", Some(PlayerRank::Member)),
+    ("community-filter-all", None),
+    ("community-filter-admins", Some(PlayerRank::Admin)),
+    ("community-filter-moderators", Some(PlayerRank::Moderator)),
+    ("community-filter-elite", Some(PlayerRank::Elite)),
+    ("community-filter-vip", Some(PlayerRank::Vip)),
+    ("community-filter-members", Some(PlayerRank::Member)),
 ];
-
 #[component]
 pub fn CommunityPlayers() -> Element {
-    let navigator = use_navigator();
-    let players = use_hook(placeholder_players);
+    let _lang = i18n();
+    let navigator = use_navigator();    let players = use_hook(placeholder_players);
     let query = use_signal(String::new);
     let filter = use_signal(|| 0usize);
 
@@ -279,26 +280,27 @@ pub fn CommunityPlayers() -> Element {
     rsx! {
         PlayersLeaderboardsStyles {}
         PageHeader {
-            title: "Player roster",
-            subtitle: "The roster, ranks, and linked identities for every player across your servers.",
+            title: t_key("community-players-title"),
+            subtitle: t_key("community-players-subtitle"),
         }
 
         div { class: "pl-toolbar",
             div { class: "pl-toolbar-row",
                 SearchInput {
                     value: query,
-                    placeholder: "Search players…".to_string(),
+                    placeholder: t_key("community-search-players"),
                     class: "min-w-0 flex-1",
                 }
             }
             div { class: "pl-toolbar-row",
-                for (index, (label, _)) in PLAYER_RANK_FILTERS.iter().enumerate() {
+                for (index, (label_key, _)) in PLAYER_RANK_FILTERS.iter().enumerate() {
                     {
                         let mut filter = filter;
                         let is_active = filter() == index;
+                        let label = t_key(label_key);
                         rsx! {
                             button {
-                                key: "{label}",
+                                key: "{label_key}",
                                 r#type: "button",
                                 class: if is_active { "roster-chip is-active" } else { "roster-chip" },
                                 onclick: move |_| filter.set(index),
@@ -311,7 +313,7 @@ pub fn CommunityPlayers() -> Element {
         }
 
         if visible().is_empty() {
-            p { class: "text-sm text-text-muted", "No players match those filters." }
+            p { class: "text-sm text-text-muted", { t!("community-players-empty") } }
         } else {
             div { class: "motion-cascade roster-grid",
                 for player in visible() {
@@ -338,7 +340,9 @@ pub fn CommunityPlayers() -> Element {
                                     }
                                     div { class: "roster-card-identity",
                                         p { class: "roster-card-name", "{player.username}" }
-                                        p { class: "roster-card-case", "Level {player.level} · {player.playtime_hours}h" }
+                                        p { class: "roster-card-case",
+                                            { t!("community-level-playtime-line", level: player.level, hours: player.playtime_hours) }
+                                        }
                                     }
                                     span {
                                         class: "roster-rank-badge",
@@ -353,10 +357,9 @@ pub fn CommunityPlayers() -> Element {
                                     span { class: "roster-link-chip", "{player.discord}" }
                                 }
                                 div { class: "roster-card-foot",
-                                    span { "{player.votes} votes" }
-                                    span { "{player.status.label()} · {player.last_seen}" }
-                                }
-                            }
+                                    span { { t!("community-votes-count", count: player.votes) } }
+                                    span { { t!("community-status-last-seen", status: player.status.label(), last_seen: player.last_seen) } }
+                                }                            }
                         }
                     }
                 }
@@ -367,8 +370,8 @@ pub fn CommunityPlayers() -> Element {
 
 #[component]
 pub fn PlayersProfileDetail(id: u64) -> Element {
-    let navigator = use_navigator();
-    let player = placeholder_players().into_iter().find(|p| p.id == id);
+    let _lang = i18n();
+    let navigator = use_navigator();    let player = placeholder_players().into_iter().find(|p| p.id == id);
 
     let Some(player) = player else {
         return rsx! {
@@ -379,12 +382,20 @@ pub fn PlayersProfileDetail(id: u64) -> Element {
                 onclick: move |_| {
                     navigator.push(Route::CommunityPlayers {});
                 },
-                "← Roster"
+                    { t!("community-back-roster") }
             }
-            h1 { class: "mt-4 text-2xl font-semibold tracking-tight", "Player not found" }
-            p { class: "mt-2 text-sm text-text-muted", "This profile may have been removed." }
+            h1 { class: "mt-4 text-2xl font-semibold tracking-tight", { t!("community-player-not-found") } }
+            p { class: "mt-2 text-sm text-text-muted", { t!("community-player-not-found-hint") } }
         };
     };
+
+    let player_case_id = format!("{:04}", player.id);
+    let case_joined =
+        community_case_joined(player_case_id, player.joined.to_string());
+    let status_last_seen = community_status_last_seen(
+        player.status.label(),
+        player.last_seen.to_string(),
+    );
 
     rsx! {
         PlayersLeaderboardsStyles {}
@@ -394,7 +405,7 @@ pub fn PlayersProfileDetail(id: u64) -> Element {
             onclick: move |_| {
                 navigator.push(Route::CommunityPlayers {});
             },
-            "← Roster"
+            { t!("community-back-roster") }
         }
 
         div { class: "roster-file mt-4",
@@ -411,15 +422,13 @@ pub fn PlayersProfileDetail(id: u64) -> Element {
                             "{player.rank.label()}"
                         }
                     }
-                    p { class: "roster-file-case-number",
-                        "Case #{player.id:04} · joined {player.joined}"
-                    }
+                    p { class: "roster-file-case-number", "{case_joined}" }
                     p { class: "roster-file-bio", "{player.bio}" }
                     div { class: "roster-file-meta-row",
                         span {
                             class: "roster-file-stamp",
                             style: "--stamp-color: {player.status.tone()};",
-                            "{player.status.label()} · {player.last_seen}"
+                            { status_last_seen }
                         }
                     }
                 }
@@ -428,17 +437,17 @@ pub fn PlayersProfileDetail(id: u64) -> Element {
             div { class: "motion-cascade roster-file-grid",
                 div {
                     section { class: "roster-file-section",
-                        p { class: "roster-file-section-title", "Linked accounts" }
+                        p { class: "roster-file-section-title", { t!("community-linked-accounts") } }
                         div { class: "roster-file-linked-row",
                             span { class: "roster-file-linked-icon", "MC" }
                             div { class: "min-w-0 flex-1",
                                 p { class: "text-sm font-medium text-text", "{player.mc_name}" }
-                                p { class: "text-xs text-text-muted", "Minecraft · Java" }
+                                p { class: "text-xs text-text-muted", { t!("community-minecraft-java") } }
                             }
                             if player.verified {
-                                StatusChip { label: "Verified", tone: "#3ecf8e" }
+                                StatusChip { label: t_key("community-verified"), tone: "#3ecf8e" }
                             } else {
-                                StatusChip { label: "Unlinked", tone: "#8a8f98" }
+                                StatusChip { label: t_key("community-unlinked"), tone: "#8a8f98" }
                             }
                         }
                         div { class: "roster-file-linked-row",
@@ -453,23 +462,23 @@ pub fn PlayersProfileDetail(id: u64) -> Element {
                 aside {
                     div { class: "roster-file-aside-card",
                         div { class: "roster-file-fact",
-                            span { class: "roster-file-fact-label", "Level" }
+                            span { class: "roster-file-fact-label", { t!("community-label-level") } }
                             span { class: "roster-file-fact-value", "{player.level}" }
                         }
                         div { class: "roster-file-fact",
-                            span { class: "roster-file-fact-label", "Playtime" }
+                            span { class: "roster-file-fact-label", { t!("community-label-playtime") } }
                             span { class: "roster-file-fact-value", "{player.playtime_hours}h" }
                         }
                         div { class: "roster-file-fact",
-                            span { class: "roster-file-fact-label", "Votes" }
+                            span { class: "roster-file-fact-label", { t!("community-label-votes") } }
                             span { class: "roster-file-fact-value", "{player.votes}" }
                         }
                         div { class: "roster-file-fact",
-                            span { class: "roster-file-fact-label", "Kills" }
+                            span { class: "roster-file-fact-label", { t!("community-label-kills") } }
                             span { class: "roster-file-fact-value", "{player.kills}" }
                         }
                         div { class: "roster-file-fact",
-                            span { class: "roster-file-fact-label", "Balance" }
+                            span { class: "roster-file-fact-label", { t!("community-label-balance") } }
                             span { class: "roster-file-fact-value", "{player.balance}" }
                         }
                     }
@@ -489,17 +498,36 @@ pub enum BoardStat {
 }
 
 impl BoardStat {
-    pub fn label(self) -> &'static str {
+    pub fn key(self) -> &'static str {
         match self {
-            BoardStat::Playtime => "Playtime",
-            BoardStat::Kills => "Kills",
-            BoardStat::Votes => "Votes",
-            BoardStat::Balance => "Balance",
-            BoardStat::Blocks => "Blocks placed",
+            BoardStat::Playtime => "playtime",
+            BoardStat::Kills => "kills",
+            BoardStat::Votes => "votes",
+            BoardStat::Balance => "balance",
+            BoardStat::Blocks => "blocks",
+        }
+    }
+
+    pub fn label(self) -> String {
+        match self {
+            BoardStat::Playtime => t_key("community-board-stat-playtime"),
+            BoardStat::Kills => t_key("community-board-stat-kills"),
+            BoardStat::Votes => t_key("community-board-stat-votes"),
+            BoardStat::Balance => t_key("community-board-stat-balance"),
+            BoardStat::Blocks => t_key("community-board-stat-blocks"),
+        }
+    }
+
+    pub fn from_key(key: &str) -> Self {
+        match key {
+            "kills" => BoardStat::Kills,
+            "votes" => BoardStat::Votes,
+            "balance" => BoardStat::Balance,
+            "blocks" => BoardStat::Blocks,
+            _ => BoardStat::Playtime,
         }
     }
 }
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BoardReset {
     Never,
@@ -510,17 +538,36 @@ pub enum BoardReset {
 }
 
 impl BoardReset {
-    pub fn label(self) -> &'static str {
+    pub fn key(self) -> &'static str {
         match self {
-            BoardReset::Never => "Never",
-            BoardReset::Daily => "Daily",
-            BoardReset::Weekly => "Weekly",
-            BoardReset::Monthly => "Monthly",
-            BoardReset::Seasonal => "Seasonal",
+            BoardReset::Never => "never",
+            BoardReset::Daily => "daily",
+            BoardReset::Weekly => "weekly",
+            BoardReset::Monthly => "monthly",
+            BoardReset::Seasonal => "seasonal",
+        }
+    }
+
+    pub fn label(self) -> String {
+        match self {
+            BoardReset::Never => t_key("community-board-reset-never"),
+            BoardReset::Daily => t_key("community-board-reset-daily"),
+            BoardReset::Weekly => t_key("community-board-reset-weekly"),
+            BoardReset::Monthly => t_key("community-board-reset-monthly"),
+            BoardReset::Seasonal => t_key("community-board-reset-seasonal"),
+        }
+    }
+
+    pub fn from_key(key: &str) -> Self {
+        match key {
+            "daily" => BoardReset::Daily,
+            "weekly" => BoardReset::Weekly,
+            "monthly" => BoardReset::Monthly,
+            "seasonal" => BoardReset::Seasonal,
+            _ => BoardReset::Never,
         }
     }
 }
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BoardSource {
     Plugin,
@@ -529,15 +576,30 @@ pub enum BoardSource {
 }
 
 impl BoardSource {
-    pub fn label(self) -> &'static str {
+    pub fn key(self) -> &'static str {
         match self {
-            BoardSource::Plugin => "In-game plugin",
-            BoardSource::Manual => "Manual",
-            BoardSource::Api => "API",
+            BoardSource::Plugin => "plugin",
+            BoardSource::Manual => "manual",
+            BoardSource::Api => "api",
+        }
+    }
+
+    pub fn label(self) -> String {
+        match self {
+            BoardSource::Plugin => t_key("community-board-source-plugin"),
+            BoardSource::Manual => t_key("community-board-source-manual"),
+            BoardSource::Api => t_key("community-board-source-api"),
+        }
+    }
+
+    pub fn from_key(key: &str) -> Self {
+        match key {
+            "manual" => BoardSource::Manual,
+            "api" => BoardSource::Api,
+            _ => BoardSource::Plugin,
         }
     }
 }
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Trend {
     Up,
@@ -801,10 +863,9 @@ pub fn BoardPodium(entries: Vec<BoardEntry>) -> Element {
 
     if first.is_none() && second.is_none() && third.is_none() {
         return rsx! {
-            div { class: "board-podium-empty", "No standings yet — sync a source or seed entries." }
+            div { class: "board-podium-empty", { t!("community-podium-empty") } }
         };
     }
-
     rsx! {
         div { class: "board-podium",
             {
@@ -892,29 +953,29 @@ pub fn BoardStandings(entries: Vec<BoardEntry>, #[props(default = 0)] skip_top: 
 
 #[component]
 pub fn CommunityLeaderboards() -> Element {
-    let navigator = use_navigator();
-    let mut boards = use_context::<Signal<Vec<LeaderboardBoard>>>();
+    let _lang = i18n();
+    let navigator = use_navigator();    let mut boards = use_context::<Signal<Vec<LeaderboardBoard>>>();
     let list = use_memo(move || boards());
     let mut expanded = use_signal(|| None::<u64>);
 
     rsx! {
         PlayersLeaderboardsStyles {}
         PageHeader {
-            title: "Boards",
-            subtitle: "Standings, podiums, and rank rewards — create and manage every leaderboard.",
+            title: t_key("community-boards-title"),
+            subtitle: t_key("community-boards-subtitle"),
             action: rsx! {
                 Button {
                     onclick: move |_| {
                         navigator.push(Route::LeaderboardsBoardNew {});
                     },
                     IconPlus {}
-                    "New board"
+                    { t!("community-new-board") }
                 }
             },
         }
 
         if list().is_empty() {
-            p { class: "text-sm text-text-muted", "No boards yet. Create one to get started." }
+            p { class: "text-sm text-text-muted", { t!("community-boards-empty") } }
         } else {
             div { class: "motion-cascade board-card-grid",
                 for board in list() {
@@ -933,7 +994,7 @@ pub fn CommunityLeaderboards() -> Element {
                             .map(|r| {
                                 format!("#{place} · {summary}", place = r.place, summary = r.summary)
                             })
-                            .unwrap_or_else(|| "No rank rewards yet".into());
+                            .unwrap_or_else(|| t_key("community-no-rank-rewards"));
                         rsx! {
                             article {
                                 key: "{board.id}",
@@ -942,7 +1003,9 @@ pub fn CommunityLeaderboards() -> Element {
                                 div { class: "board-card-head",
                                     div { class: "min-w-0",
                                         h2 { class: "board-card-title", "{board.name}" }
-                                        p { class: "board-card-meta", "{board.entries.len()} ranked · {board.source.label()}" }
+                                        p { class: "board-card-meta",
+                                            { t!("community-board-ranked-meta", count: board.entries.len(), source: board.source.label()) }
+                                        }
                                     }
                                     div { class: "board-card-chips",
                                         span { class: "board-chip is-accent", "{board.stat.label()}" }
@@ -955,9 +1018,8 @@ pub fn CommunityLeaderboards() -> Element {
 
                                 if !is_open && board.entries.len() > 5 {
                                     p { class: "text-xs text-text-muted px-1",
-                                        "+{board.entries.len().saturating_sub(5)} more in full standings"
-                                    }
-                                }
+                                        { t!("community-board-more-standings", count: board.entries.len().saturating_sub(5)) }
+                                    }                                }
 
                                 div { class: "board-card-foot",
                                     div { class: "board-card-reward",
@@ -974,9 +1036,9 @@ pub fn CommunityLeaderboards() -> Element {
                                                 });
                                             },
                                             if is_open {
-                                                "Collapse"
+                                                { t!("community-collapse") }
                                             } else {
-                                                "Standings"
+                                                { t!("community-standings") }
                                             }
                                         }
                                         button {
@@ -988,7 +1050,7 @@ pub fn CommunityLeaderboards() -> Element {
                                                         id: board_id,
                                                     });
                                             },
-                                            "Edit"
+                                            { t!("common-edit") }
                                         }
                                         button {
                                             r#type: "button",
@@ -999,9 +1061,8 @@ pub fn CommunityLeaderboards() -> Element {
                                                     expanded.set(None);
                                                 }
                                             },
-                                            "Delete"
-                                        }
-                                    }
+                                            { t!("common-delete") }
+                                        }                                    }
                                 }
                             }
                         }
@@ -1028,6 +1089,7 @@ pub fn LeaderboardsBoardEdit(id: u64) -> Element {
 
 #[component]
 fn BoardEditor(board_id: Option<u64>) -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let mut boards = use_context::<Signal<Vec<LeaderboardBoard>>>();
     let existing = board_id.and_then(|id| boards.read().iter().find(|b| b.id == id).cloned());
@@ -1041,22 +1103,21 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
     let stat = use_signal(|| {
         existing
             .as_ref()
-            .map(|b| b.stat.label().to_string())
-            .unwrap_or_else(|| BoardStat::Playtime.label().to_string())
+            .map(|b| b.stat.key().to_string())
+            .unwrap_or_else(|| BoardStat::Playtime.key().to_string())
     });
     let reset = use_signal(|| {
         existing
             .as_ref()
-            .map(|b| b.reset.label().to_string())
-            .unwrap_or_else(|| BoardReset::Never.label().to_string())
+            .map(|b| b.reset.key().to_string())
+            .unwrap_or_else(|| BoardReset::Never.key().to_string())
     });
     let source = use_signal(|| {
         existing
             .as_ref()
-            .map(|b| b.source.label().to_string())
-            .unwrap_or_else(|| BoardSource::Plugin.label().to_string())
-    });
-    let accent = use_signal(|| match existing.as_ref() {
+            .map(|b| b.source.key().to_string())
+            .unwrap_or_else(|| BoardSource::Plugin.key().to_string())
+    });    let accent = use_signal(|| match existing.as_ref() {
         Some(b) => b.accent.clone(),
         None => next_board_accent(&boards.peek()),
     });
@@ -1073,11 +1134,13 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
     });
 
     let heading = if existing.is_some() {
-        "Edit board"
+        t_key("community-edit-board")
     } else {
-        "New board"
+        t_key("community-new-board")
     };
     let is_edit = existing.is_some();
+    let untitled_board = t_key("community-untitled-board");
+    let untitled_board_save = untitled_board.clone();
 
     rsx! {
         PlayersLeaderboardsStyles {}
@@ -1087,59 +1150,53 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
             onclick: move |_| {
                 navigator.push(Route::CommunityLeaderboards {});
             },
-            "← Boards"
+            { t!("community-back-boards") }
         }
 
         div { class: "mb-6 mt-4",
-            p { class: "board-console-eyebrow", "Leaderboard admin" }
+            p { class: "board-console-eyebrow", { t!("community-leaderboard-admin") } }
             h1 { class: "mt-1 text-2xl font-semibold tracking-tight text-text", "{heading}" }
         }
 
         div { class: "board-editor-layout",
             div { class: "motion-cascade board-editor-main",
                 section { class: "board-editor-section",
-                    h2 { class: "board-editor-heading", "Board basics" }
-                    p { class: "board-editor-lede",
-                        "The name and the stat this board ranks players by."
-                    }
-                    LabeledField { label: "Board name",
+                    h2 { class: "board-editor-heading", { t!("community-board-basics") } }
+                    p { class: "board-editor-lede", { t!("community-board-basics-lede") } }
+                    LabeledField { label: t_key("community-field-board-name"),
                         SignalInput {
                             value: name,
-                            placeholder: "Top playtime".to_string(),
+                            placeholder: t_key("community-board-name-placeholder"),
                         }
                     }
-                    LabeledField { label: "Ranked stat",
+                    LabeledField { label: t_key("community-field-ranked-stat"),
                         SignalSelect { value: stat, options: board_stat_options() }
                     }
                 }
                 section { class: "board-editor-section",
-                    h2 { class: "board-editor-heading", "Reset & source" }
-                    p { class: "board-editor-lede",
-                        "How often the board clears and where its numbers come from."
-                    }
-                    LabeledField { label: "Reset schedule",
+                    h2 { class: "board-editor-heading", { t!("community-board-reset-source") } }
+                    p { class: "board-editor-lede", { t!("community-board-reset-source-lede") } }
+                    LabeledField { label: t_key("community-field-reset-schedule"),
                         SignalSelect { value: reset, options: board_reset_options() }
                     }
-                    LabeledField { label: "Data source",
+                    LabeledField { label: t_key("community-field-data-source"),
                         SignalSelect { value: source, options: board_source_options() }
                     }
-                    LabeledField { label: "Board colour",
+                    LabeledField { label: t_key("community-field-board-colour"),
                         ColorPicker {
                             value: accent,
                             presets: BOARD_ACCENT_PRESETS
-                                                        .iter()
-                                                        .map(|c| c.to_string())
-                                                        .collect::<Vec<_>>(),
+                                .iter()
+                                .map(|c| c.to_string())
+                                .collect::<Vec<_>>(),
                         }
                     }
                 }
                 section { class: "board-editor-section",
                     div { class: "mb-3 flex flex-wrap items-center justify-between gap-2",
                         div { class: "min-w-0",
-                            h2 { class: "board-editor-heading", "Rank rewards" }
-                            p { class: "board-editor-lede",
-                                "Payouts for finishing places when the board resets (or on demand)."
-                            }
+                            h2 { class: "board-editor-heading", { t!("community-rank-rewards") } }
+                            p { class: "board-editor-lede", { t!("community-rank-rewards-lede") } }
                         }
                         Button {
                             variant: ButtonVariant::Secondary,
@@ -1160,21 +1217,20 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                                     });
                             },
                             IconPlus {}
-                            "Add place"
+                            { t!("community-add-place") }
                         }
                     }
                     if rewards.read().is_empty() {
                         p { class: "text-sm text-text-muted",
-                            "No rank rewards yet. Add a place to start."
+                            { t!("community-rank-rewards-empty") }
                         }
                     } else {
                         div { class: "motion-cascade motion-cascade-tight board-reward-list",
                             div { class: "board-reward-row is-head",
-                                span { "Place" }
-                                span { "Reward" }
+                                span { { t!("community-col-place") } }
+                                span { { t!("community-col-reward") } }
                                 span { "" }
-                            }
-                            for i in 0..rewards.read().len() {
+                            }                            for i in 0..rewards.read().len() {
                                 {
                                     let idx = i;
                                     let place_value = rewards
@@ -1205,7 +1261,7 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                                                 r#type: "text",
                                                 class: "ui-input ui-squircle h-10 w-full px-4 text-sm outline-none",
                                                 value: "{summary_value}",
-                                                placeholder: "1× Legendary crate key",
+                                                placeholder: t_key("community-reward-summary-placeholder"),
                                                 oninput: move |evt: FormEvent| {
                                                     if let Some(row) = rewards.write().get_mut(idx) {
                                                         row.summary = evt.value();
@@ -1220,9 +1276,8 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                                                         rewards.write().remove(idx);
                                                     }
                                                 },
-                                                "Remove"
-                                            }
-                                        }
+                                                { t!("community-remove") }
+                                            }                                        }
                                     }
                                 }
                             }
@@ -1234,11 +1289,11 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                         onclick: move |_| {
                             let resolved_name = {
                                 let v = name().trim().to_string();
-                                if v.is_empty() { "Untitled board".into() } else { v }
+                                if v.is_empty() { untitled_board_save.clone() } else { v }
                             };
-                            let resolved_stat = parse_board_stat(&stat());
-                            let resolved_reset = parse_board_reset(&reset());
-                            let resolved_source = parse_board_source(&source());
+                            let resolved_stat = BoardStat::from_key(&stat());
+                            let resolved_reset = BoardReset::from_key(&reset());
+                            let resolved_source = BoardSource::from_key(&source());
                             let resolved_rewards = rewards();
                             let resolved_accent = {
                                 let v = accent().trim().to_string();
@@ -1273,14 +1328,14 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                             }
                             navigator.push(Route::CommunityLeaderboards {});
                         },
-                        "Save board"
+                        { t!("community-save-board") }
                     }
                     Button {
                         variant: ButtonVariant::Ghost,
                         onclick: move |_| {
                             navigator.push(Route::CommunityLeaderboards {});
                         },
-                        "Cancel"
+                        { t!("common-cancel") }
                     }
                     if is_edit {
                         if let Some(id) = board_id {
@@ -1290,7 +1345,7 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
                                     boards.write().retain(|b| b.id != id);
                                     navigator.push(Route::CommunityLeaderboards {});
                                 },
-                                "Delete board"
+                                { t!("community-delete-board") }
                             }
                         }
                     }
@@ -1299,34 +1354,34 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
 
             aside { class: "board-editor-aside",
                 div { class: "board-editor-summary",
-                    p { class: "pl-eyebrow", "Board summary" }
+                    p { class: "pl-eyebrow", { t!("community-board-summary") } }
                     p { class: "mt-2 text-lg font-semibold text-text",
                         if name().trim().is_empty() {
-                            "Untitled board"
+                            "{untitled_board}"
                         } else {
                             "{name}"
                         }
                     }
                     dl { class: "board-summary-dl",
                         div {
-                            dt { "Ranks" }
-                            dd { "{stat}" }
+                            dt { { t!("community-summary-ranks") } }
+                            dd { { board_stat_label(&stat()) } }
                         }
                         div {
-                            dt { "Resets" }
-                            dd { "{reset}" }
+                            dt { { t!("community-summary-resets") } }
+                            dd { { board_reset_label(&reset()) } }
                         }
                         div {
-                            dt { "Source" }
-                            dd { "{source}" }
+                            dt { { t!("community-summary-source") } }
+                            dd { { board_source_label(&source()) } }
                         }
                         div {
-                            dt { "Rank rewards" }
+                            dt { { t!("community-rank-rewards") } }
                             dd { "{rewards.read().len()}" }
                         }
                     }
                     p { class: "board-editor-aside-note",
-                        "Standings are pulled from the data source; rank rewards pay out on reset."
+                        { t!("community-board-aside-note") }
                     }
                 }
             }
@@ -1334,55 +1389,50 @@ fn BoardEditor(board_id: Option<u64>) -> Element {
     }
 }
 
-fn parse_board_stat(label: &str) -> BoardStat {
-    match label {
-        "Kills" => BoardStat::Kills,
-        "Votes" => BoardStat::Votes,
-        "Balance" => BoardStat::Balance,
-        "Blocks placed" => BoardStat::Blocks,
-        _ => BoardStat::Playtime,
-    }
+fn board_stat_label(key: &str) -> String {
+    BoardStat::from_key(key).label()
 }
 
-fn parse_board_reset(label: &str) -> BoardReset {
-    match label {
-        "Daily" => BoardReset::Daily,
-        "Weekly" => BoardReset::Weekly,
-        "Monthly" => BoardReset::Monthly,
-        "Seasonal" => BoardReset::Seasonal,
-        _ => BoardReset::Never,
-    }
+fn board_reset_label(key: &str) -> String {
+    BoardReset::from_key(key).label()
 }
 
-fn parse_board_source(label: &str) -> BoardSource {
-    match label {
-        "Manual" => BoardSource::Manual,
-        "API" => BoardSource::Api,
-        _ => BoardSource::Plugin,
-    }
+fn board_source_label(key: &str) -> String {
+    BoardSource::from_key(key).label()
 }
 
 fn board_stat_options() -> Vec<SelectOption> {
-    ["Playtime", "Kills", "Votes", "Balance", "Blocks placed"]
-        .iter()
-        .map(|s| SelectOption::new(*s, *s))
-        .collect()
+    [
+        BoardStat::Playtime,
+        BoardStat::Kills,
+        BoardStat::Votes,
+        BoardStat::Balance,
+        BoardStat::Blocks,
+    ]
+    .iter()
+    .map(|stat| SelectOption::new(stat.key(), stat.label()))
+    .collect()
 }
 
 fn board_reset_options() -> Vec<SelectOption> {
-    ["Never", "Daily", "Weekly", "Monthly", "Seasonal"]
-        .iter()
-        .map(|s| SelectOption::new(*s, *s))
-        .collect()
+    [
+        BoardReset::Never,
+        BoardReset::Daily,
+        BoardReset::Weekly,
+        BoardReset::Monthly,
+        BoardReset::Seasonal,
+    ]
+    .iter()
+    .map(|reset| SelectOption::new(reset.key(), reset.label()))
+    .collect()
 }
 
 fn board_source_options() -> Vec<SelectOption> {
-    ["In-game plugin", "Manual", "API"]
+    [BoardSource::Plugin, BoardSource::Manual, BoardSource::Api]
         .iter()
-        .map(|s| SelectOption::new(*s, *s))
+        .map(|source| SelectOption::new(source.key(), source.label()))
         .collect()
 }
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum VoteSiteStatus {
     Live,
@@ -1390,11 +1440,11 @@ pub enum VoteSiteStatus {
     Offline,
 }
 
-pub(crate) fn vote_site_status_label(status: VoteSiteStatus) -> &'static str {
+pub(crate) fn vote_site_status_label(status: VoteSiteStatus) -> String {
     match status {
-        VoteSiteStatus::Live => "Live",
-        VoteSiteStatus::Degraded => "Degraded",
-        VoteSiteStatus::Offline => "Offline",
+        VoteSiteStatus::Live => t_key("community-vote-site-live"),
+        VoteSiteStatus::Degraded => t_key("community-vote-site-degraded"),
+        VoteSiteStatus::Offline => t_key("community-vote-site-offline"),
     }
 }
 
@@ -1580,6 +1630,7 @@ pub fn placeholder_vote_rewards() -> Vec<VoteReward> {
 
 #[component]
 pub fn CommunityVotes() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let rewards = use_context::<Signal<Vec<VoteReward>>>();
     let list = rewards();
@@ -1594,30 +1645,30 @@ pub fn CommunityVotes() -> Element {
         VotesApplicationsStyles {}
         div { class: "vote-console-page",
             PageHeader {
-                title: "Rewards",
-                subtitle: "What players receive after a verified vote. Listing sites and callbacks live on Overview and Settings.",
+                title: t_key("community-votes-title"),
+                subtitle: t_key("community-votes-subtitle"),
                 action: rsx! {
                     Button {
                         onclick: move |_| {
                             navigator.push(Route::VoteRewardNew {});
                         },
                         IconPlus {}
-                        "New reward"
+                        { t!("community-new-reward") }
                     }
                 },
             }
 
             div { class: "vote-summary-bar",
-                span { "{live} of {sites.len()} listing sites live" }
+                span { { t!("community-vote-sites-summary", live: live, total: sites.len()) } }
                 span { class: "vote-summary-sep", "·" }
-                span { "{enabled} of {list.len()} rewards enabled" }
+                span { { t!("community-rewards-enabled-summary", enabled: enabled, total: list.len()) } }
             }
 
             if list.is_empty() {
                 div { class: "vote-empty",
-                    p { class: "text-sm font-medium text-text", "No rewards yet" }
+                    p { class: "text-sm font-medium text-text", { t!("community-votes-empty-title") } }
                     p { class: "mt-1 text-sm text-text-muted",
-                        "Create a reward rule, then map it to the listing sites that should pay it out."
+                        { t!("community-votes-empty-hint") }
                     }
                     Button {
                         class: "mt-4",
@@ -1625,7 +1676,7 @@ pub fn CommunityVotes() -> Element {
                             navigator.push(Route::VoteRewardNew {});
                         },
                         IconPlus {}
-                        "New reward"
+                        { t!("community-new-reward") }
                     }
                 }
             } else {
@@ -1643,9 +1694,9 @@ pub fn CommunityVotes() -> Element {
                                             p { class: "vote-reward-name", "{reward.name}" }
                                             span { class: if reward.active { "vote-pill is-on" } else { "vote-pill is-off" },
                                                 if reward.active {
-                                                    "Enabled"
+                                                    { t!("community-enabled") }
                                                 } else {
-                                                    "Paused"
+                                                    { t!("community-paused") }
                                                 }
                                             }
                                         }
@@ -1654,7 +1705,7 @@ pub fn CommunityVotes() -> Element {
                                             p { class: "vote-reward-note", "{reward.note}" }
                                         }
                                     }
-                                    span { class: "vote-reward-claims", "{reward.claims} claims" }
+                                    span { class: "vote-reward-claims", { t!("community-claims-count", count: reward.claims) } }
                                     Button {
                                         variant: ButtonVariant::Ghost,
                                         size: ButtonSize::Sm,
@@ -1664,7 +1715,7 @@ pub fn CommunityVotes() -> Element {
                                                     id: reward_id,
                                                 });
                                         },
-                                        "Edit"
+                                        { t!("common-edit") }
                                     }
                                 }
                             }
@@ -1720,6 +1771,7 @@ fn vote_cooldown_options() -> Vec<SelectOption> {
 
 #[component]
 fn RewardEditor(reward_id: Option<u64>) -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let mut rewards = use_context::<Signal<Vec<VoteReward>>>();
     let existing = reward_id.and_then(|id| rewards.read().iter().find(|r| r.id == id).cloned());
@@ -1737,9 +1789,9 @@ fn RewardEditor(reward_id: Option<u64>) -> Element {
     let mut active = use_signal(|| seed.active);
 
     let heading = if reward_id.is_some() {
-        "Edit reward"
+        t_key("community-edit-reward")
     } else {
-        "New reward"
+        t_key("community-new-reward")
     };
 
     if missing {
@@ -1751,10 +1803,10 @@ fn RewardEditor(reward_id: Option<u64>) -> Element {
                 onclick: move |_| {
                     navigator.push(Route::CommunityVotes {});
                 },
-                "← Rewards"
+                { t!("community-back-rewards") }
             }
-            h1 { class: "mt-4 text-2xl font-semibold tracking-tight", "Reward not found" }
-            p { class: "mt-2 text-sm text-text-muted", "This reward may have been deleted." }
+            h1 { class: "mt-4 text-2xl font-semibold tracking-tight", { t!("community-reward-not-found") } }
+            p { class: "mt-2 text-sm text-text-muted", { t!("community-reward-not-found-hint") } }
         };
     }
 
@@ -1806,75 +1858,69 @@ fn RewardEditor(reward_id: Option<u64>) -> Element {
                 onclick: move |_| {
                     navigator.push(Route::CommunityVotes {});
                 },
-                "← Rewards"
+                { t!("community-back-rewards") }
             }
 
             div { class: "mb-8 mt-4",
-                p { class: "pl-eyebrow", "Votes" }
+                p { class: "pl-eyebrow", { t!("community-votes-eyebrow") } }
                 h1 { class: "mt-1 text-2xl font-semibold tracking-tight text-text",
                     "{heading}"
                 }
                 p { class: "mt-1.5 max-w-xl text-sm text-text-muted",
-                    "Define what is granted after a verified vote callback from a listing site."
+                    { t!("community-reward-editor-lede") }
                 }
             }
 
             div { class: "vote-editor",
                 div { class: "vote-editor-main",
                     section { class: "vote-editor-section",
-                        h2 { class: "vote-editor-heading", "Reward rule" }
-                        p { class: "vote-editor-lede",
-                            "The name players see and what triggers the payout."
-                        }
-                        LabeledField { label: "Reward name",
+                        h2 { class: "vote-editor-heading", { t!("community-reward-rule") } }
+                        p { class: "vote-editor-lede", { t!("community-reward-rule-lede") } }
+                        LabeledField { label: t_key("community-field-reward-name"),
                             SignalInput {
                                 value: name,
-                                placeholder: "Vote crate key".to_string(),
+                                placeholder: t_key("community-reward-name-placeholder"),
                             }
                         }
-                        LabeledField { label: "Trigger",
+                        LabeledField { label: t_key("community-field-trigger"),
                             SignalSelect {
                                 value: trigger_kind,
                                 options: vote_trigger_options(),
                             }
                         }
-                        LabeledField { label: "Trigger detail",
+                        LabeledField { label: t_key("community-field-trigger-detail"),
                             SignalInput {
                                 value: trigger_detail,
-                                placeholder: "Each successful vote".to_string(),
+                                placeholder: t_key("community-trigger-detail-placeholder"),
                             }
                         }
                     }
                     section { class: "vote-editor-section",
-                        h2 { class: "vote-editor-heading", "Payout" }
-                        p { class: "vote-editor-lede",
-                            "What is granted and how it reaches the player."
-                        }
-                        LabeledField { label: "Reward summary",
+                        h2 { class: "vote-editor-heading", { t!("community-payout") } }
+                        p { class: "vote-editor-lede", { t!("community-payout-lede") } }
+                        LabeledField { label: t_key("community-field-reward-summary"),
                             SignalInput {
                                 value: reward_summary,
-                                placeholder: "1x Vote Key + 250 coins".to_string(),
+                                placeholder: t_key("community-reward-summary-input-placeholder"),
                             }
                         }
-                        LabeledField { label: "Command",
+                        LabeledField { label: t_key("community-field-command"),
                             SignalInput {
                                 value: command,
-                                placeholder: "crate give {player} vote 1".to_string(),
+                                placeholder: t_key("community-command-placeholder"),
                             }
                         }
                     }
                     section { class: "vote-editor-section",
-                        h2 { class: "vote-editor-heading", "Listing sites & limits" }
-                        p { class: "vote-editor-lede",
-                            "Which connected sites pay this out, and how often."
-                        }
-                        LabeledField { label: "Listing sites",
+                        h2 { class: "vote-editor-heading", { t!("community-listing-sites-limits") } }
+                        p { class: "vote-editor-lede", { t!("community-listing-sites-limits-lede") } }
+                        LabeledField { label: t_key("community-field-listing-sites"),
                             SignalSelect {
                                 value: site_scope,
                                 options: vote_site_scope_options(),
                             }
                         }
-                        LabeledField { label: "Claim cooldown",
+                        LabeledField { label: t_key("community-field-claim-cooldown"),
                             SignalSelect {
                                 value: cooldown,
                                 options: vote_cooldown_options(),
@@ -1886,31 +1932,31 @@ fn RewardEditor(reward_id: Option<u64>) -> Element {
                                 checked: active(),
                                 onchange: move |e| active.set(e.checked()),
                             }
-                            span { "Enabled — grant when a matching site reports a vote" }
+                            span { { t!("community-enabled-grant-check") } }
                         }
                     }
                     div { class: "mt-6 flex flex-wrap gap-2",
-                        Button { onclick: save, "Save reward" }
+                        Button { onclick: save, { t!("community-save-reward") } }
                         Button {
                             variant: ButtonVariant::Ghost,
                             onclick: move |_| {
                                 navigator.push(Route::CommunityVotes {});
                             },
-                            "Cancel"
+                            { t!("common-cancel") }
                         }
                     }
                 }
 
                 aside { class: "vote-editor-aside",
                     div { class: "vote-editor-summary",
-                        p { class: "pl-eyebrow", "How it pays out" }
+                        p { class: "pl-eyebrow", { t!("community-payout-summary") } }
                         dl { class: "vote-payout-dl",
                             div {
-                                dt { "Trigger" }
+                                dt { { t!("community-field-trigger") } }
                                 dd { "{trigger_kind}" }
                             }
                             div {
-                                dt { "Grant" }
+                                dt { { t!("community-summary-grant") } }
                                 dd {
                                     if reward_summary().trim().is_empty() {
                                         "—"
@@ -1920,26 +1966,26 @@ fn RewardEditor(reward_id: Option<u64>) -> Element {
                                 }
                             }
                             div {
-                                dt { "Sites" }
+                                dt { { t!("community-summary-sites") } }
                                 dd { "{site_scope}" }
                             }
                             div {
-                                dt { "Cooldown" }
+                                dt { { t!("community-field-claim-cooldown") } }
                                 dd { "{cooldown}" }
                             }
                             div {
-                                dt { "Status" }
+                                dt { { t!("community-summary-status") } }
                                 dd {
                                     if active() {
-                                        "Enabled"
+                                        { t!("community-enabled") }
                                     } else {
-                                        "Paused"
+                                        { t!("community-paused") }
                                     }
                                 }
                             }
                         }
                         p { class: "vote-editor-aside-note",
-                            "Callbacks are configured per listing site under Votes → Settings."
+                            { t!("community-reward-aside-note") }
                         }
                     }
                 }
@@ -1957,12 +2003,12 @@ pub enum ApplicationStatus {
 }
 
 impl ApplicationStatus {
-    pub fn label(self) -> &'static str {
+    pub fn label(self) -> String {
         match self {
-            ApplicationStatus::Submitted => "Submitted",
-            ApplicationStatus::Reviewing => "Reviewing",
-            ApplicationStatus::Accepted => "Accepted",
-            ApplicationStatus::Denied => "Denied",
+            ApplicationStatus::Submitted => t_key("community-app-status-submitted"),
+            ApplicationStatus::Reviewing => t_key("community-app-status-reviewing"),
+            ApplicationStatus::Accepted => t_key("community-app-status-accepted"),
+            ApplicationStatus::Denied => t_key("community-app-status-denied"),
         }
     }
 
@@ -2072,15 +2118,16 @@ pub fn placeholder_applications() -> Vec<Application> {
 }
 
 const APPLICATION_FILTERS: &[(&str, Option<ApplicationStatus>)] = &[
-    ("All", None),
-    ("Submitted", Some(ApplicationStatus::Submitted)),
-    ("Reviewing", Some(ApplicationStatus::Reviewing)),
-    ("Accepted", Some(ApplicationStatus::Accepted)),
-    ("Denied", Some(ApplicationStatus::Denied)),
+    ("community-filter-all", None),
+    ("community-app-status-submitted", Some(ApplicationStatus::Submitted)),
+    ("community-app-status-reviewing", Some(ApplicationStatus::Reviewing)),
+    ("community-app-status-accepted", Some(ApplicationStatus::Accepted)),
+    ("community-app-status-denied", Some(ApplicationStatus::Denied)),
 ];
 
 #[component]
 pub fn CommunityApplications() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let applications = use_context::<Signal<Vec<Application>>>();
     let list = applications();
@@ -2102,15 +2149,15 @@ pub fn CommunityApplications() -> Element {
     rsx! {
         VotesApplicationsStyles {}
         PageHeader {
-            title: "Inbox",
-            subtitle: "Every submitted application with its status, staff vote tally, and review link.",
+            title: t_key("community-applications-title"),
+            subtitle: t_key("community-applications-subtitle"),
             action: rsx! {
                 Button {
                     onclick: move |_| {
                         navigator.push(Route::ApplicationFormNew {});
                     },
                     IconPlus {}
-                    "New form"
+                    { t!("community-new-form") }
                 }
             },
         }
@@ -2119,17 +2166,18 @@ pub fn CommunityApplications() -> Element {
             div { class: "app-toolbar-search",
                 SearchInput {
                     value: query,
-                    placeholder: "Search applicants or roles…".to_string(),
+                    placeholder: t_key("community-search-applicants"),
                 }
             }
             div { class: "app-toolbar-chips",
-                for (index, (label, _)) in APPLICATION_FILTERS.iter().enumerate() {
+                for (index, (label_key, _)) in APPLICATION_FILTERS.iter().enumerate() {
                     {
                         let mut filter = filter;
                         let is_active = filter() == index;
+                        let label = t_key(label_key);
                         rsx! {
                             button {
-                                key: "{label}",
+                                key: "{label_key}",
                                 r#type: "button",
                                 class: if is_active { "app-chip is-active" } else { "app-chip" },
                                 onclick: move |_| filter.set(index),
@@ -2143,21 +2191,23 @@ pub fn CommunityApplications() -> Element {
 
         div { class: "app-console-panel",
             div { class: "app-console-panel-head",
-                h2 { class: "text-sm font-semibold text-text", "Applications" }
-                span { class: "text-xs text-text-muted", "{visible.len()} of {list.len()} shown" }
+                h2 { class: "text-sm font-semibold text-text", { t!("community-applications-panel") } }
+                span { class: "text-xs text-text-muted",
+                    { t!("community-applications-shown", visible: visible.len(), total: list.len()) }
+                }
             }
             if visible.is_empty() {
                 p { class: "px-4 py-6 text-sm text-text-muted",
-                    "No applications match those filters."
+                    { t!("community-applications-empty") }
                 }
             } else {
                 div { class: "motion-cascade motion-cascade-tight app-console-table",
                     div { class: "app-console-row is-head",
-                        span { "Applicant" }
-                        span { "Role" }
-                        span { "Status" }
-                        span { "Votes" }
-                        span { "Submitted" }
+                        span { { t!("feature-overview-col-applicant") } }
+                        span { { t!("feature-overview-col-role") } }
+                        span { { t!("feature-overview-col-status") } }
+                        span { { t!("feature-overview-col-votes") } }
+                        span { { t!("feature-overview-col-submitted") } }
                         span { "" }
                     }
                     for app in visible {
@@ -2181,7 +2231,7 @@ pub fn CommunityApplications() -> Element {
                                     }
                                     span { class: "tabular-nums", "{app.votes_yes} / {app.votes_no}" }
                                     span { class: "text-text-muted", "{app.submitted}" }
-                                    span { class: "app-console-link", "Review" }
+                                    span { class: "app-console-link", { t!("community-review") } }
                                 }
                             }
                         }
@@ -2194,6 +2244,7 @@ pub fn CommunityApplications() -> Element {
 
 #[component]
 pub fn ApplicationReview(id: u64) -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let applications = use_context::<Signal<Vec<Application>>>();
     let app = applications.read().iter().find(|a| a.id == id).cloned();
@@ -2208,9 +2259,9 @@ pub fn ApplicationReview(id: u64) -> Element {
                 onclick: move |_| {
                     navigator.push(Route::CommunityApplications {});
                 },
-                "← Inbox"
+                { t!("community-back-inbox") }
             }
-            h1 { class: "mt-4 text-2xl font-semibold tracking-tight", "Application not found" }
+            h1 { class: "mt-4 text-2xl font-semibold tracking-tight", { t!("community-application-not-found") } }
         };
     };
 
@@ -2222,19 +2273,19 @@ pub fn ApplicationReview(id: u64) -> Element {
             onclick: move |_| {
                 navigator.push(Route::CommunityApplications {});
             },
-            "← Inbox"
+            { t!("community-back-inbox") }
         }
 
         div { class: "mb-6 mt-4",
-            p { class: "app-console-eyebrow", "Review · {app.role}" }
+            p { class: "app-console-eyebrow", { t!("community-review-role", role: app.role.clone()) } }
             h1 { class: "mt-1 text-2xl font-semibold tracking-tight text-text", "{app.applicant}" }
         }
 
         div { class: "app-editor-layout",
             div { class: "motion-cascade app-editor-main",
                 section { class: "app-editor-section",
-                    h2 { class: "app-editor-heading", "Answers" }
-                    p { class: "app-editor-lede", "Submitted {app.submitted}." }
+                    h2 { class: "app-editor-heading", { t!("community-answers") } }
+                    p { class: "app-editor-lede", { t!("community-submitted-at", when: app.submitted.clone()) } }
                     div { class: "motion-cascade motion-cascade-tight app-qa-list",
                         for (q, a) in app.answers.iter().cloned() {
                             div { class: "app-qa-item",
@@ -2245,43 +2296,43 @@ pub fn ApplicationReview(id: u64) -> Element {
                     }
                 }
                 section { class: "app-editor-section",
-                    h2 { class: "app-editor-heading", "Reviewer notes" }
-                    p { class: "app-editor-lede", "Internal notes are only visible to staff." }
+                    h2 { class: "app-editor-heading", { t!("community-reviewer-notes") } }
+                    p { class: "app-editor-lede", { t!("community-reviewer-notes-lede") } }
                     SignalTextarea {
                         value: note,
-                        placeholder: "Add a note for other reviewers…".to_string(),
+                        placeholder: t_key("community-reviewer-notes-placeholder"),
                     }
                     div { class: "mt-3 flex flex-wrap gap-2",
-                        Button { variant: ButtonVariant::Primary, "Accept" }
-                        Button { variant: ButtonVariant::Secondary, "Keep reviewing" }
-                        Button { variant: ButtonVariant::Danger, "Deny" }
+                        Button { variant: ButtonVariant::Primary, { t!("community-accept") } }
+                        Button { variant: ButtonVariant::Secondary, { t!("community-keep-reviewing") } }
+                        Button { variant: ButtonVariant::Danger, { t!("community-deny") } }
                     }
                 }
             }
             aside { class: "app-editor-aside",
                 div { class: "app-editor-summary",
-                    p { class: "pl-eyebrow", "Application summary" }
+                    p { class: "pl-eyebrow", { t!("community-application-summary") } }
                     p { class: "mt-2 text-sm text-text-secondary", "{app.summary}" }
                     dl { class: "app-summary-dl",
                         div {
-                            dt { "Role" }
+                            dt { { t!("feature-overview-col-role") } }
                             dd { "{app.role}" }
                         }
                         div {
-                            dt { "Status" }
+                            dt { { t!("feature-overview-col-status") } }
                             dd { "{app.status.label()}" }
                         }
                         div {
-                            dt { "Staff votes" }
-                            dd { "{app.votes_yes} for · {app.votes_no} against" }
+                            dt { { t!("community-staff-votes") } }
+                            dd { { t!("community-staff-votes-tally", yes: app.votes_yes, no: app.votes_no) } }
                         }
                         div {
-                            dt { "Submitted" }
+                            dt { { t!("feature-overview-col-submitted") } }
                             dd { "{app.submitted}" }
                         }
                     }
                     p { class: "app-editor-aside-note",
-                        "Decisions email the applicant and update their account role."
+                        { t!("community-application-aside-note") }
                     }
                 }
             }
@@ -2291,6 +2342,7 @@ pub fn ApplicationReview(id: u64) -> Element {
 
 #[component]
 pub fn ApplicationFormNew() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let role = use_signal(String::new);
     let description = use_signal(String::new);
@@ -2300,6 +2352,7 @@ pub fn ApplicationFormNew() -> Element {
             String::from("How much time can you commit?"),
         ]
     });
+    let untitled_role = t_key("community-untitled-role");
 
     rsx! {
         VotesApplicationsStyles {}
@@ -2309,34 +2362,32 @@ pub fn ApplicationFormNew() -> Element {
             onclick: move |_| {
                 navigator.push(Route::CommunityApplications {});
             },
-            "← Inbox"
+            { t!("community-back-inbox") }
         }
 
         div { class: "mb-6 mt-4",
-            p { class: "app-console-eyebrow", "Applications" }
-            h1 { class: "mt-1 text-2xl font-semibold tracking-tight text-text", "New form" }
+            p { class: "app-console-eyebrow", { t!("feature-overview-applications") } }
+            h1 { class: "mt-1 text-2xl font-semibold tracking-tight text-text", { t!("community-new-form") } }
         }
 
         div { class: "app-editor-layout",
             div { class: "motion-cascade app-editor-main",
                 section { class: "app-editor-section",
-                    h2 { class: "app-editor-heading", "Role" }
-                    p { class: "app-editor-lede",
-                        "Create a role and the questions applicants answer."
+                    h2 { class: "app-editor-heading", { t!("community-form-role") } }
+                    p { class: "app-editor-lede", { t!("community-form-role-lede") } }
+                    LabeledField { label: t_key("community-field-role-name"),
+                        SignalInput { value: role, placeholder: t_key("community-role-name-placeholder") }
                     }
-                    LabeledField { label: "Role name",
-                        SignalInput { value: role, placeholder: "Moderator".to_string() }
-                    }
-                    LabeledField { label: "Description",
+                    LabeledField { label: t_key("community-field-description"),
                         SignalTextarea {
                             value: description,
-                            placeholder: "Who this role is for and what they do…".to_string(),
+                            placeholder: t_key("community-description-placeholder"),
                         }
                     }
                 }
                 section { class: "app-editor-section",
-                    h2 { class: "app-editor-heading", "Questions" }
-                    p { class: "app-editor-lede", "Applicants answer these in order." }
+                    h2 { class: "app-editor-heading", { t!("community-form-questions") } }
+                    p { class: "app-editor-lede", { t!("community-form-questions-lede") } }
                     div { class: "motion-cascade motion-cascade-tight app-question-list",
                         for (i, q) in questions().into_iter().enumerate() {
                             {
@@ -2355,7 +2406,7 @@ pub fn ApplicationFormNew() -> Element {
                                                     }
                                                 });
                                             },
-                                            "Remove"
+                                            { t!("community-remove") }
                                         }
                                     }
                                 }
@@ -2368,45 +2419,45 @@ pub fn ApplicationFormNew() -> Element {
                         size: ButtonSize::Sm,
                         onclick: move |_| {
                             let mut questions = questions;
-                            questions.with_mut(|list| list.push(String::from("New question")));
+                            questions.with_mut(|list| list.push(t_key("community-new-question")));
                         },
                         IconPlus {}
-                        "Add question"
+                        { t!("community-add-question") }
                     }
                 }
                 div { class: "mt-6 flex flex-wrap gap-2",
-                    Button { "Save form" }
+                    Button { { t!("community-save-form") } }
                     Button {
                         variant: ButtonVariant::Ghost,
                         onclick: move |_| {
                             navigator.push(Route::CommunityApplications {});
                         },
-                        "Cancel"
+                        { t!("common-cancel") }
                     }
                 }
             }
             aside { class: "app-editor-aside",
                 div { class: "app-editor-summary",
-                    p { class: "pl-eyebrow", "Form summary" }
+                    p { class: "pl-eyebrow", { t!("community-form-summary") } }
                     p { class: "mt-2 text-lg font-semibold text-text",
                         if role().trim().is_empty() {
-                            "Untitled role"
+                            "{untitled_role}"
                         } else {
                             "{role}"
                         }
                     }
                     dl { class: "app-summary-dl",
                         div {
-                            dt { "Questions" }
+                            dt { { t!("community-form-questions") } }
                             dd { "{questions().len()}" }
                         }
                         div {
-                            dt { "Status" }
-                            dd { "Draft" }
+                            dt { { t!("community-summary-status") } }
+                            dd { { t!("community-form-draft") } }
                         }
                     }
                     p { class: "app-editor-aside-note",
-                        "Published forms appear on your website for players to fill in."
+                        { t!("community-form-aside-note") }
                     }
                 }
             }
@@ -2415,7 +2466,7 @@ pub fn ApplicationFormNew() -> Element {
 }
 
 #[component]
-fn LabeledField(label: &'static str, children: Element) -> Element {
+fn LabeledField(#[props(into)] label: String, children: Element) -> Element {
     rsx! {
         label { class: "mb-4 block",
             span { class: "mb-1.5 block text-xs font-medium text-text-secondary", "{label}" }

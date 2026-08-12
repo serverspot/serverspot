@@ -1,7 +1,10 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::syntax::highlighted_html;
 use crate::components::ui::*;
+use crate::i18n::t_key;
 use crate::router::Route;
 
 #[derive(Clone, PartialEq, Eq)]
@@ -53,16 +56,16 @@ enum StatusMsg {
 }
 
 impl StatusMsg {
-    const fn as_str(self) -> &'static str {
+    fn label(self) -> String {
         match self {
-            Self::Ready => "Ready",
-            Self::Unsaved => "Unsaved changes",
-            Self::Saved => "Saved theme files (mock)",
-            Self::CreatedFile => "Created file",
-            Self::CreatedFolder => "Created folder",
-            Self::Uploaded => "Uploaded file (mock)",
-            Self::InvalidName => "Enter a valid name",
-            Self::Exists => "Path already exists",
+            Self::Ready => t_key("theme-status-ready"),
+            Self::Unsaved => t_key("theme-status-unsaved"),
+            Self::Saved => t_key("theme-status-saved"),
+            Self::CreatedFile => t_key("theme-status-created-file"),
+            Self::CreatedFolder => t_key("theme-status-created-folder"),
+            Self::Uploaded => t_key("theme-status-uploaded"),
+            Self::InvalidName => t_key("theme-status-invalid-name"),
+            Self::Exists => t_key("theme-status-exists"),
         }
     }
 }
@@ -276,6 +279,7 @@ fn language_from_path(path: &str) -> String {
 
 #[component]
 fn ThemeFileEditor() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let mut editor = use_signal(|| ThemeEditor::new(site_theme_files()));
     let mut dirty = use_signal(|| false);
@@ -303,9 +307,9 @@ fn ThemeFileEditor() -> Element {
                     onclick: move |_| {
                         navigator.push(Route::SettingsGeneral {});
                     },
-                    "← Settings"
+                    { t!("theme-back-settings") }
                 }
-                p { class: "theme-ide-title", "Site theme · themes/site" }
+                p { class: "theme-ide-title", { t!("theme-titlebar") } }
                 div { class: "flex items-center gap-2",
                     Button {
                         variant: ButtonVariant::Secondary,
@@ -317,9 +321,9 @@ fn ThemeFileEditor() -> Element {
                             status.set(StatusMsg::Saved);
                         },
                         if dirty_flag {
-                            "Save*"
+                            { t!("theme-save-dirty") }
                         } else {
-                            "Save"
+                            { t!("theme-save") }
                         }
                     }
                 }
@@ -327,32 +331,32 @@ fn ThemeFileEditor() -> Element {
             div { class: "theme-ide-body",
                 aside { class: "theme-ide-sidebar",
                     div { class: "theme-ide-sidebar-header",
-                        p { class: "theme-ide-sidebar-label", "Explorer" }
+                        p { class: "theme-ide-sidebar-label", { t!("theme-explorer") } }
                         div { class: "theme-ide-sidebar-actions",
                             button {
                                 r#type: "button",
                                 class: "theme-ide-tool",
-                                title: "New file",
+                                title: t_key("theme-new-file"),
                                 onclick: move |_| {
                                     prompt_buf.set(String::new());
                                     prompt.set(Some(PromptKind::NewFile));
                                 },
-                                "File"
+                                { t!("theme-file") }
                             }
                             button {
                                 r#type: "button",
                                 class: "theme-ide-tool",
-                                title: "New folder",
+                                title: t_key("theme-new-folder"),
                                 onclick: move |_| {
                                     prompt_buf.set(String::new());
                                     prompt.set(Some(PromptKind::NewFolder));
                                 },
-                                "Folder"
+                                { t!("theme-folder") }
                             }
                             label {
                                 class: "theme-ide-tool theme-ide-tool-upload",
-                                title: "Upload files",
-                                span { "Upload" }
+                                title: t_key("theme-upload-files"),
+                                span { { t!("theme-upload") } }
                                 input {
                                     r#type: "file",
                                     multiple: true,
@@ -367,7 +371,7 @@ fn ThemeFileEditor() -> Element {
                             }
                         }
                     }
-                    p { class: "theme-ide-folder theme-ide-folder-root", "themes/site" }
+                    p { class: "theme-ide-folder theme-ide-folder-root", { t!("theme-root-path") } }
                     for index in 0..file_count as u16 {
                         if editor.read().files.get(index as usize).is_some_and(|file| file.parent().is_none()) {
                             ThemeFileRow {
@@ -405,9 +409,9 @@ fn ThemeFileEditor() -> Element {
                         }
                     } else {
                         div { class: "theme-ide-empty",
-                            p { "No file open" }
+                            p { { t!("theme-empty-title") } }
                             p { class: "theme-ide-empty-hint",
-                                "Create a file, upload one, or pick something from the explorer."
+                                { t!("theme-empty-hint") }
                             }
                         }
                     }
@@ -439,6 +443,7 @@ fn ThemePromptDialog(
     mut dirty: Signal<bool>,
     mut status: Signal<StatusMsg>,
 ) -> Element {
+    let _lang = i18n();
     rsx! {
         div {
             class: "theme-ide-prompt-backdrop",
@@ -451,14 +456,14 @@ fn ThemePromptDialog(
                 onclick: move |evt| evt.stop_propagation(),
                 p { class: "theme-ide-prompt-title",
                     match kind {
-                        PromptKind::NewFile => "New file",
-                        PromptKind::NewFolder => "New folder",
+                        PromptKind::NewFile => t!("theme-new-file"),
+                        PromptKind::NewFolder => t!("theme-new-folder"),
                     }
                 }
                 p { class: "theme-ide-prompt-hint",
                     match kind {
-                        PromptKind::NewFile => "Path relative to the theme root, e.g. assets/hero.css",
-                        PromptKind::NewFolder => "Folder path, e.g. assets/fonts",
+                        PromptKind::NewFile => t!("theme-new-file-hint"),
+                        PromptKind::NewFolder => t!("theme-new-folder-hint"),
                     }
                 }
                 input {
@@ -466,8 +471,8 @@ fn ThemePromptDialog(
                     class: "ui-input ui-squircle theme-ide-prompt-input h-10 w-full px-4 text-sm outline-none",
                     value: "{prompt_buf}",
                     placeholder: match kind {
-                        PromptKind::NewFile => "filename.css",
-                        PromptKind::NewFolder => "folder-name",
+                        PromptKind::NewFile => t_key("theme-new-file-placeholder"),
+                        PromptKind::NewFolder => t_key("theme-new-folder-placeholder"),
                     },
                     oninput: move |evt: FormEvent| {
                         prompt_buf.set(evt.value());
@@ -481,7 +486,7 @@ fn ThemePromptDialog(
                             prompt.set(None);
                             prompt_buf.set(String::new());
                         },
-                        "Cancel"
+                        { t!("common-cancel") }
                     }
                     Button {
                         size: ButtonSize::Sm,
@@ -499,7 +504,7 @@ fn ThemePromptDialog(
                                 }
                             }
                         },
-                        "Create"
+                        { t!("theme-create") }
                     }
                 }
             }
@@ -509,6 +514,8 @@ fn ThemePromptDialog(
 
 #[component]
 fn ThemeStatusBar(editor: Signal<ThemeEditor>, status: StatusMsg) -> Element {
+    let _lang = i18n();
+    let status_label = status.label();
     let (path, language) = {
         let state = editor.read();
         match state.files.get(state.active as usize) {
@@ -523,7 +530,7 @@ fn ThemeStatusBar(editor: Signal<ThemeEditor>, status: StatusMsg) -> Element {
             span { "{language}" }
             span { "UTF-8" }
             span { "LF" }
-            span { class: "theme-ide-status-msg", "{status.as_str()}" }
+            span { class: "theme-ide-status-msg", "{status_label}" }
         }
     }
 }
@@ -689,7 +696,7 @@ fn ThemeTab(mut editor: Signal<ThemeEditor>, mut draft: Signal<String>, index: u
             }
             button {
                 class: "theme-ide-tab-close",
-                title: "Close",
+                title: t_key("theme-close-tab"),
                 onclick: move |_| {
                     editor.write().close_tab(index);
                     draft.set(editor.read().active_body());

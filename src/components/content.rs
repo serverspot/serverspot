@@ -1,9 +1,12 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::page::{
     DataPanel, FeatureSettingsChrome, PageHeader, SettingRow, SettingsControl, SettingsField,
 };
 use crate::components::ui::*;
+use crate::i18n::t_key;
 use crate::router::Route;
 
 pub const CONTENT_ACCENT: &str = "#f071a5";
@@ -21,11 +24,12 @@ const TEMPLATES: &[&str] = &["Landing", "Standalone", "Widget"];
 
 #[component]
 fn PressHeader(
-    eyebrow: &'static str,
-    title: &'static str,
-    #[props(default)] subtitle: &'static str,
+    #[props(into)] eyebrow: String,
+    #[props(into)] title: String,
+    #[props(default, into)] subtitle: String,
     #[props(default)] action: Option<Element>,
 ) -> Element {
+    let _lang = i18n();
     rsx! {
         document::Stylesheet { href: BLOG_CSS }
         p { class: "press-eyebrow", "{eyebrow}" }
@@ -49,21 +53,21 @@ impl PostStatus {
         PostStatus::Published,
     ];
 
-    fn label(self) -> &'static str {
+    fn label(self) -> String {
         match self {
-            PostStatus::Draft => "Draft",
-            PostStatus::InReview => "In review",
-            PostStatus::Scheduled => "Scheduled",
-            PostStatus::Published => "Published",
+            PostStatus::Draft => t_key("content-post-status-draft"),
+            PostStatus::InReview => t_key("content-post-status-in-review"),
+            PostStatus::Scheduled => t_key("content-post-status-scheduled"),
+            PostStatus::Published => t_key("content-post-status-published"),
         }
     }
 
-    fn stamp(self) -> &'static str {
+    fn stamp(self) -> String {
         match self {
-            PostStatus::Draft => "DRAFT",
-            PostStatus::InReview => "PROOF",
-            PostStatus::Scheduled => "SET",
-            PostStatus::Published => "LIVE",
+            PostStatus::Draft => t_key("content-post-stamp-draft"),
+            PostStatus::InReview => t_key("content-post-stamp-proof"),
+            PostStatus::Scheduled => t_key("content-post-stamp-set"),
+            PostStatus::Published => t_key("content-post-stamp-live"),
         }
     }
 
@@ -200,6 +204,7 @@ fn read_minutes(words: u32) -> u32 {
 
 #[component]
 pub fn ContentOverview() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let posts = use_context::<Signal<Vec<Post>>>();
     let posts_now = posts();
@@ -246,9 +251,14 @@ pub fn ContentOverview() -> Element {
 
         div { class: "press-masthead",
             div { class: "min-w-0",
-                p { class: "press-eyebrow", "The ServerSpot Press" }
+                p { class: "press-eyebrow", { t!("content-overview-masthead") } }
                 p { class: "press-edition",
-                    "Editorial desk · {published} live · {drafts} in the pile · {scheduled_count} on the strip"
+                    { t!(
+                        "content-overview-edition",
+                        published: published,
+                        drafts: drafts,
+                        scheduled: scheduled_count
+                    ) }
                 }
             }
             Button {
@@ -256,7 +266,7 @@ pub fn ContentOverview() -> Element {
                     navigator.push(Route::ContentPostNew {});
                 },
                 IconPlus {}
-                "New post"
+                { t!("content-new-post") }
             }
         }
 
@@ -265,7 +275,7 @@ pub fn ContentOverview() -> Element {
                 let lead_id = lead.id;
                 rsx! {
                     section { class: "press-front",
-                        p { class: "press-front-kicker", "Above the fold" }
+                        p { class: "press-front-kicker", { t!("content-overview-above-fold") } }
                         button {
                             class: "press-lead",
                             r#type: "button",
@@ -286,7 +296,9 @@ pub fn ContentOverview() -> Element {
                                 span { class: "press-lead-tag", "{lead.section}" }
                                 h1 { class: "press-lead-title", "{lead.headline}" }
                                 p { class: "press-lead-dek", "{lead.dek}" }
-                                p { class: "press-lead-byline", "By {lead.byline} · {lead.updated}" }
+                                p { class: "press-lead-byline",
+                                    { t!("content-overview-byline", byline: lead.byline.clone(), updated: lead.updated.clone()) }
+                                }
                             }
                         }
                     }
@@ -294,11 +306,9 @@ pub fn ContentOverview() -> Element {
             }
         } else {
             section { class: "press-front",
-                p { class: "press-front-kicker", "Above the fold" }
+                p { class: "press-front-kicker", { t!("content-overview-above-fold") } }
                 div { class: "press-lead press-lead-empty",
-                    p { class: "press-lead-dek",
-                        "No published lead story yet — publish a post to feature it here."
-                    }
+                    p { class: "press-lead-dek", { t!("content-overview-no-lead") } }
                 }
             }
         }
@@ -306,20 +316,18 @@ pub fn ContentOverview() -> Element {
         div { class: "motion-cascade press-desk-grid",
             section {
                 div { class: "press-section-head",
-                    h2 { class: "press-section-title", "Draft pile" }
+                    h2 { class: "press-section-title", { t!("content-overview-draft-pile") } }
                     button {
                         class: "press-section-link",
                         r#type: "button",
                         onclick: move |_| {
                             navigator.push(Route::ContentBlog {});
                         },
-                        "All posts →"
+                        { t!("content-overview-all-posts") }
                     }
                 }
                 if draft_pile.is_empty() {
-                    p { class: "py-4 text-sm text-text-muted",
-                        "The pile is empty — every story has moved on."
-                    }
+                    p { class: "py-4 text-sm text-text-muted", { t!("content-overview-pile-empty") } }
                 } else {
                     div { class: "motion-cascade motion-cascade-tight press-draft-pile",
                         for post in draft_pile {
@@ -354,13 +362,13 @@ pub fn ContentOverview() -> Element {
             }
             section {
                 div { class: "press-section-head",
-                    h2 { class: "press-section-title", "Schedule strip" }
-                    span { class: "text-xs text-text-muted", "{scheduled_count} queued" }
+                    h2 { class: "press-section-title", { t!("content-overview-schedule-strip") } }
+                    span { class: "text-xs text-text-muted",
+                        { t!("content-overview-queued", count: scheduled_count) }
+                    }
                 }
                 if schedule.is_empty() {
-                    p { class: "py-4 text-sm text-text-muted",
-                        "Nothing queued — schedule a post to see it on the strip."
-                    }
+                    p { class: "py-4 text-sm text-text-muted", { t!("content-overview-schedule-empty") } }
                 } else {
                     div { class: "motion-cascade motion-cascade-tight press-schedule",
                         for post in schedule {
@@ -390,6 +398,7 @@ pub fn ContentOverview() -> Element {
 
 #[component]
 pub fn ContentBlog() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
     let posts = use_context::<Signal<Vec<Post>>>();
     let search = use_signal(String::new);
@@ -421,24 +430,24 @@ pub fn ContentBlog() -> Element {
     let total_posts = use_memo(move || posts.read().len());
 
     let status_options = [
-        SelectOption::new("all", "All statuses"),
-        SelectOption::new("draft", "Draft & review"),
-        SelectOption::new("scheduled", "Scheduled"),
-        SelectOption::new("published", "Published"),
+        SelectOption::new("all", t_key("content-blog-filter-all")),
+        SelectOption::new("draft", t_key("content-blog-filter-draft")),
+        SelectOption::new("scheduled", t_key("content-blog-filter-scheduled")),
+        SelectOption::new("published", t_key("content-blog-filter-published")),
     ];
 
     rsx! {
         PressHeader {
-            eyebrow: "Copy desk",
-            title: "Posts",
-            subtitle: "Every headline in production — proofs, bylines, and press dates.",
+            eyebrow: t_key("content-blog-eyebrow"),
+            title: t_key("content-blog-title"),
+            subtitle: t_key("content-blog-subtitle"),
             action: rsx! {
                 Button {
                     onclick: move |_| {
                         navigator.push(Route::ContentPostNew {});
                     },
                     IconPlus {}
-                    "New post"
+                    { t!("content-new-post") }
                 }
             },
         }
@@ -446,7 +455,7 @@ pub fn ContentBlog() -> Element {
         div { class: "mb-5 flex flex-col gap-3 sm:flex-row sm:items-center",
             SearchInput {
                 value: search,
-                placeholder: "Search headlines or bylines…",
+                placeholder: "{t!(\"content-blog-search-placeholder\")}",
                 class: "sm:max-w-xs",
             }
             SignalSelect {
@@ -455,14 +464,18 @@ pub fn ContentBlog() -> Element {
                 class: "sm:w-48",
             }
             p { class: "text-xs text-text-muted sm:ml-auto",
-                "{visible().len()} of {total_posts()} stories"
+                { t!(
+                    "content-blog-story-count",
+                    visible: visible().len(),
+                    total: total_posts()
+                ) }
             }
         }
 
         if visible().is_empty() {
             div { class: "motion-cascade motion-cascade-tight press-proof-list",
                 p { class: "px-4 py-8 text-center text-sm text-text-muted",
-                    "No stories match this filter."
+                    { t!("content-blog-empty") }
                 }
             }
         } else {
@@ -471,13 +484,17 @@ pub fn ContentBlog() -> Element {
                     {
                         let post_id = post.id;
                         let meta = if post.status == PostStatus::Scheduled {
-                            format!(
-                                "{} · runs {}",
-                                post.byline,
-                                format_display_date(&post.scheduled_for),
+                            t!(
+                                "content-blog-meta-scheduled",
+                                byline: post.byline.clone(),
+                                date: format_display_date(&post.scheduled_for)
                             )
                         } else {
-                            format!("{} · {}", post.byline, post.updated)
+                            t!(
+                                "content-blog-meta-updated",
+                                byline: post.byline.clone(),
+                                updated: post.updated.clone()
+                            )
                         };
                         rsx! {
                             button {
@@ -514,63 +531,62 @@ pub fn ContentBlog() -> Element {
 
 #[component]
 pub fn ContentSiteSettings() -> Element {
+    let _lang = i18n();
     let public_path = use_signal(|| String::from("/news"));
     let masthead = use_signal(|| String::from("The ServerSpot Press"));
     let tagline = use_signal(|| String::from("News, patch notes, and stories from the team."));
 
     rsx! {
-        FeatureSettingsChrome { subtitle: "Path, masthead branding, and how the newsroom behaves on your site.",
-            DataPanel { title: "On your website",
-                SettingsControl { label: "Public path",
+        FeatureSettingsChrome { subtitle: t_key("content-settings-subtitle"),
+            DataPanel { title: t_key("content-settings-panel-website"),
+                SettingsControl { label: t_key("content-settings-field-public-path"),
                     SignalInput { value: public_path, class: "max-w-md".to_string() }
                 }
                 SettingsField {
-                    label: "Full URL",
+                    label: t_key("content-settings-field-full-url"),
                     value: format!("www.example.com{}", public_path()),
                 }
-                p { class: "pt-3 text-xs text-text-muted",
-                    "Domain and HTTPS are managed in Settings → General."
-                }
+                p { class: "pt-3 text-xs text-text-muted", { t!("content-settings-domain-hint") } }
             }
-            DataPanel { title: "Masthead & branding",
-                SettingsControl { label: "Masthead title",
+            DataPanel { title: t_key("content-settings-panel-masthead"),
+                SettingsControl { label: t_key("content-settings-field-masthead"),
                     SignalInput { value: masthead, class: "max-w-md".to_string() }
                 }
-                SettingsControl { label: "Tagline",
+                SettingsControl { label: t_key("content-settings-field-tagline"),
                     SignalInput { value: tagline, class: "max-w-md".to_string() }
                 }
             }
-            DataPanel { title: "Syndication",
+            DataPanel { title: t_key("content-settings-panel-syndication"),
                 SettingRow {
-                    title: "RSS feed",
-                    description: "Publish an RSS feed of live posts at /news/feed.",
+                    title: t_key("content-settings-rss-title"),
+                    description: t_key("content-settings-rss-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Homepage feed widget",
-                    description: "Show the three latest posts on the homepage.",
+                    title: t_key("content-settings-homepage-widget-title"),
+                    description: t_key("content-settings-homepage-widget-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Newsletter signup",
-                    description: "Embed an email signup at the bottom of every post.",
+                    title: t_key("content-settings-newsletter-title"),
+                    description: t_key("content-settings-newsletter-desc"),
                     enabled: false,
                 }
                 SettingRow {
-                    title: "Comments",
-                    description: "Allow signed-in players to comment on posts.",
+                    title: t_key("content-settings-comments-title"),
+                    description: t_key("content-settings-comments-desc"),
                     enabled: false,
                 }
             }
-            DataPanel { title: "Editorial workflow",
+            DataPanel { title: t_key("content-settings-panel-workflow"),
                 SettingRow {
-                    title: "Require editorial approval",
-                    description: "Drafts need a second staff sign-off before publishing.",
+                    title: t_key("content-settings-approval-title"),
+                    description: t_key("content-settings-approval-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Stale draft reminders",
-                    description: "Notify authors when a draft sits idle for 30 days.",
+                    title: t_key("content-settings-stale-reminders-title"),
+                    description: t_key("content-settings-stale-reminders-desc"),
                     enabled: false,
                 }
             }
@@ -580,6 +596,7 @@ pub fn ContentSiteSettings() -> Element {
 
 #[component]
 pub fn ContentPostNew() -> Element {
+    let _lang = i18n();
     rsx! {
         PostEditor { post_id: None }
     }
@@ -587,6 +604,7 @@ pub fn ContentPostNew() -> Element {
 
 #[component]
 pub fn ContentPostEdit(id: u64) -> Element {
+    let _lang = i18n();
     rsx! {
         PostEditor { post_id: Some(id) }
     }
@@ -594,6 +612,7 @@ pub fn ContentPostEdit(id: u64) -> Element {
 
 #[component]
 fn PostEditor(post_id: Option<u64>) -> Element {
+    let _lang = i18n();
     let mut posts = use_context::<Signal<Vec<Post>>>();
     let navigator = use_navigator();
     let is_new = post_id.is_none();
@@ -642,17 +661,17 @@ fn PostEditor(post_id: Option<u64>) -> Element {
     let words = body_now.split_whitespace().count().max(seed.words as usize) as u32;
 
     let preview_headline = if headline_now.trim().is_empty() {
-        String::from("Untitled story")
+        t_key("content-editor-preview-untitled")
     } else {
         headline_now.trim().to_string()
     };
     let preview_dek = if dek_now.trim().is_empty() {
-        String::from("No deck written yet.")
+        t_key("content-editor-preview-no-dek")
     } else {
         dek_now.trim().to_string()
     };
     let preview_byline = if byline_now.trim().is_empty() {
-        String::from("Unassigned")
+        t_key("content-editor-preview-unassigned")
     } else {
         byline_now.trim().to_string()
     };
@@ -667,13 +686,11 @@ fn PostEditor(post_id: Option<u64>) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::ContentBlog {});
                     },
-                    "← Posts"
+                    { t!("content-editor-back-posts") }
                 }
             }
-            h1 { class: "text-3xl font-semibold tracking-tight", "Story not found" }
-            p { class: "mt-2 text-sm text-text-muted",
-                "This post may have been pulled from the desk."
-            }
+            h1 { class: "text-3xl font-semibold tracking-tight", { t!("content-editor-not-found-title") } }
+            p { class: "mt-2 text-sm text-text-muted", { t!("content-editor-not-found-desc") } }
         };
     }
 
@@ -750,7 +767,7 @@ fn PostEditor(post_id: Option<u64>) -> Element {
                 onclick: move |_| {
                     navigator.push(Route::ContentBlog {});
                 },
-                "← Posts"
+                { t!("content-editor-back-posts") }
             }
             div { class: "flex flex-wrap items-center gap-2",
                 if let Some(id) = post_id {
@@ -761,7 +778,7 @@ fn PostEditor(post_id: Option<u64>) -> Element {
                             posts.with_mut(|list| list.retain(|post| post.id != id));
                             navigator.push(Route::ContentBlog {});
                         },
-                        "Delete"
+                        { t!("content-editor-delete") }
                     }
                 }
                 Button {
@@ -770,53 +787,49 @@ fn PostEditor(post_id: Option<u64>) -> Element {
                     onclick: move |_| {
                         navigator.push(Route::ContentBlog {});
                     },
-                    "Cancel"
+                    { t!("content-editor-cancel") }
                 }
                 Button {
                     size: ButtonSize::Sm,
                     disabled: !can_save,
                     onclick: save,
                     if is_new {
-                        "Create post"
+                        { t!("content-editor-create-post") }
                     } else {
-                        "Save changes"
+                        { t!("content-editor-save-changes") }
                     }
                 }
             }
         }
 
-        p { class: "press-eyebrow", "Copy desk" }
+        p { class: "press-eyebrow", { t!("content-blog-eyebrow") } }
         div { class: "mb-8",
             h1 { class: "text-3xl font-semibold tracking-tight",
                 if is_new {
-                    "New post"
+                    { t!("content-editor-new-post") }
                 } else {
-                    "Edit post"
+                    { t!("content-editor-edit-post") }
                 }
             }
-            p { class: "mt-2 max-w-2xl text-sm text-text-muted",
-                "Headline, deck, byline, and the press date players will see."
-            }
+            p { class: "mt-2 max-w-2xl text-sm text-text-muted", { t!("content-editor-lede") } }
         }
 
         div { class: "press-editor-layout",
             div { class: "motion-cascade press-editor-main space-y-8",
                 section { class: "press-editor-section",
-                    h2 { class: "press-editor-heading", "Headline & deck" }
-                    p { class: "press-editor-lede",
-                        "The headline runs big; the deck is the one-line summary underneath."
-                    }
+                    h2 { class: "press-editor-heading", { t!("content-editor-section-headline") } }
+                    p { class: "press-editor-lede", { t!("content-editor-section-headline-lede") } }
                     div { class: "mt-4 space-y-4",
-                        FieldLabel { label: "Headline",
+                        FieldLabel { label: t_key("content-editor-field-headline"),
                             SignalInput {
                                 value: headline,
-                                placeholder: "Season 4 launch recap",
+                                placeholder: t_key("content-editor-placeholder-headline"),
                             }
                         }
-                        FieldLabel { label: "Deck",
+                        FieldLabel { label: t_key("content-editor-field-deck"),
                             SignalTextarea {
                                 value: dek,
-                                placeholder: "One line that sums up the story…",
+                                placeholder: t_key("content-editor-placeholder-deck"),
                                 class: "min-h-[4.5rem]",
                             }
                         }
@@ -824,33 +837,29 @@ fn PostEditor(post_id: Option<u64>) -> Element {
                 }
 
                 section { class: "press-editor-section",
-                    h2 { class: "press-editor-heading", "Byline & desk" }
-                    p { class: "press-editor-lede", "Who wrote it, and which desk it runs under." }
+                    h2 { class: "press-editor-heading", { t!("content-editor-section-byline") } }
+                    p { class: "press-editor-lede", { t!("content-editor-section-byline-lede") } }
                     div { class: "mt-4 grid gap-4 sm:grid-cols-2",
-                        FieldLabel { label: "Byline",
+                        FieldLabel { label: t_key("content-editor-field-byline"),
                             SignalInput { value: byline, placeholder: "Mira Chen" }
                         }
-                        FieldLabel { label: "Section",
+                        FieldLabel { label: t_key("content-editor-field-section"),
                             SignalSelect { value: section, options: section_options }
                         }
                     }
                 }
 
                 section { class: "press-editor-section",
-                    h2 { class: "press-editor-heading", "Cover art" }
-                    p { class: "press-editor-lede",
-                        "Wide image shown on the lead story and post header."
-                    }
+                    h2 { class: "press-editor-heading", { t!("content-editor-section-cover") } }
+                    p { class: "press-editor-lede", { t!("content-editor-section-cover-lede") } }
                     div { class: "mt-4",
                         CoverUploadField { value: cover }
                     }
                 }
 
                 section { class: "press-editor-section",
-                    h2 { class: "press-editor-heading", "Status & press date" }
-                    p { class: "press-editor-lede",
-                        "Move the story through the desk — draft, review, set, or live."
-                    }
+                    h2 { class: "press-editor-heading", { t!("content-editor-section-status") } }
+                    p { class: "press-editor-lede", { t!("content-editor-section-status-lede") } }
                     div { class: "mt-4 space-y-3",
                         div { class: "press-segment",
                             for option in PostStatus::ALL {
@@ -869,10 +878,10 @@ fn PostEditor(post_id: Option<u64>) -> Element {
                             }
                         }
                         if status_now == PostStatus::Scheduled {
-                            FieldLabel { label: "Runs on",
+                            FieldLabel { label: t_key("content-editor-field-runs-on"),
                                 SignalDatePicker {
                                     value: scheduled_for,
-                                    placeholder: "Choose a press date",
+                                    placeholder: "{t!(\"content-editor-placeholder-press-date\")}",
                                 }
                             }
                         }
@@ -880,26 +889,24 @@ fn PostEditor(post_id: Option<u64>) -> Element {
                 }
 
                 section { class: "press-editor-section",
-                    h2 { class: "press-editor-heading", "Copy" }
-                    p { class: "press-editor-lede", "The full story body." }
+                    h2 { class: "press-editor-heading", { t!("content-editor-section-copy") } }
+                    p { class: "press-editor-lede", { t!("content-editor-section-copy-lede") } }
                     div { class: "mt-4",
                         SignalTextarea {
                             value: body,
-                            placeholder: "Write the story…",
+                            placeholder: "{t!(\"content-editor-placeholder-body\")}",
                             class: "min-h-[14rem]",
                         }
                     }
                 }
 
                 section { class: "press-editor-section",
-                    h2 { class: "press-editor-heading", "Placement" }
-                    p { class: "press-editor-lede",
-                        "Feature this story as the newsroom lead once it's published."
-                    }
+                    h2 { class: "press-editor-heading", { t!("content-editor-section-placement") } }
+                    p { class: "press-editor-lede", { t!("content-editor-section-placement-lede") } }
                     div { class: "mt-4",
                         ToggleRow {
-                            title: "Feature as lead story",
-                            description: "Shown large at the top of the Newsroom overview.",
+                            title: t_key("content-editor-feature-lead-title"),
+                            description: t_key("content-editor-feature-lead-desc"),
                             checked: featured,
                         }
                     }
@@ -909,7 +916,7 @@ fn PostEditor(post_id: Option<u64>) -> Element {
             aside { class: "press-editor-aside",
                 div { class: "press-editor-preview",
                     p { class: "text-xs font-medium uppercase tracking-wide text-text-muted",
-                        "Proof preview"
+                        { t!("content-editor-proof-preview") }
                     }
                     div { class: "mt-4 flex items-start gap-3",
                         if cover_now.trim().is_empty() {
@@ -937,13 +944,24 @@ fn PostEditor(post_id: Option<u64>) -> Element {
                         }
                     }
                     ul { class: "mt-5 space-y-1.5 text-xs text-text-secondary",
-                        li { "By {preview_byline}" }
-                        li { "{read_minutes(words)} min read · {words} words" }
+                        li { { t!("content-editor-preview-by", byline: preview_byline.clone()) } }
+                        li {
+                            { t!(
+                                "content-editor-preview-read-stats",
+                                minutes: read_minutes(words),
+                                words: words
+                            ) }
+                        }
                         if status_now == PostStatus::Scheduled && !scheduled_now.trim().is_empty() {
-                            li { "Runs {format_display_date(&scheduled_now)}" }
+                            li {
+                                { t!(
+                                    "content-editor-preview-runs",
+                                    date: format_display_date(&scheduled_now)
+                                ) }
+                            }
                         }
                         if featured_now {
-                            li { "Featured as lead story" }
+                            li { { t!("content-editor-preview-featured") } }
                         }
                     }
                 }
@@ -954,7 +972,7 @@ fn PostEditor(post_id: Option<u64>) -> Element {
 
 #[component]
 fn FieldLabel(
-    label: &'static str,
+    #[props(into)] label: String,
     #[props(default)] hint: Option<String>,
     children: Element,
 ) -> Element {
@@ -970,7 +988,12 @@ fn FieldLabel(
 }
 
 #[component]
-fn ToggleRow(title: &'static str, description: &'static str, mut checked: Signal<bool>) -> Element {
+fn ToggleRow(
+    #[props(into)] title: String,
+    #[props(into)] description: String,
+    mut checked: Signal<bool>,
+) -> Element {
+    let _lang = i18n();
     let on = checked();
     rsx! {
         div { class: "flex flex-col gap-3 border-b border-border-subtle py-4 last:border-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
@@ -987,9 +1010,9 @@ fn ToggleRow(title: &'static str, description: &'static str, mut checked: Signal
                     checked.set(next);
                 },
                 if on {
-                    "On"
+                    { t!("content-toggle-on") }
                 } else {
-                    "Off"
+                    { t!("content-toggle-off") }
                 }
             }
         }
@@ -998,6 +1021,7 @@ fn ToggleRow(title: &'static str, description: &'static str, mut checked: Signal
 
 #[component]
 fn CoverUploadField(mut value: Signal<String>) -> Element {
+    let _lang = i18n();
     let mut file_name = use_signal(String::new);
     let current = value();
     let name_now = file_name();
@@ -1006,10 +1030,8 @@ fn CoverUploadField(mut value: Signal<String>) -> Element {
         div { class: "space-y-2",
             div { class: "flex items-start justify-between gap-3",
                 div {
-                    p { class: "text-xs font-medium text-text-muted", "Cover image" }
-                    p { class: "text-xs text-text-muted/80",
-                        "Wide image for the lead story and post header"
-                    }
+                    p { class: "text-xs font-medium text-text-muted", { t!("content-cover-label") } }
+                    p { class: "text-xs text-text-muted/80", { t!("content-cover-hint") } }
                 }
                 if !current.trim().is_empty() {
                     Button {
@@ -1019,14 +1041,14 @@ fn CoverUploadField(mut value: Signal<String>) -> Element {
                             value.set(String::new());
                             file_name.set(String::new());
                         },
-                        "Remove"
+                        { t!("content-cover-remove") }
                     }
                 }
             }
             label { class: "press-cover-upload",
                 if current.trim().is_empty() {
                     span { class: "pointer-events-none px-3 text-center text-xs leading-relaxed text-text-muted",
-                        "Click to upload cover art"
+                        { t!("content-cover-upload") }
                     }
                 } else {
                     img {

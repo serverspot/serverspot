@@ -1,9 +1,12 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::brand::BrandMark;
 
 #[component]
 pub fn LoadingScreen() -> Element {
+    let _lang = i18n();
     let mut mounted = use_signal(|| true);
 
     use_effect(move || {
@@ -31,7 +34,7 @@ pub fn LoadingScreen() -> Element {
                     BrandMark { class: "splash-mark-base" }
                     BrandMark { class: "splash-mark-fill" }
                 }
-                p { class: "splash-label", "Loading" }
+                p { class: "splash-label", { t!("loading-label") } }
             }
         }
     }

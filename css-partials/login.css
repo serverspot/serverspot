@@ -299,6 +299,76 @@
     color: #fff;
   }
 
+  .login-otp-copy {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-align: center;
+    color: var(--color-text-secondary);
+  }
+
+  .login-otp-field {
+    position: relative;
+    display: block;
+    cursor: text;
+  }
+
+  .login-otp-cells {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .login-otp-cell {
+    display: flex;
+    height: 3rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-squircle);
+    background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+    font-size: 1.125rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--color-text);
+    transition:
+      border-color 0.18s ease,
+      background-color 0.18s ease;
+  }
+
+  .login-otp-cell.is-active {
+    border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border-subtle));
+    background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  }
+
+  .login-otp-cell.is-filled {
+    border-color: color-mix(in srgb, var(--color-border-subtle) 40%, var(--color-accent) 35%);
+  }
+
+  .login-otp-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    caret-color: transparent;
+    color: transparent;
+    background: transparent;
+    border: 0;
+  }
+
+  .login-otp-field:focus-within .login-otp-cell.is-active {
+    border-color: color-mix(in srgb, var(--color-accent) 70%, var(--color-border-subtle));
+  }
+
+  .login-otp-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
   .login-foot {
     margin-top: 1.5rem;
     max-width: 18rem;

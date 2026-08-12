@@ -1,7 +1,10 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::page::StatPill;
 use crate::components::ui::*;
+use crate::i18n::t_key;
 
 const GENERAL_ACCENT: &str = "#87d1fe";
 const LOCALE_ACCENT: &str = "#34d399";
@@ -12,9 +15,9 @@ const HOSTING_ACCENT: &str = "#38bdf8";
 
 #[component]
 pub fn SectionIntro(
-    eyebrow: &'static str,
-    title: &'static str,
-    #[props(default)] description: &'static str,
+    #[props(into)] eyebrow: String,
+    #[props(into)] title: String,
+    #[props(default)] description: String,
     #[props(default = "#b0b3c0")] accent: &'static str,
     #[props(default)] action: Option<Element>,
 ) -> Element {
@@ -38,8 +41,8 @@ pub fn SectionIntro(
 
 #[component]
 pub fn ToggleField(
-    #[props(default = "")] label: &'static str,
-    #[props(default = "")] hint: &'static str,
+    #[props(default = String::new())] label: String,
+    #[props(default = String::new())] hint: String,
     #[props(default)] enabled: bool,
 ) -> Element {
     let mut on = use_signal(|| enabled);
@@ -75,7 +78,7 @@ pub fn ToggleField(
 }
 
 #[component]
-fn SettingsField(label: &'static str, value: &'static str) -> Element {
+fn SettingsField(#[props(into)] label: String, value: &'static str) -> Element {
     rsx! {
         div { class: "stg-field",
             label { class: "stg-field-label", "{label}" }
@@ -193,24 +196,26 @@ pub fn IconEye(#[props(default = "")] class: &'static str) -> Element {
 
 #[component]
 pub fn SettingsGeneral() -> Element {
+    let _lang = i18n();
+
     rsx! {
         div {
             class: "motion-cascade contents",
             style: "--stg-accent: {GENERAL_ACCENT};",
             SectionIntro {
-                eyebrow: "Website",
-                title: "General",
-                description: "How this site presents itself, and who can reach it.",
+                eyebrow: t_key("settings-general-eyebrow"),
+                title: t_key("settings-general-title"),
+                description: t_key("settings-general-description"),
                 accent: GENERAL_ACCENT,
                 action: rsx! {
-                    Button { "Save changes" }
+                    Button { { t!("common-save-changes") } }
                 },
             }
 
             section { class: "stg-site-presence",
                 div { class: "stg-site-presence-inner",
                     div { class: "stg-site-presence-copy",
-                        p { class: "stg-site-presence-kicker", "Your site" }
+                        p { class: "stg-site-presence-kicker", { t!("settings-general-your-site") } }
                         h2 { class: "stg-site-presence-name", "NovaCraft" }
                         p { class: "stg-site-presence-tagline", "Survival, Skyblock & more" }
                         div { class: "stg-site-presence-meta",
@@ -227,7 +232,7 @@ pub fn SettingsGeneral() -> Element {
                                 class: "stg-site-presence-sep",
                                 "aria-hidden": "true",
                             }
-                            span { class: "stg-site-presence-live", "Live" }
+                            span { class: "stg-site-presence-live", { t!("settings-general-live") } }
                         }
                     }
                     div { class: "stg-site-presence-actions",
@@ -235,12 +240,12 @@ pub fn SettingsGeneral() -> Element {
                             variant: ButtonVariant::Secondary,
                             size: ButtonSize::Sm,
                             IconGlobe {}
-                            "Visit site"
+                            { t!("settings-general-visit-site") }
                         }
                         Button {
                             variant: ButtonVariant::Ghost,
                             size: ButtonSize::Sm,
-                            "Manage domain"
+                            { t!("settings-general-manage-domain") }
                         }
                     }
                 }
@@ -249,24 +254,24 @@ pub fn SettingsGeneral() -> Element {
             section { class: "stg-site-panel",
                 div { class: "stg-site-panel-head",
                     div { class: "min-w-0",
-                        h2 { class: "stg-site-panel-title", "Identity" }
+                        h2 { class: "stg-site-panel-title", { t!("settings-general-identity-title") } }
                         p { class: "stg-site-panel-sub",
-                            "Name, tagline, and the addresses players use to find you."
+                            { t!("settings-general-identity-sub") }
                         }
                     }
                 }
                 div { class: "stg-site-panel-body",
                     div { class: "stg-site-fields",
-                        SettingsField { label: "Site name", value: "NovaCraft" }
+                        SettingsField { label: t_key("settings-general-field-site-name"), value: "NovaCraft" }
                         SettingsField {
-                            label: "Tagline",
+                            label: t_key("settings-general-field-tagline"),
                             value: "Survival, Skyblock & more",
                         }
                         div { class: "stg-field stg-field-wide",
-                            label { class: "stg-field-label", "Custom domain" }
+                            label { class: "stg-field-label", { t!("settings-general-field-custom-domain") } }
                             StaticInput { value: "www.novacraft.gg" }
                         }
-                        SettingsField { label: "Subdomain", value: "novacraft" }
+                        SettingsField { label: t_key("settings-general-field-subdomain"), value: "novacraft" }
                     }
                 }
             }
@@ -274,32 +279,32 @@ pub fn SettingsGeneral() -> Element {
             section { class: "stg-site-panel",
                 div { class: "stg-site-panel-head",
                     div { class: "min-w-0",
-                        h2 { class: "stg-site-panel-title", "Access" }
+                        h2 { class: "stg-site-panel-title", { t!("settings-general-access-title") } }
                         p { class: "stg-site-panel-sub",
-                            "Defaults for how visitors reach and register on the site."
+                            { t!("settings-general-access-sub") }
                         }
                     }
                 }
                 div { class: "stg-site-panel-body",
                     div { class: "stg-site-access",
                         ToggleField {
-                            label: "Force HTTPS",
-                            hint: "Redirect all traffic on your website to HTTPS.",
+                            label: t_key("settings-general-toggle-https-label"),
+                            hint: t_key("settings-general-toggle-https-hint"),
                             enabled: true,
                         }
                         ToggleField {
-                            label: "Maintenance mode",
-                            hint: "Show a maintenance page to non-staff visitors.",
+                            label: t_key("settings-general-toggle-maintenance-label"),
+                            hint: t_key("settings-general-toggle-maintenance-hint"),
                             enabled: false,
                         }
                         ToggleField {
-                            label: "User registration",
-                            hint: "Allow new players to create website accounts.",
+                            label: t_key("settings-general-toggle-registration-label"),
+                            hint: t_key("settings-general-toggle-registration-hint"),
                             enabled: true,
                         }
                         ToggleField {
-                            label: "Email verification",
-                            hint: "Require verified email before purchases.",
+                            label: t_key("settings-general-toggle-verification-label"),
+                            hint: t_key("settings-general-toggle-verification-hint"),
                             enabled: true,
                         }
                     }
@@ -310,86 +315,88 @@ pub fn SettingsGeneral() -> Element {
 }
 
 struct LocaleRow {
-    name: &'static str,
-    note: &'static str,
+    name_key: &'static str,
+    note_key: &'static str,
     pct: u8,
-    tag: &'static str,
+    tag_key: &'static str,
     accent: &'static str,
 }
 
 const LOCALES: &[LocaleRow] = &[
     LocaleRow {
-        name: "English (UK)",
-        note: "Default locale for new visitors",
+        name_key: "settings-locale-row-en-uk-name",
+        note_key: "settings-locale-row-en-uk-note",
         pct: 100,
-        tag: "Default",
+        tag_key: "settings-locale-tag-default",
         accent: "#34d399",
     },
     LocaleRow {
-        name: "Spanish",
-        note: "User preference enabled",
+        name_key: "settings-locale-row-es-name",
+        note_key: "settings-locale-row-es-note",
         pct: 96,
-        tag: "EUR",
+        tag_key: "settings-locale-tag-eur",
         accent: "#5b9dff",
     },
     LocaleRow {
-        name: "Arabic",
-        note: "Right-to-left layout",
+        name_key: "settings-locale-row-ar-name",
+        note_key: "settings-locale-row-ar-note",
         pct: 88,
-        tag: "RTL",
+        tag_key: "settings-locale-tag-rtl",
         accent: "#f0a35e",
     },
     LocaleRow {
-        name: "German",
-        note: "Currency formatting active",
+        name_key: "settings-locale-row-de-name",
+        note_key: "settings-locale-row-de-note",
         pct: 91,
-        tag: "EUR",
+        tag_key: "settings-locale-tag-eur",
         accent: "#87d1fe",
     },
     LocaleRow {
-        name: "French",
-        note: "Community translated",
+        name_key: "settings-locale-row-fr-name",
+        note_key: "settings-locale-row-fr-note",
         pct: 79,
-        tag: "Community",
+        tag_key: "settings-locale-tag-community",
         accent: "#c4b5fd",
     },
 ];
 
 #[component]
 pub fn SettingsLocalisation() -> Element {
+    let _lang = i18n();
+
     rsx! {
         div {
             class: "motion-cascade contents",
             style: "--stg-accent: {LOCALE_ACCENT};",
             SectionIntro {
-                eyebrow: "Language",
-                title: "Localisation",
-                description: "Multi-language support, formatting, and translation management.",
+                eyebrow: t_key("settings-locale-eyebrow"),
+                title: t_key("settings-locale-title"),
+                description: t_key("settings-locale-description"),
                 accent: LOCALE_ACCENT,
                 action: rsx! {
                     Button {
                         IconPlus {}
-                        "Add language"
+                        { t!("settings-locale-add-language") }
                     }
                 },
             }
 
             section { class: "motion-cascade stat-strip mb-6",
-                StatPill { label: "Languages", value: "12", accent: LOCALE_ACCENT }
+                StatPill { label: t_key("settings-locale-stat-languages"), value: "12", accent: LOCALE_ACCENT }
                 StatPill {
-                    label: "Translated keys",
+                    label: t_key("settings-locale-stat-translated-keys"),
                     value: "94%",
                     accent: LOCALE_ACCENT,
                 }
-                StatPill { label: "Currencies", value: "8", accent: LOCALE_ACCENT }
-                StatPill { label: "RTL locales", value: "2", accent: LOCALE_ACCENT }
+                StatPill { label: t_key("settings-locale-stat-currencies"), value: "8", accent: LOCALE_ACCENT }
+                StatPill { label: t_key("settings-locale-stat-rtl-locales"), value: "2", accent: LOCALE_ACCENT }
             }
 
             div { class: "motion-cascade motion-cascade-tight stg-locale-matrix",
                 div { class: "stg-locale-head",
-                    span { "Language" }
-                    span { "Completion" }
-                    span { "Notes" }
+                    span { { t!("settings-locale-col-language") } }
+                    span { { t!("settings-locale-col-completion") } }
+                    span { { t!("settings-locale-col-notes") } }
                     span { "" }
                 }
                 for row in LOCALES {
@@ -399,8 +406,8 @@ pub fn SettingsLocalisation() -> Element {
                         div { class: "stg-locale-name",
                             span { class: "stg-locale-flagdot" }
                             div {
-                                p { class: "stg-locale-title", "{row.name}" }
-                                p { class: "stg-locale-sub", "{row.note}" }
+                                p { class: "stg-locale-title", { t_key(row.name_key) } }
+                                p { class: "stg-locale-sub", { t_key(row.note_key) } }
                             }
                         }
                         div {
@@ -410,16 +417,16 @@ pub fn SettingsLocalisation() -> Element {
                                     style: "width: {row.pct}%;",
                                 }
                             }
-                            p { class: "stg-locale-pct", "{row.pct}% complete" }
+                            p { class: "stg-locale-pct", { t!("settings-locale-pct-complete", pct: row.pct) } }
                         }
                         div { class: "stg-locale-tags",
-                            span { class: "stg-locale-tag", "{row.tag}" }
+                            span { class: "stg-locale-tag", { t_key(row.tag_key) } }
                         }
                         div { class: "stg-locale-actions",
                             Button {
                                 variant: ButtonVariant::Secondary,
                                 size: ButtonSize::Sm,
-                                "Edit"
+                                { t!("common-edit") }
                             }
                         }
                     }
@@ -432,7 +439,7 @@ pub fn SettingsLocalisation() -> Element {
 struct ApiKeyRow {
     name: &'static str,
     masked: &'static str,
-    env: &'static str,
+    env_key: &'static str,
     live: bool,
     scopes: &'static [&'static str],
     last_used: &'static str,
@@ -443,7 +450,7 @@ const API_KEYS: &[ApiKeyRow] = &[
     ApiKeyRow {
         name: "live_storefront",
         masked: "sk_live_••••92ab",
-        env: "Live",
+        env_key: "settings-dev-env-live",
         live: true,
         scopes: &["read:orders", "write:orders"],
         last_used: "Used 4m ago",
@@ -452,7 +459,7 @@ const API_KEYS: &[ApiKeyRow] = &[
     ApiKeyRow {
         name: "discord_bridge",
         masked: "sk_live_••••1f3c",
-        env: "Live",
+        env_key: "settings-dev-env-live",
         live: true,
         scopes: &["read:members"],
         last_used: "Used 1h ago",
@@ -461,7 +468,7 @@ const API_KEYS: &[ApiKeyRow] = &[
     ApiKeyRow {
         name: "analytics_export",
         masked: "sk_test_••••00e2",
-        env: "Test",
+        env_key: "settings-dev-env-test",
         live: false,
         scopes: &["read:analytics"],
         last_used: "Never used",
@@ -475,7 +482,7 @@ struct WebhookRow {
     events: &'static str,
     success: u8,
     delivery: &'static str,
-    status: &'static str,
+    status_key: &'static str,
     ok: bool,
 }
 
@@ -486,7 +493,7 @@ const WEBHOOKS: &[WebhookRow] = &[
         events: "order.completed · order.refunded",
         success: 100,
         delivery: "482ms average · 1.4k sent",
-        status: "Healthy",
+        status_key: "settings-dev-hook-status-healthy",
         ok: true,
     },
     WebhookRow {
@@ -495,7 +502,7 @@ const WEBHOOKS: &[WebhookRow] = &[
         events: "ticket.created · ticket.replied",
         success: 99,
         delivery: "210ms average · 860 sent",
-        status: "Healthy",
+        status_key: "settings-dev-hook-status-healthy",
         ok: true,
     },
     WebhookRow {
@@ -504,44 +511,46 @@ const WEBHOOKS: &[WebhookRow] = &[
         events: "vote.claimed",
         success: 74,
         delivery: "1.2s average · 3 retrying",
-        status: "Retrying",
+        status_key: "settings-dev-hook-status-retrying",
         ok: false,
     },
 ];
 
 #[component]
 pub fn SettingsDeveloper() -> Element {
+    let _lang = i18n();
+
     rsx! {
         div {
             class: "motion-cascade contents",
             style: "--stg-accent: {DEV_ACCENT};",
             SectionIntro {
-                eyebrow: "Platform",
-                title: "Developer",
-                description: "API keys, webhooks, and tools for extending ServerSpot.",
+                eyebrow: t_key("settings-dev-eyebrow"),
+                title: t_key("settings-dev-title"),
+                description: t_key("settings-dev-description"),
                 accent: DEV_ACCENT,
                 action: rsx! {
                     Button {
                         IconPlus {}
-                        "Create API key"
+                        { t!("settings-dev-create-api-key") }
                     }
                 },
             }
 
             section { class: "motion-cascade stat-strip mb-6",
-                StatPill { label: "Active keys", value: "3", accent: DEV_ACCENT }
+                StatPill { label: t_key("settings-dev-stat-active-keys"), value: "3", accent: DEV_ACCENT }
                 StatPill {
-                    label: "Webhook endpoints",
+                    label: t_key("settings-dev-stat-webhook-endpoints"),
                     value: "11",
                     accent: DEV_ACCENT,
                 }
                 StatPill {
-                    label: "API calls / day",
+                    label: t_key("settings-dev-stat-api-calls-day"),
                     value: "18.2k",
                     accent: DEV_ACCENT,
                 }
                 StatPill {
-                    label: "Failed deliveries",
+                    label: t_key("settings-dev-stat-failed-deliveries"),
                     value: "3",
                     accent: DEV_ACCENT,
                 }
@@ -550,21 +559,21 @@ pub fn SettingsDeveloper() -> Element {
             div { class: "motion-cascade motion-cascade-tight stg-dev-panel",
                 div { class: "stg-dev-panel-head",
                     div { class: "min-w-0",
-                        h2 { class: "stg-dev-panel-title", "API keys" }
+                        h2 { class: "stg-dev-panel-title", { t!("settings-dev-api-keys-title") } }
                         p { class: "stg-dev-panel-sub",
-                            "Secrets that authenticate requests to the ServerSpot API."
+                            { t!("settings-dev-api-keys-sub") }
                         }
                     }
                     Button {
                         variant: ButtonVariant::Secondary,
                         size: ButtonSize::Sm,
-                        "View documentation"
+                        { t!("settings-dev-view-docs") }
                     }
                 }
                 div { class: "stg-key-head",
-                    span { "Key" }
-                    span { "Scopes" }
-                    span { "Activity" }
+                    span { { t!("settings-dev-col-key") } }
+                    span { { t!("settings-dev-col-scopes") } }
+                    span { { t!("settings-dev-col-activity") } }
                     span { "" }
                 }
                 for key in API_KEYS {
@@ -573,12 +582,12 @@ pub fn SettingsDeveloper() -> Element {
                             div { class: "stg-key-name-row",
                                 p { class: "stg-key-name stg-dev-mono", "{key.name}" }
                                 span { class: if key.live { "stg-key-env is-live" } else { "stg-key-env" },
-                                    "{key.env}"
+                                    { t_key(key.env_key) }
                                 }
                             }
                             div { class: "stg-key-secret",
                                 span { class: "stg-key-secret-text stg-dev-mono", "{key.masked}" }
-                                button { class: "stg-key-copy", "Copy" }
+                                button { class: "stg-key-copy", { t!("common-copy") } }
                             }
                         }
                         div { class: "stg-key-scopes",
@@ -594,12 +603,12 @@ pub fn SettingsDeveloper() -> Element {
                             Button {
                                 variant: ButtonVariant::Secondary,
                                 size: ButtonSize::Sm,
-                                "Roll"
+                                { t!("settings-dev-roll") }
                             }
                             Button {
                                 variant: ButtonVariant::Ghost,
                                 size: ButtonSize::Sm,
-                                "Revoke"
+                                { t!("settings-dev-revoke") }
                             }
                         }
                     }
@@ -609,16 +618,16 @@ pub fn SettingsDeveloper() -> Element {
             div { class: "motion-cascade motion-cascade-tight stg-dev-panel",
                 div { class: "stg-dev-panel-head",
                     div { class: "min-w-0",
-                        h2 { class: "stg-dev-panel-title", "Webhook endpoints" }
+                        h2 { class: "stg-dev-panel-title", { t!("settings-dev-webhooks-title") } }
                         p { class: "stg-dev-panel-sub",
-                            "Where ServerSpot posts events from your store, forum, and votes."
+                            { t!("settings-dev-webhooks-sub") }
                         }
                     }
                     Button {
                         variant: ButtonVariant::Secondary,
                         size: ButtonSize::Sm,
                         IconPlus {}
-                        "Add endpoint"
+                        { t!("settings-dev-add-endpoint") }
                     }
                 }
                 for hook in WEBHOOKS {
@@ -638,18 +647,18 @@ pub fn SettingsDeveloper() -> Element {
                                 }
                             }
                             p { class: "stg-hook-health-meta",
-                                "{hook.success}% delivered · {hook.delivery}"
+                                { t!("settings-dev-hook-delivered", pct: hook.success, delivery: hook.delivery) }
                             }
                         }
                         div { class: "stg-hook-side",
                             span { class: if hook.ok { "stg-hook-status" } else { "stg-hook-status is-warn" },
                                 span { class: "stg-hook-status-dot" }
-                                "{hook.status}"
+                                { t_key(hook.status_key) }
                             }
                             Button {
                                 variant: ButtonVariant::Ghost,
                                 size: ButtonSize::Sm,
-                                "Send test"
+                                { t!("settings-dev-send-test") }
                             }
                         }
                     }
@@ -659,90 +668,111 @@ pub fn SettingsDeveloper() -> Element {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
-enum IntegrationId {
-    Discord,
-    GoogleAnalytics,
-    Zapier,
-    SendGrid,
-}
-
 struct IntegrationTile {
-    id: IntegrationId,
     name: &'static str,
-    desc: &'static str,
+    desc_key: &'static str,
     accent: &'static str,
     connected: bool,
+    icon: &'static str,
 }
 
 const INTEGRATIONS: &[IntegrationTile] = &[
     IntegrationTile {
-        id: IntegrationId::Discord,
+        name: "Minecraft",
+        desc_key: "settings-integrations-desc-minecraft",
+        accent: "#62B64A",
+        connected: true,
+        icon: "M3 8l9-5 9 5v8l-9 5-9-5V8zm9 1.7L6.2 6.6 12 3.4l5.8 3.2L12 9.7zm1 .85v6.9l6-3.3V7.25L13 10.55z",
+    },
+    IntegrationTile {
+        name: "FiveM",
+        desc_key: "settings-integrations-desc-fivem",
+        accent: "#F40552",
+        connected: true,
+        icon: "M12 2 20 6.5v11L12 22 4 17.5v-11L12 2zm-2.2 5.2v9.6h1.8v-3.4h2.1c1.8 0 2.9-1 2.9-2.6 0-1.6-1.1-2.6-2.9-2.6H9.8zm1.8 1.6h1.8c.8 0 1.3.4 1.3 1.1s-.5 1.1-1.3 1.1H11.6V8.8z",
+    },
+    IntegrationTile {
+        name: "Rust",
+        desc_key: "settings-integrations-desc-rust",
+        accent: "#CE422B",
+        connected: true,
+        icon: "M12 9a3 3 0 100 6 3 3 0 000-6zm0-7 1.2 3.8L17 4.2l.9 3.8L22 9.2 19.2 12 22 14.8l-4.1 1.2-.9 3.8-3.8-1.6L12 22l-1.2-3.8-3.8 1.6-.9-3.8L2 14.8 4.8 12 2 9.2l4.1-1.2.9-3.8 3.8 1.6L12 2z",
+    },
+    IntegrationTile {
+        name: "Hytale",
+        desc_key: "settings-integrations-desc-hytale",
+        accent: "#3DDC97",
+        connected: false,
+        icon: "M4 3h6v7h4V3h6v18h-6v-7H10v7H4V3z",
+    },
+    IntegrationTile {
         name: "Discord",
-        desc: "Login, role rewards, and purchase announcements.",
+        desc_key: "settings-integrations-desc-discord",
         accent: "#5865F2",
         connected: true,
+        icon: "M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.37-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.02.06.03.09.02c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12z",
     },
     IntegrationTile {
-        id: IntegrationId::GoogleAnalytics,
         name: "Google Analytics",
-        desc: "Track traffic and conversion funnels on your site.",
+        desc_key: "settings-integrations-desc-google-analytics",
         accent: "#F9AB00",
         connected: false,
+        icon: "M22.84 2.98a1.62 1.62 0 1 1-3.24 0 1.62 1.62 0 0 1 3.24 0zM1.16 17.76v4.48h4.48a4.48 4.48 0 0 0-4.48-4.48zm0-6.72v4.48c3.71 0 6.72 3.01 6.72 6.72h4.48c0-6.18-5.02-11.2-11.2-11.2zm0-6.72v4.48c7.42 0 13.44 6.02 13.44 13.44h4.48C19.08 10.61 10.95 2.48 1.16 4.32z",
     },
     IntegrationTile {
-        id: IntegrationId::Zapier,
         name: "Zapier",
-        desc: "Automate workflows across hundreds of apps.",
+        desc_key: "settings-integrations-desc-zapier",
         accent: "#FF4A00",
         connected: true,
+        icon: "M12 0 9.04 8.04H0l7.07 5.04L4.1 24 12 17.28 19.9 24l-2.97-10.92L24 8.04h-9.04L12 0z",
     },
     IntegrationTile {
-        id: IntegrationId::SendGrid,
         name: "SendGrid",
-        desc: "Transactional email delivery for receipts and alerts.",
+        desc_key: "settings-integrations-desc-sendgrid",
         accent: "#1A82E2",
         connected: false,
+        icon: "M.4 0v9.6h9.6V0H.4zm13.6 0v9.6h9.6V0H14zM.4 14.4V24h9.6v-9.6H.4zm13.6 0 .1 3.2h3.1V24H24v-9.6H14z",
     },
 ];
 
 #[component]
-fn IntegrationBrandIcon(id: IntegrationId) -> Element {
-    match id {
-        IntegrationId::Discord => rsx! {
-            svg {
-                class: "stg-tile-brand",
-                view_box: "0 0 24 24",
-                fill: "currentColor",
-                "aria-hidden": "true",
-                path { d: "M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.37-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.02.06.03.09.02c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12z" }
+fn IntegrationBrandIcon(name: &'static str, icon: &'static str) -> Element {
+    match name {
+        "Minecraft" => rsx! {
+            img {
+                class: "stg-tile-brand is-mark",
+                src: asset!("/assets/integrations/minecraft.svg"),
+                alt: "",
             }
         },
-        IntegrationId::GoogleAnalytics => rsx! {
-            svg {
-                class: "stg-tile-brand",
-                view_box: "0 0 24 24",
-                fill: "currentColor",
-                "aria-hidden": "true",
-                path { d: "M22.84 2.98a1.62 1.62 0 1 1-3.24 0 1.62 1.62 0 0 1 3.24 0zM1.16 17.76v4.48h4.48a4.48 4.48 0 0 0-4.48-4.48zm0-6.72v4.48c3.71 0 6.72 3.01 6.72 6.72h4.48c0-6.18-5.02-11.2-11.2-11.2zm0-6.72v4.48c7.42 0 13.44 6.02 13.44 13.44h4.48C19.08 10.61 10.95 2.48 1.16 4.32z" }
+        "FiveM" => rsx! {
+            img {
+                class: "stg-tile-brand is-mark",
+                src: asset!("/assets/integrations/fivem.svg"),
+                alt: "",
             }
         },
-        IntegrationId::Zapier => rsx! {
-            svg {
-                class: "stg-tile-brand",
-                view_box: "0 0 24 24",
-                fill: "currentColor",
-                "aria-hidden": "true",
-                path { d: "M12 0 9.04 8.04H0l7.07 5.04L4.1 24 12 17.28 19.9 24l-2.97-10.92L24 8.04h-9.04L12 0z" }
+        "Rust" => rsx! {
+            img {
+                class: "stg-tile-brand is-mark is-rust",
+                src: asset!("/assets/integrations/rust.png"),
+                alt: "",
             }
         },
-        IntegrationId::SendGrid => rsx! {
+        "Hytale" => rsx! {
+            img {
+                class: "stg-tile-brand is-mark",
+                src: asset!("/assets/integrations/hytale.webp"),
+                alt: "",
+            }
+        },
+        _ => rsx! {
             svg {
                 class: "stg-tile-brand",
                 view_box: "0 0 24 24",
                 fill: "currentColor",
                 "aria-hidden": "true",
-                path { d: "M.4 0v9.6h9.6V0H.4zm13.6 0v9.6h9.6V0H14zM.4 14.4V24h9.6v-9.6H.4zm13.6 0 .1 3.2h3.1V24H24v-9.6H14z" }
+                path { d: icon }
             }
         },
     }
@@ -750,19 +780,21 @@ fn IntegrationBrandIcon(id: IntegrationId) -> Element {
 
 #[component]
 pub fn SettingsIntegrations() -> Element {
+    let _lang = i18n();
+
     rsx! {
         div {
             class: "motion-cascade contents",
             style: "--stg-accent: {INTEGRATIONS_ACCENT};",
             SectionIntro {
-                eyebrow: "Ecosystem",
-                title: "Integrations",
-                description: "Connect Discord, analytics, email, and automation tools.",
+                eyebrow: t_key("settings-integrations-eyebrow"),
+                title: t_key("settings-integrations-title"),
+                description: t_key("settings-integrations-description"),
                 accent: INTEGRATIONS_ACCENT,
                 action: rsx! {
                     Button {
                         IconPlus {}
-                        "Add integration"
+                        { t!("settings-integrations-add") }
                     }
                 },
             }
@@ -776,22 +808,22 @@ pub fn SettingsIntegrations() -> Element {
                             span {
                                 class: "stg-tile-badge",
                                 "aria-hidden": "true",
-                                IntegrationBrandIcon { id: tile.id }
+                                IntegrationBrandIcon { name: tile.name, icon: tile.icon }
                             }
                             span { class: if tile.connected { "stg-tile-status is-on" } else { "stg-tile-status" },
                                 if tile.connected {
-                                    "Connected"
+                                    { t!("common-connected") }
                                 } else {
-                                    "Off"
+                                    { t!("common-off") }
                                 }
                             }
                         }
                         div {
                             p { class: "stg-tile-name", "{tile.name}" }
-                            p { class: "stg-tile-desc", "{tile.desc}" }
+                            p { class: "stg-tile-desc", { t_key(tile.desc_key) } }
                         }
                         div { class: "stg-tile-foot",
-                            span { class: "text-xs text-text-muted", "Manage" }
+                            span { class: "text-xs text-text-muted", { t!("common-manage") } }
                             ToggleField { enabled: tile.connected }
                         }
                     }
@@ -802,57 +834,63 @@ pub fn SettingsIntegrations() -> Element {
 }
 
 struct PolicyCard {
-    title: &'static str,
-    desc: &'static str,
+    title_key: &'static str,
+    desc_key: &'static str,
     enabled: bool,
 }
 
-fn posture_band(score: u32) -> (&'static str, &'static str) {
+fn posture_band_key(score: u32) -> &'static str {
     match score {
-        0..=39 => ("var(--color-danger)", "Weak posture"),
-        40..=69 => ("var(--color-warning)", "Fair posture"),
-        _ => ("var(--color-success)", "Strong posture"),
+        0..=39 => "settings-security-posture-weak",
+        40..=69 => "settings-security-posture-fair",
+        _ => "settings-security-posture-strong",
     }
 }
 
 const POLICIES: &[PolicyCard] = &[
     PolicyCard {
-        title: "Two-factor authentication",
-        desc: "Encourage 2FA for staff and high-value accounts.",
+        title_key: "settings-security-policy-2fa-title",
+        desc_key: "settings-security-policy-2fa-desc",
         enabled: true,
     },
     PolicyCard {
-        title: "CAPTCHA on forms",
-        desc: "Protect login, register, and ticket forms from spam.",
+        title_key: "settings-security-policy-captcha-title",
+        desc_key: "settings-security-policy-captcha-desc",
         enabled: true,
     },
     PolicyCard {
-        title: "Cookie consent",
-        desc: "Ask visitors for permission before storing cookies.",
+        title_key: "settings-security-policy-cookie-title",
+        desc_key: "settings-security-policy-cookie-desc",
         enabled: false,
     },
     PolicyCard {
-        title: "Session idle timeout",
-        desc: "Sign staff out automatically after 30 minutes idle.",
+        title_key: "settings-security-policy-session-title",
+        desc_key: "settings-security-policy-session-desc",
         enabled: true,
     },
 ];
 
 #[component]
 pub fn SettingsSecurity() -> Element {
+    let _lang = i18n();
     let score: u32 = 82;
     let segments: u32 = 10;
     let filled = ((score as f32 / 100.0) * segments as f32).round() as u32;
-    let (band_color, band_label) = posture_band(score);
+    let band_color = match score {
+        0..=39 => "var(--color-danger)",
+        40..=69 => "var(--color-warning)",
+        _ => "var(--color-success)",
+    };
+    let band_key = posture_band_key(score);
 
     rsx! {
         div {
             class: "motion-cascade contents",
             style: "--stg-accent: {SECURITY_ACCENT};",
             SectionIntro {
-                eyebrow: "Protection",
-                title: "Security",
-                description: "Authentication posture, spam protection, and privacy controls.",
+                eyebrow: t_key("settings-security-eyebrow"),
+                title: t_key("settings-security-title"),
+                description: t_key("settings-security-description"),
                 accent: SECURITY_ACCENT,
             }
 
@@ -862,7 +900,7 @@ pub fn SettingsSecurity() -> Element {
                         span { class: "stg-posture-score-num", "{score}" }
                         span { class: "stg-posture-score-max", "/ 100" }
                     }
-                    span { class: "stg-posture-score-label", "{band_label}" }
+                    span { class: "stg-posture-score-label", { t_key(band_key) } }
                 }
                 div { class: "stg-posture-meter",
                     for i in 0..segments {
@@ -873,10 +911,10 @@ pub fn SettingsSecurity() -> Element {
                     }
                 }
                 div { class: "stg-posture-scale",
-                    span { "Weak" }
-                    span { "Fair" }
-                    span { "Good" }
-                    span { "Strong" }
+                    span { { t!("settings-security-scale-weak") } }
+                    span { { t!("settings-security-scale-fair") } }
+                    span { { t!("settings-security-scale-good") } }
+                    span { { t!("settings-security-scale-strong") } }
                 }
             }
 
@@ -886,10 +924,10 @@ pub fn SettingsSecurity() -> Element {
                         span { class: "stg-policy-icon", IconShield {} }
                         div { class: "stg-policy-body",
                             div { class: "stg-policy-title-row",
-                                p { class: "stg-policy-title", "{policy.title}" }
+                                p { class: "stg-policy-title", { t_key(policy.title_key) } }
                                 ToggleField { enabled: policy.enabled }
                             }
-                            p { class: "stg-policy-desc", "{policy.desc}" }
+                            p { class: "stg-policy-desc", { t_key(policy.desc_key) } }
                         }
                     }
                 }
@@ -899,47 +937,57 @@ pub fn SettingsSecurity() -> Element {
 }
 
 struct InfraNode {
-    name: &'static str,
+    name_key: &'static str,
     meta: &'static str,
     warn: bool,
 }
 
 const INFRA_NODES: &[InfraNode] = &[
     InfraNode {
-        name: "Web",
+        name_key: "settings-hosting-node-web",
         meta: "99.98% uptime · 42ms",
         warn: false,
     },
     InfraNode {
-        name: "Database",
+        name_key: "settings-hosting-node-database",
         meta: "99.99% uptime · 8ms",
         warn: false,
     },
     InfraNode {
-        name: "CDN",
+        name_key: "settings-hosting-node-cdn",
         meta: "99.95% uptime · 21ms",
         warn: false,
     },
     InfraNode {
-        name: "Email relay",
+        name_key: "settings-hosting-node-email-relay",
         meta: "Delayed queue · 3 retries",
         warn: true,
     },
 ];
 
 const BACKUP_TICKS: &[bool] = &[true, true, true, true, false, true, true];
-const BACKUP_LABELS: &[&str] = &["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const BACKUP_LABEL_KEYS: &[&str] = &[
+    "settings-hosting-day-mon",
+    "settings-hosting-day-tue",
+    "settings-hosting-day-wed",
+    "settings-hosting-day-thu",
+    "settings-hosting-day-fri",
+    "settings-hosting-day-sat",
+    "settings-hosting-day-sun",
+];
 
 #[component]
 pub fn SettingsHosting() -> Element {
+    let _lang = i18n();
+
     rsx! {
         div {
             class: "motion-cascade contents",
             style: "--stg-accent: {HOSTING_ACCENT};",
             SectionIntro {
-                eyebrow: "Infrastructure",
-                title: "Hosting",
-                description: "Cloud hosting, backups, and deployment for this website.",
+                eyebrow: t_key("settings-hosting-eyebrow"),
+                title: t_key("settings-hosting-title"),
+                description: t_key("settings-hosting-description"),
                 accent: HOSTING_ACCENT,
             }
 
@@ -948,7 +996,7 @@ pub fn SettingsHosting() -> Element {
                     div { class: "stg-infra-node",
                         div { class: "stg-infra-top",
                             span { class: if node.warn { "stg-infra-dot is-warn" } else { "stg-infra-dot" } }
-                            span { class: "stg-infra-name", "{node.name}" }
+                            span { class: "stg-infra-name", { t_key(node.name_key) } }
                         }
                         p { class: "stg-infra-meta", "{node.meta}" }
                     }
@@ -957,7 +1005,7 @@ pub fn SettingsHosting() -> Element {
 
             div { class: "ui-card p-4",
                 div { class: "mb-1 flex items-center justify-between gap-3",
-                    h2 { class: "text-sm font-semibold text-text", "Automatic backups" }
+                    h2 { class: "text-sm font-semibold text-text", { t!("settings-hosting-backups-title") } }
                     span { class: "text-xs text-text-muted tabular-nums", "Last snapshot 2h ago" }
                 }
                 div { class: "stg-infra-timeline",
@@ -966,19 +1014,19 @@ pub fn SettingsHosting() -> Element {
                     }
                 }
                 div { class: "stg-infra-timeline-labels",
-                    for label in BACKUP_LABELS {
-                        span { "{label}" }
+                    for label_key in BACKUP_LABEL_KEYS {
+                        span { { t_key(label_key) } }
                     }
                 }
                 div { class: "mt-3 border-t border-border-subtle pt-1",
                     ToggleField {
-                        label: "Nightly snapshots",
-                        hint: "Automatic backups of your site and database.",
+                        label: t_key("settings-hosting-toggle-nightly-label"),
+                        hint: t_key("settings-hosting-toggle-nightly-hint"),
                         enabled: true,
                     }
                 }
                 div { class: "mt-4",
-                    Button { variant: ButtonVariant::Outline, size: ButtonSize::Sm, "Open hosting panel" }
+                    Button { variant: ButtonVariant::Outline, size: ButtonSize::Sm, { t!("settings-hosting-open-panel") } }
                 }
             }
         }

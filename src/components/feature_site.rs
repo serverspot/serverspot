@@ -1,62 +1,67 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
 
 use crate::components::community::{PlayersLeaderboardsStyles, VotesApplicationsStyles};
 use crate::components::page::{DataPanel, FeatureSettingsChrome, SettingRow, SettingsField};
+use crate::i18n::t_key;
 
 #[component]
 pub fn PlayersSiteSettings() -> Element {
+    let _lang = i18n();
+
     rsx! {
         PlayersLeaderboardsStyles {}
-        FeatureSettingsChrome { subtitle: "Path and profile hub settings for the player directory.",
-            DataPanel { title: "On your website",
-                SettingsField { label: "Public path", value: "/players" }
-                SettingsField { label: "Full URL", value: "www.example.com/players" }
+        FeatureSettingsChrome { subtitle: t_key("feature-players-subtitle"),
+            DataPanel { title: t_key("feature-on-website"),
+                SettingsField { label: t_key("feature-public-path"), value: "/players" }
+                SettingsField { label: t_key("feature-full-url"), value: "www.example.com/players" }
                 SettingsField {
-                    label: "Profile URL pattern",
+                    label: t_key("feature-players-profile-url-pattern"),
                     value: "www.example.com/players/:id",
                 }
                 p { class: "pt-3 text-xs text-text-muted",
-                    "Domain and HTTPS are managed in Settings → General."
+                    { t!("feature-domain-hint") }
                 }
             }
-            DataPanel { title: "Directory behaviour",
+            DataPanel { title: t_key("feature-players-directory-behaviour"),
                 SettingRow {
-                    title: "Public roster search",
-                    description: "Let visitors search and filter the player directory.",
+                    title: t_key("feature-players-roster-search-title"),
+                    description: t_key("feature-players-roster-search-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Show ranks",
-                    description: "Display rank badges on profiles and the roster.",
+                    title: t_key("feature-players-show-ranks-title"),
+                    description: t_key("feature-players-show-ranks-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Show linked accounts",
-                    description: "Reveal linked Minecraft and Discord identities publicly.",
+                    title: t_key("feature-players-linked-accounts-title"),
+                    description: t_key("feature-players-linked-accounts-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Public profile pages",
-                    description: "Allow anyone to view a player's case file page.",
+                    title: t_key("feature-players-public-profiles-title"),
+                    description: t_key("feature-players-public-profiles-desc"),
                     enabled: true,
                 }
             }
-            DataPanel { title: "Branding & navigation",
-                SettingsField { label: "Page title", value: "Players" }
+            DataPanel { title: t_key("feature-branding-navigation"),
+                SettingsField { label: t_key("feature-page-title"), value: t_key("feature-example-page-title-players") }
                 SettingsField {
-                    label: "Section navigation",
+                    label: t_key("feature-section-navigation"),
                     value: "Profiles, Search, Badges",
                 }
                 SettingRow {
-                    title: "Custom navigation",
-                    description: "Show a feature menu instead of the default website nav.",
+                    title: t_key("feature-custom-nav-title"),
+                    description: t_key("feature-custom-nav-desc"),
                     enabled: false,
                 }
             }
-            DataPanel { title: "Roster defaults",
-                SettingsField { label: "Default sort", value: "Highest level" }
-                SettingsField { label: "Cards per page", value: "24" }
-                SettingsField { label: "Offline grace period", value: "5 minutes" }
+            DataPanel { title: t_key("feature-players-roster-defaults"),
+                SettingsField { label: t_key("feature-players-default-sort"), value: t_key("feature-example-sort-highest-level") }
+                SettingsField { label: t_key("feature-players-cards-per-page"), value: "24" }
+                SettingsField { label: t_key("feature-players-offline-grace"), value: "5 minutes" }
             }
         }
     }
@@ -64,58 +69,60 @@ pub fn PlayersSiteSettings() -> Element {
 
 #[component]
 pub fn LeaderboardsSiteSettings() -> Element {
+    let _lang = i18n();
+
     rsx! {
         PlayersLeaderboardsStyles {}
-        FeatureSettingsChrome { subtitle: "Path and public board settings for rankings and podiums.",
-            DataPanel { title: "On your website",
-                SettingsField { label: "Public path", value: "/leaderboards" }
-                SettingsField { label: "Full URL", value: "www.example.com/leaderboards" }
+        FeatureSettingsChrome { subtitle: t_key("feature-leaderboards-subtitle"),
+            DataPanel { title: t_key("feature-on-website"),
+                SettingsField { label: t_key("feature-public-path"), value: "/leaderboards" }
+                SettingsField { label: t_key("feature-full-url"), value: "www.example.com/leaderboards" }
                 SettingsField {
-                    label: "Board URL pattern",
+                    label: t_key("feature-leaderboards-board-url-pattern"),
                     value: "www.example.com/leaderboards/:id",
                 }
                 p { class: "pt-3 text-xs text-text-muted",
-                    "Domain and HTTPS are managed in Settings → General."
+                    { t!("feature-domain-hint") }
                 }
             }
-            DataPanel { title: "Board behaviour",
+            DataPanel { title: t_key("feature-leaderboards-board-behaviour"),
                 SettingRow {
-                    title: "Public boards",
-                    description: "Show leaderboards on the public website.",
+                    title: t_key("feature-leaderboards-public-boards-title"),
+                    description: t_key("feature-leaderboards-public-boards-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Show avatars",
-                    description: "Display player avatars next to ranked entries.",
+                    title: t_key("feature-leaderboards-show-avatars-title"),
+                    description: t_key("feature-leaderboards-show-avatars-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Automatic resets",
-                    description: "Reset boards automatically based on their schedule.",
+                    title: t_key("feature-leaderboards-auto-resets-title"),
+                    description: t_key("feature-leaderboards-auto-resets-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Podium spotlight widget",
-                    description: "Show the top-3 podium widget on the overview page.",
+                    title: t_key("feature-leaderboards-podium-widget-title"),
+                    description: t_key("feature-leaderboards-podium-widget-desc"),
                     enabled: true,
                 }
             }
-            DataPanel { title: "Branding & navigation",
-                SettingsField { label: "Page title", value: "Leaderboards" }
+            DataPanel { title: t_key("feature-branding-navigation"),
+                SettingsField { label: t_key("feature-page-title"), value: t_key("feature-example-page-title-leaderboards") }
                 SettingsField {
-                    label: "Section navigation",
+                    label: t_key("feature-section-navigation"),
                     value: "Top players, Kills, Playtime",
                 }
                 SettingRow {
-                    title: "Custom navigation",
-                    description: "Show a feature menu instead of the default website nav.",
+                    title: t_key("feature-custom-nav-title"),
+                    description: t_key("feature-custom-nav-desc"),
                     enabled: false,
                 }
             }
-            DataPanel { title: "Data sources",
-                SettingsField { label: "Primary source", value: "In-game plugin API" }
-                SettingsField { label: "Sync interval", value: "5 minutes" }
-                SettingsField { label: "Fallback source", value: "Manual CSV import" }
+            DataPanel { title: t_key("feature-leaderboards-data-sources"),
+                SettingsField { label: t_key("feature-leaderboards-primary-source"), value: t_key("feature-example-source-plugin-api") }
+                SettingsField { label: t_key("feature-leaderboards-sync-interval"), value: "5 minutes" }
+                SettingsField { label: t_key("feature-leaderboards-fallback-source"), value: t_key("feature-example-source-csv-import") }
             }
         }
     }
@@ -123,58 +130,60 @@ pub fn LeaderboardsSiteSettings() -> Element {
 
 #[component]
 pub fn VotesSiteSettings() -> Element {
+    let _lang = i18n();
+
     rsx! {
         VotesApplicationsStyles {}
-        FeatureSettingsChrome { subtitle: "Listing sites, callbacks, and claim delivery for vote rewards.",
-            DataPanel { title: "Listing sites & callbacks",
-                SettingsField { label: "Connected sites", value: "4 listing sites" }
-                SettingsField { label: "Callback timeout", value: "10 seconds" }
-                SettingsField { label: "Vote cooldown", value: "12–24 hours per site" }
+        FeatureSettingsChrome { subtitle: t_key("feature-votes-subtitle"),
+            DataPanel { title: t_key("feature-votes-listing-callbacks"),
+                SettingsField { label: t_key("feature-votes-connected-sites"), value: "4 listing sites" }
+                SettingsField { label: t_key("feature-votes-callback-timeout"), value: "10 seconds" }
+                SettingsField { label: t_key("feature-votes-vote-cooldown"), value: "12–24 hours per site" }
                 SettingsField {
-                    label: "Callback URL",
+                    label: t_key("feature-votes-callback-url"),
                     value: "www.example.com/vote/callback/:site",
                 }
                 p { class: "pt-3 text-xs text-text-muted",
-                    "Each listing site posts to this callback when a vote is verified."
+                    { t!("feature-votes-callback-hint") }
                 }
             }
-            DataPanel { title: "Claim delivery",
+            DataPanel { title: t_key("feature-votes-claim-delivery"),
                 SettingRow {
-                    title: "Auto-claim online players",
-                    description: "Run reward commands immediately if the player is online.",
+                    title: t_key("feature-votes-auto-claim-title"),
+                    description: t_key("feature-votes-auto-claim-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Queue offline claims",
-                    description: "Hold claims until the player next joins the server.",
+                    title: t_key("feature-votes-queue-offline-title"),
+                    description: t_key("feature-votes-queue-offline-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Streak grace period",
-                    description: "Allow a 24-hour grace period before a streak resets.",
+                    title: t_key("feature-votes-streak-grace-title"),
+                    description: t_key("feature-votes-streak-grace-desc"),
                     enabled: true,
                 }
             }
-            DataPanel { title: "On your website",
-                SettingsField { label: "Public path", value: "/vote" }
-                SettingsField { label: "Full URL", value: "www.example.com/vote" }
+            DataPanel { title: t_key("feature-on-website"),
+                SettingsField { label: t_key("feature-public-path"), value: "/vote" }
+                SettingsField { label: t_key("feature-full-url"), value: "www.example.com/vote" }
                 SettingsField {
-                    label: "Claim URL pattern",
+                    label: t_key("feature-votes-claim-url-pattern"),
                     value: "www.example.com/vote/claim/:id",
                 }
                 p { class: "pt-3 text-xs text-text-muted",
-                    "Domain and HTTPS are managed in Settings → General."
+                    { t!("feature-domain-hint") }
                 }
             }
-            DataPanel { title: "Branding & navigation",
-                SettingsField { label: "Page title", value: "Vote rewards" }
+            DataPanel { title: t_key("feature-branding-navigation"),
+                SettingsField { label: t_key("feature-page-title"), value: t_key("feature-example-page-title-votes") }
                 SettingsField {
-                    label: "Section navigation",
+                    label: t_key("feature-section-navigation"),
                     value: "Vote links, Rewards, Claim",
                 }
                 SettingRow {
-                    title: "Custom navigation",
-                    description: "Show a feature menu instead of the default website nav.",
+                    title: t_key("feature-custom-nav-title"),
+                    description: t_key("feature-custom-nav-desc"),
                     enabled: false,
                 }
             }
@@ -184,58 +193,60 @@ pub fn VotesSiteSettings() -> Element {
 
 #[component]
 pub fn ApplicationsSiteSettings() -> Element {
+    let _lang = i18n();
+
     rsx! {
         VotesApplicationsStyles {}
-        FeatureSettingsChrome { subtitle: "Path, form defaults, and review workflow for applications.",
-            DataPanel { title: "On your website",
-                SettingsField { label: "Public path", value: "/apply" }
-                SettingsField { label: "Full URL", value: "www.example.com/apply" }
+        FeatureSettingsChrome { subtitle: t_key("feature-applications-subtitle"),
+            DataPanel { title: t_key("feature-on-website"),
+                SettingsField { label: t_key("feature-public-path"), value: "/apply" }
+                SettingsField { label: t_key("feature-full-url"), value: "www.example.com/apply" }
                 SettingsField {
-                    label: "Form URL pattern",
+                    label: t_key("feature-applications-form-url-pattern"),
                     value: "www.example.com/apply/:role",
                 }
                 p { class: "pt-3 text-xs text-text-muted",
-                    "Domain and HTTPS are managed in Settings → General."
+                    { t!("feature-domain-hint") }
                 }
             }
-            DataPanel { title: "Desk behaviour",
+            DataPanel { title: t_key("feature-applications-desk-behaviour"),
                 SettingRow {
-                    title: "Open applications publicly",
-                    description: "Let visitors browse open roles and apply.",
+                    title: t_key("feature-applications-open-publicly-title"),
+                    description: t_key("feature-applications-open-publicly-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Require account link",
-                    description: "Applicants must link a Minecraft account to apply.",
+                    title: t_key("feature-applications-require-account-title"),
+                    description: t_key("feature-applications-require-account-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Staff voting",
-                    description: "Allow reviewers to cast yes/no votes on each application.",
+                    title: t_key("feature-applications-staff-voting-title"),
+                    description: t_key("feature-applications-staff-voting-desc"),
                     enabled: true,
                 }
                 SettingRow {
-                    title: "Auto-close duplicate applications",
-                    description: "Archive earlier applications when a newer one is submitted.",
+                    title: t_key("feature-applications-auto-close-title"),
+                    description: t_key("feature-applications-auto-close-desc"),
                     enabled: false,
                 }
             }
-            DataPanel { title: "Branding & navigation",
-                SettingsField { label: "Page title", value: "Applications" }
+            DataPanel { title: t_key("feature-branding-navigation"),
+                SettingsField { label: t_key("feature-page-title"), value: t_key("feature-example-page-title-applications") }
                 SettingsField {
-                    label: "Section navigation",
+                    label: t_key("feature-section-navigation"),
                     value: "Open roles, My applications",
                 }
                 SettingRow {
-                    title: "Custom navigation",
-                    description: "Show a feature menu instead of the default website nav.",
+                    title: t_key("feature-custom-nav-title"),
+                    description: t_key("feature-custom-nav-desc"),
                     enabled: false,
                 }
             }
-            DataPanel { title: "Review workflow",
-                SettingsField { label: "Reviewers per application", value: "2 minimum" }
-                SettingsField { label: "Decision notifications", value: "Email + Discord" }
-                SettingsField { label: "Reapply cooldown", value: "30 days after denial" }
+            DataPanel { title: t_key("feature-applications-review-workflow"),
+                SettingsField { label: t_key("feature-applications-reviewers-min"), value: "2 minimum" }
+                SettingsField { label: t_key("feature-applications-decision-notifications"), value: t_key("feature-example-notifications") }
+                SettingsField { label: t_key("feature-applications-reapply-cooldown"), value: "30 days after denial" }
             }
         }
     }
