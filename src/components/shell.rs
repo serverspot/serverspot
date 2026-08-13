@@ -3,12 +3,17 @@ use dioxus_i18n::prelude::*;
 use dioxus_i18n::t;
 
 use crate::components::brand::{favicon_svg, BrandMark};
+use crate::components::changelog::{ChangelogHost, use_changelog};
+use crate::components::notifications::NotificationsMenu;
 use crate::components::page::{PageTransition, PoweredByFooter};
 use crate::components::ui::*;
 use crate::i18n::{crumb_label, section_document_title, section_label, subnav_label};
 use crate::nav::{is_theme_editor, section_for, subnav_active, Section};
 use crate::router::Route;
 use crate::user::CurrentUser;
+
+/// Flip to `false` to hide the secondary-sidebar update badge.
+const SHOW_UPDATE_AVAILABLE: bool = true;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum SheetAnim {
@@ -29,6 +34,7 @@ pub fn AppShell() -> Element {
     let theme_ide = is_theme_editor(&route);
     let mut favicon_accent = use_signal(|| Option::<&'static str>::None);
     let mut side_open = use_signal(|| true);
+    let changelog = use_changelog();
 
     use_effect(move || {
         let _route = router().current::<Route>();
@@ -185,6 +191,15 @@ pub fn AppShell() -> Element {
                             }
                         }
                     }
+                    if SHOW_UPDATE_AVAILABLE {
+                        button {
+                            r#type: "button",
+                            class: "shell-update-badge mt-auto",
+                            onclick: move |_| changelog.show(),
+                            span { class: "shell-update-badge-label", { t!("shell-update-available") } }
+                            span { class: "shell-update-badge-go", aria_hidden: "true", "↗" }
+                        }
+                    }
                 }
             }
 
@@ -223,6 +238,8 @@ pub fn AppShell() -> Element {
                     panel_class,
                 }
             }
+
+            ChangelogHost {}
         }
     }
 }
@@ -390,7 +407,7 @@ fn ShellHeaderBar(
 
                 div { class: "flex shrink-0 items-center gap-0.5 sm:gap-1",
                     IconButton { onclick: move |_| search_open.set(true), IconSearch {} }
-                    IconButton { class: "max-lg:hidden", IconBell {} }
+                    NotificationsMenu {}
                     IconButton {
                         class: "max-lg:hidden",
                         onclick: move |_| {

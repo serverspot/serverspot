@@ -701,22 +701,199 @@ const ROLE_LADDER: &[RoleRung] = &[
 ];
 
 const PERMISSIONS: &[&str] = &[
+    // Dashboard
+    "dashboard.view",
+    // Store
+    "store.view",
+    "store.products.manage",
+    "store.orders.manage",
+    "store.orders.refund",
+    "store.coupons.manage",
+    "store.categories.manage",
+    "store.settings",
+    // Forums
+    "forums.view",
     "forums.create",
+    "forums.edit",
     "forums.delete",
+    "forums.moderate",
+    "forums.boards.manage",
+    "forums.automod",
+    "forums.settings",
+    // Support
+    "tickets.view",
+    "tickets.reply",
+    "tickets.assign",
     "tickets.manage",
+    "tickets.close",
+    "help.view",
+    "help.manage",
+    "support.automation",
+    "support.settings",
+    // Content / news
+    "news.view",
+    "news.draft",
     "news.publish",
+    "news.delete",
+    "news.settings",
+    // Community — players
+    "players.view",
+    "players.manage",
+    "players.ban",
+    "players.settings",
+    // Community — leaderboards
+    "leaderboards.view",
+    "leaderboards.manage",
+    "leaderboards.settings",
+    // Community — votes
+    "votes.view",
+    "votes.manage",
+    "votes.settings",
+    // Community — applications
+    "applications.view",
     "applications.review",
+    "applications.manage",
+    "applications.settings",
+    // Analytics
     "analytics.view",
+    "analytics.export",
+    "analytics.settings",
+    // Accounts & access
+    "accounts.view",
+    "accounts.manage",
+    "accounts.invite",
+    "roles.view",
+    "roles.manage",
+    // Settings & theme
+    "settings.view",
+    "settings.general",
+    "settings.localisation",
+    "settings.integrations",
+    "theme.view",
+    "theme.edit",
 ];
 
+// Columns: Owner, Admin, Moderator, Helper, Member
 const GRANTS: &[[bool; 5]] = &[
-    [true, true, true, false, true],
-    [true, true, true, false, false],
+    // dashboard.view
     [true, true, true, true, false],
-    [true, true, false, false, false],
-    [true, true, false, false, false],
+    // store.view
     [true, true, true, false, false],
+    // store.products.manage
+    [true, true, false, false, false],
+    // store.orders.manage
+    [true, true, true, false, false],
+    // store.orders.refund
+    [true, true, false, false, false],
+    // store.coupons.manage
+    [true, true, false, false, false],
+    // store.categories.manage
+    [true, true, false, false, false],
+    // store.settings
+    [true, true, false, false, false],
+    // forums.view
+    [true, true, true, true, true],
+    // forums.create
+    [true, true, true, true, true],
+    // forums.edit
+    [true, true, true, false, false],
+    // forums.delete
+    [true, true, true, false, false],
+    // forums.moderate
+    [true, true, true, true, false],
+    // forums.boards.manage
+    [true, true, false, false, false],
+    // forums.automod
+    [true, true, true, false, false],
+    // forums.settings
+    [true, true, false, false, false],
+    // tickets.view
+    [true, true, true, true, false],
+    // tickets.reply
+    [true, true, true, true, false],
+    // tickets.assign
+    [true, true, true, false, false],
+    // tickets.manage
+    [true, true, true, false, false],
+    // tickets.close
+    [true, true, true, true, false],
+    // help.view
+    [true, true, true, true, true],
+    // help.manage
+    [true, true, true, false, false],
+    // support.automation
+    [true, true, false, false, false],
+    // support.settings
+    [true, true, false, false, false],
+    // news.view
+    [true, true, true, true, true],
+    // news.draft
+    [true, true, true, false, false],
+    // news.publish
+    [true, true, false, false, false],
+    // news.delete
+    [true, true, false, false, false],
+    // news.settings
+    [true, true, false, false, false],
+    // players.view
+    [true, true, true, true, false],
+    // players.manage
+    [true, true, true, false, false],
+    // players.ban
+    [true, true, true, false, false],
+    // players.settings
+    [true, true, false, false, false],
+    // leaderboards.view
+    [true, true, true, true, true],
+    // leaderboards.manage
+    [true, true, false, false, false],
+    // leaderboards.settings
+    [true, true, false, false, false],
+    // votes.view
+    [true, true, true, false, false],
+    // votes.manage
+    [true, true, false, false, false],
+    // votes.settings
+    [true, true, false, false, false],
+    // applications.view
+    [true, true, true, true, false],
+    // applications.review
+    [true, true, true, false, false],
+    // applications.manage
+    [true, true, false, false, false],
+    // applications.settings
+    [true, true, false, false, false],
+    // analytics.view
+    [true, true, true, false, false],
+    // analytics.export
+    [true, true, false, false, false],
+    // analytics.settings
+    [true, true, false, false, false],
+    // accounts.view
+    [true, true, false, false, false],
+    // accounts.manage
+    [true, true, false, false, false],
+    // accounts.invite
+    [true, true, false, false, false],
+    // roles.view
+    [true, true, false, false, false],
+    // roles.manage
+    [true, false, false, false, false],
+    // settings.view
+    [true, true, false, false, false],
+    // settings.general
+    [true, true, false, false, false],
+    // settings.localisation
+    [true, true, false, false, false],
+    // settings.integrations
+    [true, true, false, false, false],
+    // theme.view
+    [true, true, false, false, false],
+    // theme.edit
+    [true, true, false, false, false],
 ];
+
+const _: () = assert!(PERMISSIONS.len() == GRANTS.len());
 
 #[component]
 pub fn AccountsRoles() -> Element {

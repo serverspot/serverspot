@@ -1,3 +1,6 @@
+use std::collections::HashSet;
+use std::sync::OnceLock;
+
 use dioxus_i18n::prelude::*;
 use dioxus_i18n::unic_langid::{langid, LanguageIdentifier};
 use dioxus_i18n::{t, tid};
@@ -7,12 +10,17 @@ use crate::router::Route;
 
 pub const DEFAULT_LOCALE: &str = "en-US";
 
+const EN_US_FTL: &str = include_str!("../i18n/en-US.ftl");
+const FR_FR_FTL: &str = include_str!("../i18n/fr-FR.ftl");
+const DE_DE_FTL: &str = include_str!("../i18n/de-DE.ftl");
+const ES_ES_FTL: &str = include_str!("../i18n/es-ES.ftl");
+
 pub fn init_i18n_config() -> I18nConfig {
     I18nConfig::new(langid!("en-US"))
-        .with_locale((langid!("en-US"), include_str!("../i18n/en-US.ftl")))
-        .with_locale((langid!("fr-FR"), include_str!("../i18n/fr-FR.ftl")))
-        .with_locale((langid!("de-DE"), include_str!("../i18n/de-DE.ftl")))
-        .with_locale((langid!("es-ES"), include_str!("../i18n/es-ES.ftl")))
+        .with_locale((langid!("en-US"), EN_US_FTL))
+        .with_locale((langid!("fr-FR"), FR_FR_FTL))
+        .with_locale((langid!("de-DE"), DE_DE_FTL))
+        .with_locale((langid!("es-ES"), ES_ES_FTL))
 }
 
 pub fn locale_to_langid(locale: &str) -> LanguageIdentifier {
@@ -30,6 +38,170 @@ pub fn apply_user_locale(locale: &str) {
 
 pub fn t_key(id: &str) -> String {
     tid!(id).to_string()
+}
+
+/// A translation catalog shown on Settings → Localisation.
+#[derive(Clone, PartialEq)]
+pub struct TranslationCatalog {
+    pub code: String,
+    pub filename: String,
+    pub key_count: usize,
+    pub matching_keys: usize,
+    pub is_source: bool,
+    pub is_uploaded: bool,
+    pub accent: &'static str,
+}
+
+impl TranslationCatalog {
+    pub fn completion_pct(&self, source_total: usize) -> u8 {
+        if source_total == 0 {
+            return 0;
+        }
+        ((self.matching_keys * 100) / source_total).min(100) as u8
+    }
+
+    pub fn display_name(&self) -> String {
+        locale_display_name(&self.code)
+    }
+}
+
+pub fn locale_display_name(code: &str) -> String {
+    match code {
+        "en-US" => t_key("lang-en"),
+        "fr-FR" => t_key("lang-fr"),
+        "de-DE" => t_key("lang-de"),
+        "es-ES" => t_key("lang-es"),
+        other => other.to_string(),
+    }
+}
+
+pub fn parse_ftl_keys(source: &str) -> HashSet<String> {
+    source
+        .lines()
+        .filter_map(|line| {
+            if line.is_empty() || line.starts_with('#') || line.starts_with(char::is_whitespace) {
+                return None;
+            }
+            let (key, _) = line.split_once('=')?;
+            let key = key.trim();
+            if key.is_empty()
+                || !key
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+            {
+                return None;
+            }
+            Some(key.to_string())
+        })
+        .collect()
+}
+
+pub fn source_ftl_keys() -> &'static HashSet<String> {
+    static KEYS: OnceLock<HashSet<String>> = OnceLock::new();
+    KEYS.get_or_init(|| parse_ftl_keys(EN_US_FTL))
+}
+
+pub fn source_key_count() -> usize {
+    source_ftl_keys().len()
+}
+
+fn catalog_from_ftl(
+    code: &str,
+    filename: &str,
+    source: &str,
+    is_source: bool,
+    accent: &'static str,
+) -> TranslationCatalog {
+    let keys = parse_ftl_keys(source);
+    let matching = keys.intersection(source_ftl_keys()).count();
+    TranslationCatalog {
+        code: code.to_string(),
+        filename: filename.to_string(),
+        key_count: keys.len(),
+        matching_keys: matching,
+        is_source,
+        is_uploaded: false,
+        accent,
+    }
+}
+
+pub fn builtin_translation_catalogs() -> Vec<TranslationCatalog> {
+    vec![
+        catalog_from_ftl("en-US", "en-US.ftl", EN_US_FTL, true, "#34d399"),
+        catalog_from_ftl("fr-FR", "fr-FR.ftl", FR_FR_FTL, false, "#c4b5fd"),
+        catalog_from_ftl("de-DE", "de-DE.ftl", DE_DE_FTL, false, "#87d1fe"),
+        catalog_from_ftl("es-ES", "es-ES.ftl", ES_ES_FTL, false, "#5b9dff"),
+    ]
+}
+
+pub fn catalog_from_uploaded_ftl(
+    filename: &str,
+    source: &str,
+) -> Result<TranslationCatalog, &'static str> {
+    let code = locale_code_from_filename(filename).ok_or("settings-locale-upload-bad-name")?;
+    if source.trim().is_empty() {
+        return Err("settings-locale-upload-empty");
+    }
+    let keys = parse_ftl_keys(source);
+    if keys.is_empty() {
+        return Err("settings-locale-upload-no-keys");
+    }
+    let matching = keys.intersection(source_ftl_keys()).count();
+    Ok(TranslationCatalog {
+        code,
+        filename: filename.to_string(),
+        key_count: keys.len(),
+        matching_keys: matching,
+        is_source: false,
+        is_uploaded: true,
+        accent: "#f0a35e",
+    })
+}
+
+pub fn locale_code_from_filename(filename: &str) -> Option<String> {
+    let name = filename
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or(filename)
+        .trim();
+    let stem = name
+        .strip_suffix(".ftl")
+        .or_else(|| name.strip_suffix(".FTL"))?;
+    let code = stem.replace('_', "-");
+    let mut parts = code.split('-');
+    let lang = parts.next()?;
+    if lang.len() < 2 || !lang.chars().all(|c| c.is_ascii_alphabetic()) {
+        return None;
+    }
+    let mut normalized = lang.to_ascii_lowercase();
+    if let Some(region) = parts.next() {
+        if region.is_empty() || !region.chars().all(|c| c.is_ascii_alphanumeric()) {
+            return None;
+        }
+        normalized.push('-');
+        normalized.push_str(&region.to_ascii_uppercase());
+    }
+    if parts.next().is_some() {
+        return None;
+    }
+    Some(normalized)
+}
+
+pub fn settings_locale_keys_note(matched: usize, source_total: usize, filename: String) -> String {
+    t!(
+        "settings-locale-keys-note",
+        matched: matched,
+        source_total: source_total,
+        filename: filename
+    )
+}
+
+pub fn settings_locale_pct_complete(pct: u8) -> String {
+    t!("settings-locale-pct-complete", pct: pct)
+}
+
+pub fn settings_locale_upload_success(locale: String) -> String {
+    t!("settings-locale-upload-success", locale: locale)
 }
 
 pub fn community_case_joined(case_id: String, joined_at: String) -> String {

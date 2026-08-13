@@ -4,7 +4,11 @@ use dioxus_i18n::t;
 
 use crate::components::page::StatPill;
 use crate::components::ui::*;
-use crate::i18n::t_key;
+use crate::i18n::{
+    builtin_translation_catalogs, catalog_from_uploaded_ftl, settings_locale_keys_note,
+    settings_locale_pct_complete, settings_locale_upload_success, source_key_count, t_key,
+    TranslationCatalog,
+};
 
 const GENERAL_ACCENT: &str = "#87d1fe";
 const LOCALE_ACCENT: &str = "#34d399";
@@ -314,55 +318,31 @@ pub fn SettingsGeneral() -> Element {
     }
 }
 
-struct LocaleRow {
-    name_key: &'static str,
-    note_key: &'static str,
-    pct: u8,
-    tag_key: &'static str,
-    accent: &'static str,
-}
-
-const LOCALES: &[LocaleRow] = &[
-    LocaleRow {
-        name_key: "settings-locale-row-en-uk-name",
-        note_key: "settings-locale-row-en-uk-note",
-        pct: 100,
-        tag_key: "settings-locale-tag-default",
-        accent: "#34d399",
-    },
-    LocaleRow {
-        name_key: "settings-locale-row-es-name",
-        note_key: "settings-locale-row-es-note",
-        pct: 96,
-        tag_key: "settings-locale-tag-eur",
-        accent: "#5b9dff",
-    },
-    LocaleRow {
-        name_key: "settings-locale-row-ar-name",
-        note_key: "settings-locale-row-ar-note",
-        pct: 88,
-        tag_key: "settings-locale-tag-rtl",
-        accent: "#f0a35e",
-    },
-    LocaleRow {
-        name_key: "settings-locale-row-de-name",
-        note_key: "settings-locale-row-de-note",
-        pct: 91,
-        tag_key: "settings-locale-tag-eur",
-        accent: "#87d1fe",
-    },
-    LocaleRow {
-        name_key: "settings-locale-row-fr-name",
-        note_key: "settings-locale-row-fr-note",
-        pct: 79,
-        tag_key: "settings-locale-tag-community",
-        accent: "#c4b5fd",
-    },
-];
-
 #[component]
 pub fn SettingsLocalisation() -> Element {
     let _lang = i18n();
+    let source_total = source_key_count();
+    let mut catalogs = use_signal(builtin_translation_catalogs);
+    let mut upload_error = use_signal(|| Option::<String>::None);
+    let mut upload_notice = use_signal(|| Option::<String>::None);
+
+    let language_count = catalogs.read().len();
+    let uploaded_count = catalogs.read().iter().filter(|c| c.is_uploaded).count();
+    let avg_coverage = if language_count == 0 {
+        0
+    } else {
+        let sum: usize = catalogs
+            .read()
+            .iter()
+            .map(|c| c.completion_pct(source_total) as usize)
+            .sum();
+        sum / language_count
+    };
+    let rows: Vec<TranslationCatalog> = catalogs.read().clone();
+    let language_count_label = language_count.to_string();
+    let source_total_label = source_total.to_string();
+    let avg_coverage_label = format!("{avg_coverage}%");
+    let uploaded_count_label = uploaded_count.to_string();
 
     rsx! {
         div {
@@ -374,22 +354,88 @@ pub fn SettingsLocalisation() -> Element {
                 description: t_key("settings-locale-description"),
                 accent: LOCALE_ACCENT,
                 action: rsx! {
-                    Button {
+                    label {
+                        class: "ui-btn ui-squircle ui-btn-primary inline-flex h-10 cursor-pointer items-center justify-center gap-2 px-4 text-sm font-semibold",
                         IconPlus {}
                         { t!("settings-locale-add-language") }
+                        input {
+                            r#type: "file",
+                            accept: ".ftl,text/plain",
+                            class: "sr-only",
+                            onchange: move |evt| {
+                                async move {
+                                    upload_error.set(None);
+                                    upload_notice.set(None);
+                                    let Some(file) = evt.files().into_iter().next() else {
+                                        return;
+                                    };
+                                    let name = file.name();
+                                    let Ok(bytes) = file.read_bytes().await else {
+                                        upload_error
+                                            .set(Some(t_key("settings-locale-upload-read-failed")));
+                                        return;
+                                    };
+                                    let Ok(text) = String::from_utf8(bytes.to_vec()) else {
+                                        upload_error
+                                            .set(Some(t_key("settings-locale-upload-invalid-utf8")));
+                                        return;
+                                    };
+                                    match catalog_from_uploaded_ftl(&name, &text) {
+                                        Ok(catalog) => {
+                                            let code = catalog.code.clone();
+                                            catalogs.with_mut(|list| {
+                                                if let Some(existing) =
+                                                    list.iter_mut().find(|row| row.code == code)
+                                                {
+                                                    *existing = catalog;
+                                                } else {
+                                                    list.push(catalog);
+                                                    list.sort_by(|a, b| a.code.cmp(&b.code));
+                                                }
+                                            });
+                                            upload_notice
+                                                .set(Some(settings_locale_upload_success(code)));
+                                        }
+                                        Err(key) => {
+                                            upload_error.set(Some(t_key(key)));
+                                        }
+                                    }
+                                }
+                            },
+                        }
                     }
                 },
             }
 
+            if let Some(error) = upload_error() {
+                p { class: "mb-4 text-sm text-danger", "{error}" }
+            }
+            if let Some(notice) = upload_notice() {
+                p { class: "mb-4 text-sm text-success", "{notice}" }
+            }
+            p { class: "mb-4 text-xs text-text-muted", { t!("settings-locale-upload-hint") } }
+
             section { class: "motion-cascade stat-strip mb-6",
-                StatPill { label: t_key("settings-locale-stat-languages"), value: "12", accent: LOCALE_ACCENT }
                 StatPill {
-                    label: t_key("settings-locale-stat-translated-keys"),
-                    value: "94%",
+                    label: t_key("settings-locale-stat-languages"),
+                    value: language_count_label,
                     accent: LOCALE_ACCENT,
                 }
-                StatPill { label: t_key("settings-locale-stat-currencies"), value: "8", accent: LOCALE_ACCENT }
-                StatPill { label: t_key("settings-locale-stat-rtl-locales"), value: "2", accent: LOCALE_ACCENT }
+                StatPill {
+                    label: t_key("settings-locale-stat-source-keys"),
+                    value: source_total_label,
+                    accent: LOCALE_ACCENT,
+                }
+                StatPill {
+                    label: t_key("settings-locale-stat-avg-coverage"),
+                    value: avg_coverage_label,
+                    accent: LOCALE_ACCENT,
+                }
+                StatPill {
+                    label: t_key("settings-locale-stat-uploaded"),
+                    value: uploaded_count_label,
+                    accent: LOCALE_ACCENT,
+                }
             }
 
             div { class: "motion-cascade motion-cascade-tight stg-locale-matrix",
@@ -399,34 +445,58 @@ pub fn SettingsLocalisation() -> Element {
                     span { { t!("settings-locale-col-notes") } }
                     span { "" }
                 }
-                for row in LOCALES {
-                    div {
-                        class: "stg-locale-row",
-                        style: "--locale-accent: {row.accent};",
-                        div { class: "stg-locale-name",
-                            span { class: "stg-locale-flagdot" }
+                for row in rows {
+                    {
+                        let pct = row.completion_pct(source_total);
+                        let title = row.display_name();
+                        let note = settings_locale_keys_note(
+                            row.matching_keys,
+                            source_total,
+                            row.filename.clone(),
+                        );
+                        let pct_label = settings_locale_pct_complete(pct);
+                        let tag = if row.is_source {
+                            t_key("settings-locale-tag-source")
+                        } else if row.is_uploaded {
+                            t_key("settings-locale-tag-uploaded")
+                        } else if pct >= 100 {
+                            t_key("settings-locale-tag-complete")
+                        } else {
+                            t_key("settings-locale-tag-partial")
+                        };
+                        let accent = row.accent;
+                        let code = row.code.clone();
+                        rsx! {
                             div {
-                                p { class: "stg-locale-title", { t_key(row.name_key) } }
-                                p { class: "stg-locale-sub", { t_key(row.note_key) } }
-                            }
-                        }
-                        div {
-                            div { class: "stg-locale-bar-track",
-                                div {
-                                    class: "stg-locale-bar-fill",
-                                    style: "width: {row.pct}%;",
+                                class: "stg-locale-row",
+                                style: "--locale-accent: {accent};",
+                                div { class: "stg-locale-name",
+                                    span { class: "stg-locale-flagdot" }
+                                    div {
+                                        p { class: "stg-locale-title", "{title}" }
+                                        p { class: "stg-locale-sub", "{code}" }
+                                    }
                                 }
-                            }
-                            p { class: "stg-locale-pct", { t!("settings-locale-pct-complete", pct: row.pct) } }
-                        }
-                        div { class: "stg-locale-tags",
-                            span { class: "stg-locale-tag", { t_key(row.tag_key) } }
-                        }
-                        div { class: "stg-locale-actions",
-                            Button {
-                                variant: ButtonVariant::Secondary,
-                                size: ButtonSize::Sm,
-                                { t!("common-edit") }
+                                div {
+                                    div { class: "stg-locale-bar-track",
+                                        div {
+                                            class: "stg-locale-bar-fill",
+                                            style: "width: {pct}%;",
+                                        }
+                                    }
+                                    p { class: "stg-locale-pct", "{pct_label}" }
+                                }
+                                div { class: "stg-locale-tags",
+                                    span { class: "stg-locale-tag", "{tag}" }
+                                    p { class: "stg-locale-sub mt-1", "{note}" }
+                                }
+                                div { class: "stg-locale-actions",
+                                    Button {
+                                        variant: ButtonVariant::Secondary,
+                                        size: ButtonSize::Sm,
+                                        { t!("common-edit") }
+                                    }
+                                }
                             }
                         }
                     }

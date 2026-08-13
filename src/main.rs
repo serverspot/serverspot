@@ -12,12 +12,15 @@ mod backend;
 use dioxus::prelude::*;
 use dioxus_i18n::prelude::*;
 
+use components::changelog::{Changelog, ChangelogContent};
 use components::community::{
     placeholder_applications, placeholder_leaderboard_boards, placeholder_vote_rewards,
 };
 use components::content::placeholder_posts;
 use components::forum::{placeholder_boards, placeholder_threads};
 use components::loading::LoadingScreen;
+use components::notifications::placeholder_notifications;
+use components::notifications::Notifications;
 use components::store::{placeholder_categories, placeholder_coupons, placeholder_products};
 use components::support::placeholder_articles;
 use router::Route;
@@ -67,6 +70,16 @@ fn App() -> Element {
     use_context_provider(|| vote_rewards);
     let applications = use_signal(placeholder_applications);
     use_context_provider(|| applications);
+
+    let changelog_open = use_signal(|| false);
+    let changelog_content = use_signal(ChangelogContent::default);
+    use_context_provider(|| Changelog::from_signals(changelog_open, changelog_content));
+
+    let notifications_open = use_signal(|| false);
+    let notifications_items = use_signal(placeholder_notifications);
+    use_context_provider(|| {
+        Notifications::from_signals(notifications_open, notifications_items)
+    });
 
     rsx! {
         document::Meta {
