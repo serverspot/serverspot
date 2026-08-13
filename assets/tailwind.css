@@ -970,9 +970,6 @@
     --tw-tracking: var(--tracking-wide);
     letter-spacing: var(--tracking-wide);
   }
-  .break-all {
-    word-break: break-all;
-  }
   .whitespace-pre-wrap {
     white-space: pre-wrap;
   }
