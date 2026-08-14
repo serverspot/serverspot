@@ -62,8 +62,6 @@ pub fn embedded_pack_entries() -> Vec<ThemeFileEntry> {
         "header.html",
         "footer.html",
         "rail.html",
-        "sidebar.html",
-        "discord.html",
         "top-donors.html",
         "recent-purchases.html",
         "community-cta.html",
@@ -197,96 +195,7 @@ pub fn theme_css_bundle(theme: &str, feature: &str) -> Arc<str> {
     css
 }
 
-fn embedded_theme(path: &str) -> Option<&'static str> {
-    match path {
-        "default/schema.json" => Some(include_str!("../../themes/default/schema.json")),
-        "default/index.html" => Some(include_str!("../../themes/default/index.html")),
-        "default/login.html" => Some(include_str!("../../themes/default/login.html")),
-        "default/profile.html" => Some(include_str!("../../themes/default/profile.html")),
-        "default/styles.css" => Some(include_str!("../../themes/default/styles.css")),
-        "default/scripts.js" => Some(include_str!("../../themes/default/scripts.js")),
-        "default/forum/index.html" => Some(include_str!("../../themes/default/forum/index.html")),
-        "default/forum/thread.html" => Some(include_str!("../../themes/default/forum/thread.html")),
-        "default/forum/styles.css" => Some(include_str!("../../themes/default/forum/styles.css")),
-        "default/store/index.html" => Some(include_str!("../../themes/default/store/index.html")),
-        "default/store/product.html" => {
-            Some(include_str!("../../themes/default/store/product.html"))
-        }
-        "default/store/styles.css" => Some(include_str!("../../themes/default/store/styles.css")),
-        "default/support/index.html" => {
-            Some(include_str!("../../themes/default/support/index.html"))
-        }
-        "default/support/ticket.html" => {
-            Some(include_str!("../../themes/default/support/ticket.html"))
-        }
-        "default/support/styles.css" => {
-            Some(include_str!("../../themes/default/support/styles.css"))
-        }
-        "default/blog/index.html" => Some(include_str!("../../themes/default/blog/index.html")),
-        "default/blog/post.html" => Some(include_str!("../../themes/default/blog/post.html")),
-        "default/blog/styles.css" => Some(include_str!("../../themes/default/blog/styles.css")),
-        "default/players/index.html" => {
-            Some(include_str!("../../themes/default/players/index.html"))
-        }
-        "default/players/profile.html" => {
-            Some(include_str!("../../themes/default/players/profile.html"))
-        }
-        "default/players/styles.css" => {
-            Some(include_str!("../../themes/default/players/styles.css"))
-        }
-        "default/leaderboards/index.html" => {
-            Some(include_str!("../../themes/default/leaderboards/index.html"))
-        }
-        "default/leaderboards/board.html" => {
-            Some(include_str!("../../themes/default/leaderboards/board.html"))
-        }
-        "default/leaderboards/styles.css" => {
-            Some(include_str!("../../themes/default/leaderboards/styles.css"))
-        }
-        "default/votes/index.html" => Some(include_str!("../../themes/default/votes/index.html")),
-        "default/votes/claim.html" => Some(include_str!("../../themes/default/votes/claim.html")),
-        "default/votes/styles.css" => Some(include_str!("../../themes/default/votes/styles.css")),
-        "default/applications/index.html" => {
-            Some(include_str!("../../themes/default/applications/index.html"))
-        }
-        "default/applications/form.html" => {
-            Some(include_str!("../../themes/default/applications/form.html"))
-        }
-        "default/applications/styles.css" => {
-            Some(include_str!("../../themes/default/applications/styles.css"))
-        }
-        "default/analytics/index.html" => {
-            Some(include_str!("../../themes/default/analytics/index.html"))
-        }
-        "default/analytics/styles.css" => {
-            Some(include_str!("../../themes/default/analytics/styles.css"))
-        }
-        "default/assets/header.html" => {
-            Some(include_str!("../../themes/default/assets/header.html"))
-        }
-        "default/assets/footer.html" => {
-            Some(include_str!("../../themes/default/assets/footer.html"))
-        }
-        "default/assets/community-cta.html" => Some(include_str!(
-            "../../themes/default/assets/community-cta.html"
-        )),
-        "default/assets/rail.html" => Some(include_str!("../../themes/default/assets/rail.html")),
-        "default/assets/sidebar.html" => {
-            Some(include_str!("../../themes/default/assets/sidebar.html"))
-        }
-        "default/assets/discord.html" => {
-            Some(include_str!("../../themes/default/assets/discord.html"))
-        }
-        "default/assets/top-donors.html" => {
-            Some(include_str!("../../themes/default/assets/top-donors.html"))
-        }
-        "default/assets/recent-purchases.html" => Some(include_str!(
-            "../../themes/default/assets/recent-purchases.html"
-        )),
-        "default/assets/utils.css" => Some(include_str!("../../themes/default/assets/utils.css")),
-        _ => None,
-    }
-}
+include!(concat!(env!("OUT_DIR"), "/embedded_theme.rs"));
 
 fn language_for(path: &str) -> &'static str {
     if path.ends_with(".css") {

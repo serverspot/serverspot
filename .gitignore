@@ -17,3 +17,6 @@
 # Runtime uploads and local theme config overrides
 /data/
 
+# Theme sources live in /themes. build.rs embeds them into
+# target/.../out/embedded_theme.rs (covered by /target above).
+

@@ -26,7 +26,7 @@ pub fn PublicShell() -> Element {
         sanitize_css_bundle(&css_custom_properties(&state.schema, &state.values));
     let header_image = match state.values.get("header_image").map(String::as_str) {
         Some("") | None => format!("{HEADER_BG}"),
-        Some("/assets/theme/header-bg.png") | Some("/assets/theme/header-bg.jpg") => {
+        Some("/assets/theme/header-bg.png") => {
             format!("{HEADER_BG}")
         }
         Some(path) => sanitize_css_image_url(path).unwrap_or_else(|| format!("{HEADER_BG}")),
@@ -46,12 +46,8 @@ pub fn PublicShell() -> Element {
             rel: "stylesheet",
             href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css",
         }
-        style {
-            dangerous_inner_html: ":root {{ --spot-header-image: url(\"{header_image}\"); }} {config_css} html, body {{ height: auto !important; min-height: 100% !important; overflow-x: hidden !important; overflow-y: auto !important; }}",
-        }
-        div { class: "spot-public min-h-dvh bg-[#f2f4f9] text-[#1f2533]",
-            Outlet::<crate::router::Route> {}
-        }
+        style { dangerous_inner_html: ":root {{ --spot-header-image: url(\"{header_image}\"); }} {config_css} html, body {{ height: auto !important; min-height: 100% !important; overflow-x: hidden !important; overflow-y: auto !important; }}" }
+        div { class: "spot-public min-h-dvh bg-[#f2f4f9] text-[#1f2533]", Outlet::<crate::router::Route> {} }
     }
 }
 
@@ -283,9 +279,7 @@ fn render_page(
                 },
             }
         }
-        script {
-            src: "{script_src}",
-        }
+        script { src: "{script_src}" }
     }
 }
 

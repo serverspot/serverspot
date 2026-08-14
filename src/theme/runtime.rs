@@ -208,9 +208,7 @@ pub fn render_template(source: &str, ctx: &TemplateContext) -> Element {
     match parse_cached(source) {
         Ok(template) => render_nodes(&template.nodes, ctx, &RenderState::default()),
         Err(err) => rsx! {
-            div { class: "spot-error",
-                "Template error: {err}"
-            }
+            div { class: "spot-error", "Template error: {err}" }
         },
     }
 }
@@ -239,9 +237,7 @@ fn render_node(node: &Node, ctx: &TemplateContext, state: &RenderState) -> Eleme
             if *raw {
                 let value = sanitize_raw_html(&value);
                 rsx! {
-                    span {
-                        dangerous_inner_html: "{value}",
-                    }
+                    span { dangerous_inner_html: "{value}" }
                 }
             } else {
                 rsx! { "{value}" }
@@ -283,24 +279,18 @@ fn render_node(node: &Node, ctx: &TemplateContext, state: &RenderState) -> Eleme
                 Ok(path) => path,
                 Err(error) => {
                     return rsx! {
-                        div { class: "spot-error",
-                            "Blocked include: {error}"
-                        }
+                        div { class: "spot-error", "Blocked include: {error}" }
                     };
                 }
             };
             if state.include_stack.len() >= MAX_INCLUDE_DEPTH {
                 return rsx! {
-                    div { class: "spot-error",
-                        "Include depth exceeded while loading: {normalized}"
-                    }
+                    div { class: "spot-error", "Include depth exceeded while loading: {normalized}" }
                 };
             }
             if state.include_stack.iter().any(|entry| entry == &normalized) {
                 return rsx! {
-                    div { class: "spot-error",
-                        "Circular include: {normalized}"
-                    }
+                    div { class: "spot-error", "Circular include: {normalized}" }
                 };
             }
             match read_theme_source_shared(&normalized) {
@@ -311,15 +301,11 @@ fn render_node(node: &Node, ctx: &TemplateContext, state: &RenderState) -> Eleme
                         render_nodes(&template.nodes, ctx, &child_state)
                     }
                     Err(err) => rsx! {
-                        div { class: "spot-error",
-                            "Template error: {err}"
-                        }
+                        div { class: "spot-error", "Template error: {err}" }
                     },
                 },
                 None => rsx! {
-                    div { class: "spot-error",
-                        "Missing include: {normalized}"
-                    }
+                    div { class: "spot-error", "Missing include: {normalized}" }
                 },
             }
         }
@@ -404,9 +390,7 @@ fn render_element(
 ) -> Element {
     if is_forbidden_tag(tag) {
         return rsx! {
-            div { class: "spot-error",
-                "Blocked theme tag: {tag}"
-            }
+            div { class: "spot-error", "Blocked theme tag: {tag}" }
         };
     }
 
@@ -433,9 +417,15 @@ fn render_element(
     };
 
     match tag {
-        "div" => rsx! { div { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "span" => rsx! { span { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "p" => rsx! { p { class: "{class}", id: "{id}", style: "{style}", {body} } },
+        "div" => rsx! {
+            div { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "span" => rsx! {
+            span { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "p" => rsx! {
+            p { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
         "a" => rsx! {
             a {
                 class: "{class}",
@@ -449,41 +439,118 @@ fn render_element(
                 {body}
             }
         },
-        "h1" => rsx! { h1 { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "h2" => rsx! { h2 { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "h3" => rsx! { h3 { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "h4" => rsx! { h4 { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "ul" => rsx! { ul { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "ol" => rsx! { ol { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "li" => rsx! { li { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "section" => rsx! { section { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "header" => rsx! { header { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "footer" => rsx! { footer { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "main" => rsx! { main { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "nav" => rsx! { nav { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "article" => rsx! { article { class: "{class}", id: "{id}", style: "{style}", {body} } },
-        "aside" => rsx! { aside { class: "{class}", id: "{id}", style: "{style}", {body} } },
+        "h1" => rsx! {
+            h1 { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "h2" => rsx! {
+            h2 { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "h3" => rsx! {
+            h3 { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "h4" => rsx! {
+            h4 { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "ul" => rsx! {
+            ul { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "ol" => rsx! {
+            ol { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "li" => rsx! {
+            li { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "section" => rsx! {
+            section { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "header" => rsx! {
+            header { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "footer" => rsx! {
+            footer { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "main" => rsx! {
+            main { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "nav" => rsx! {
+            nav { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "article" => rsx! {
+            article { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
+        "aside" => rsx! {
+            aside { class: "{class}", id: "{id}", style: "{style}", {body} }
+        },
         "button" => {
-            rsx! { button { class: "{class}", id: "{id}", r#type: "button", style: "{style}", {body} } }
+            rsx! {
+                button {
+                    class: "{class}",
+                    id: "{id}",
+                    r#type: "button",
+                    style: "{style}",
+                    {body}
+                }
+            }
         }
-        "strong" => rsx! { strong { class: "{class}", {body} } },
-        "em" => rsx! { em { class: "{class}", {body} } },
-        "i" => rsx! { i { class: "{class}", title: "{title}", {body} } },
-        "small" => rsx! { small { class: "{class}", {body} } },
-        "code" => rsx! { code { class: "{class}", {body} } },
-        "pre" => rsx! { pre { class: "{class}", {body} } },
-        "blockquote" => rsx! { blockquote { class: "{class}", {body} } },
-        "hr" => rsx! { hr { class: "{class}" } },
-        "br" => rsx! { br {} },
-        "img" => rsx! { img { class: "{class}", src: "{src}", alt: "{alt}", style: "{style}" } },
-        "table" => rsx! { table { class: "{class}", {body} } },
-        "thead" => rsx! { thead { class: "{class}", {body} } },
-        "tbody" => rsx! { tbody { class: "{class}", {body} } },
-        "tr" => rsx! { tr { class: "{class}", {body} } },
-        "th" => rsx! { th { class: "{class}", {body} } },
-        "td" => rsx! { td { class: "{class}", {body} } },
-        "form" => rsx! { form { class: "{class}", {body} } },
-        "label" => rsx! { label { class: "{class}", {body} } },
+        "strong" => rsx! {
+            strong { class: "{class}", {body} }
+        },
+        "em" => rsx! {
+            em { class: "{class}", {body} }
+        },
+        "i" => rsx! {
+            i { class: "{class}", title: "{title}", {body} }
+        },
+        "small" => rsx! {
+            small { class: "{class}", {body} }
+        },
+        "code" => rsx! {
+            code { class: "{class}", {body} }
+        },
+        "pre" => rsx! {
+            pre { class: "{class}", {body} }
+        },
+        "blockquote" => rsx! {
+            blockquote { class: "{class}", {body} }
+        },
+        "hr" => rsx! {
+            hr { class: "{class}" }
+        },
+        "br" => rsx! {
+            br {}
+        },
+        "img" => rsx! {
+            img {
+                class: "{class}",
+                src: "{src}",
+                alt: "{alt}",
+                style: "{style}",
+            }
+        },
+        "table" => rsx! {
+            table { class: "{class}", {body} }
+        },
+        "thead" => rsx! {
+            thead { class: "{class}", {body} }
+        },
+        "tbody" => rsx! {
+            tbody { class: "{class}", {body} }
+        },
+        "tr" => rsx! {
+            tr { class: "{class}", {body} }
+        },
+        "th" => rsx! {
+            th { class: "{class}", {body} }
+        },
+        "td" => rsx! {
+            td { class: "{class}", {body} }
+        },
+        "form" => rsx! {
+            form { class: "{class}", {body} }
+        },
+        "label" => rsx! {
+            label { class: "{class}", {body} }
+        },
         "input" => rsx! {
             input {
                 class: "{class}",
@@ -493,8 +560,12 @@ fn render_element(
                 autocomplete: "{autocomplete}",
             }
         },
-        "textarea" => rsx! { textarea { class: "{class}", {body} } },
-        "time" => rsx! { time { class: "{class}", {body} } },
+        "textarea" => rsx! {
+            textarea { class: "{class}", {body} }
+        },
+        "time" => rsx! {
+            time { class: "{class}", {body} }
+        },
         _ => rsx! {
             div {
                 class: "{class}",
