@@ -8,7 +8,7 @@ use crate::server_funcs::error::CommonError;
 #[cfg(feature = "server")]
 use dioxus::server::axum::Extension;
 #[cfg(feature = "server")]
-use crate::{server_funcs::error::HasInternalError as _, backend::{AuthSession, AppState, auth::{AuthAccount, PendingTwoFactor, generate_otp}}};
+use crate::{server_funcs::error::CommonErrorExt as _, backend::{AuthSession, AppState, auth::{AuthAccount, PendingTwoFactor, generate_otp}}};
 #[cfg(feature = "server")]
 use surrealdb::types::SurrealValue;
 
@@ -19,6 +19,15 @@ use surrealdb::types::SurrealValue;
 pub enum TwoFactorMethod {
     Game,
     Email,
+}
+
+impl ToString for TwoFactorMethod {
+    fn to_string(&self) -> String {
+        match self {
+            Self::Game => "game",
+            Self::Email => "email",
+        }.into()
+    }
 }
 
 #[derive(Error, Debug, Serialize, Deserialize)]
@@ -169,6 +178,13 @@ pub async fn submit_2fa(code: String) -> Result<(), AuthenticationError> {
     auth.session.remove(PENDING_TWO_FACTOR_KEY);
     auth.session.remove(REMEMBER_ME_KEY);
 
+    // mark the method as verified
+    state.db.query("fn::verify_account_connection($acc, $ty)")
+        .bind(("acc", otp_state.account_id.as_str()))
+        .bind(("ty", otp_state.method.to_string()))
+        .await?;
+
+    // login the session
     auth.login_user(otp_state.account_id);
     auth.remember_user(remember_me);
 
