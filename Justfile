@@ -15,4 +15,4 @@ migrate:
 
 serve:
     sleep 10
-    SURREAL_URL="{{surreal_url}}" SURREAL_USER="root" SURREAL_PASS="root" SURREAL_NS="serverspot-dev" dx serve
+    SURREAL_URL="{{surreal_url}}" SURREAL_USER="root" SURREAL_PASS="root" SURREAL_NS="serverspot-dev" AUTH_SECRET="hello world" dx serve

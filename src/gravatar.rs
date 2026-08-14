@@ -14,8 +14,8 @@ pub fn placeholder_current_user() -> CurrentUser {
 }
 pub fn gravatar_url(email: &str, size: u32) -> String {
     let normalized = email.trim().to_ascii_lowercase();
-    let digest = Sha256::digest(normalized.as_bytes());
-    format!("https://www.gravatar.com/avatar/{digest:x}?s={size}&d=identicon&r=g")
+    let digest = hex::encode(Sha256::digest(normalized.as_bytes()));
+    format!("https://www.gravatar.com/avatar/{digest}?s={size}&d=identicon&r=g")
 }
 #[cfg(test)]
 mod tests {
