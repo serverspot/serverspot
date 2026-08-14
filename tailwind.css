@@ -377,7 +377,7 @@
   html,
   body {
     height: 100%;
-    overflow: hidden;
+    overflow: auto;
     background: #1c1c24;
     color: #f4f4f7;
     font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
@@ -574,7 +574,7 @@
     @apply bg-bg text-text font-sans antialiased;
     margin: 0;
     height: 100%;
-    overflow: hidden;
+    overflow: auto;
   }
 
   * {

@@ -1,0 +1,139 @@
+{
+  "name": "Default",
+  "description": "Customise colours, images, and copy used by the default theme.",
+  "options": [
+    {
+      "id": "primary_colour",
+      "name": "Primary colour",
+      "description": "Buttons, links, and accent highlights.",
+      "type": "colour",
+      "default": "#4f46e5"
+    },
+    {
+      "id": "accent_colour",
+      "name": "Accent colour",
+      "description": "Secondary accents used in chips and highlights.",
+      "type": "colour",
+      "default": "#87d1fe"
+    },
+    {
+      "id": "body_bg",
+      "name": "Page background",
+      "description": "Background colour behind cards and the page shell.",
+      "type": "colour",
+      "default": "#f1f3f9"
+    },
+    {
+      "id": "surface_colour",
+      "name": "Card surface",
+      "description": "Background colour for cards and panels.",
+      "type": "colour",
+      "default": "#ffffff"
+    },
+    {
+      "id": "surface_secondary",
+      "name": "Secondary surface",
+      "description": "Hover states, subtle panels, and inset backgrounds.",
+      "type": "colour",
+      "default": "#f6f7fb"
+    },
+    {
+      "id": "text_colour",
+      "name": "Text colour",
+      "description": "Default body text colour.",
+      "type": "colour",
+      "default": "#1f2533"
+    },
+    {
+      "id": "heading_colour",
+      "name": "Heading colour",
+      "description": "Titles and strong labels across the theme.",
+      "type": "colour",
+      "default": "#121829"
+    },
+    {
+      "id": "muted_colour",
+      "name": "Muted text",
+      "description": "Secondary copy, captions, and helper text.",
+      "type": "colour",
+      "default": "#6d7789"
+    },
+    {
+      "id": "border_colour",
+      "name": "Border colour",
+      "description": "Dividers, card outlines, and table lines.",
+      "type": "colour",
+      "default": "#e5e8f0"
+    },
+    {
+      "id": "discord_colour",
+      "name": "Discord colour",
+      "description": "Discord banners, buttons, and brand accents.",
+      "type": "colour",
+      "default": "#5865f2"
+    },
+    {
+      "id": "success_colour",
+      "name": "Success colour",
+      "description": "Online status, positive badges, and success states.",
+      "type": "colour",
+      "default": "#17a34a"
+    },
+    {
+      "id": "footer_bar",
+      "name": "Footer bar",
+      "description": "Background for the bottom footer strip.",
+      "type": "colour",
+      "default": "#edeff6"
+    },
+    {
+      "id": "header_image",
+      "name": "Header image",
+      "description": "Banner image shown behind the site logo.",
+      "type": "image",
+      "default": "/assets/theme/header-bg.png"
+    },
+    {
+      "id": "featured_image",
+      "name": "Featured story image",
+      "description": "Background image for the homepage featured update card.",
+      "type": "image",
+      "default": "/assets/theme/header-bg.png"
+    },
+    {
+      "id": "server_address",
+      "name": "Server address",
+      "description": "IP or hostname players use to connect.",
+      "type": "text",
+      "default": "play.serverspot.net"
+    },
+    {
+      "id": "discord_url",
+      "name": "Discord invite",
+      "description": "Link used by Discord buttons across the theme.",
+      "type": "link",
+      "default": "https://discord.gg/serverspot"
+    },
+    {
+      "id": "hero_title",
+      "name": "Hero title",
+      "description": "Main heading on the homepage welcome card.",
+      "type": "text",
+      "default": "Welcome to ServerSpot"
+    },
+    {
+      "id": "hero_subtitle",
+      "name": "Hero subtitle",
+      "description": "Supporting copy under the homepage hero title.",
+      "type": "text",
+      "default": "Community hub for your game server. Claim a starter kit, pick a realm, and build with a community that has been running since 2019."
+    },
+    {
+      "id": "season_label",
+      "name": "Season label",
+      "description": "Small label shown above the homepage hero title.",
+      "type": "text",
+      "default": "Season 4 is live"
+    }
+  ]
+}

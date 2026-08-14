@@ -1,0 +1,73 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <a href="/forum">Forum</a>
+        @if (thread)
+          <span>/</span>
+          <span class="active">{{ thread.title }}</span>
+        @endif
+      </nav>
+
+      <a class="spot-back" href="/forum">Back to forum</a>
+
+      @if (thread)
+        <article class="spot-card">
+          <header class="spot-thread-hero">
+            <p class="spot-kicker">{{ thread.board }}</p>
+            <h1 class="spot-title">{{ thread.title }}</h1>
+            <p class="spot-muted">Started by {{ thread.author }} - {{ thread.when }} - {{ thread.replies_count }} replies</p>
+          </header>
+
+          <section class="spot-post is-op">
+            <div class="spot-avatar lg">{{ thread.author_initial }}</div>
+            <div>
+              <div class="spot-post-meta">
+                <strong>{{ thread.author }}</strong>
+                <span>{{ thread.when }}</span>
+              </div>
+              <div class="spot-post-body">{{ thread.body }}</div>
+            </div>
+          </section>
+
+          <p class="spot-replies-label">Replies</p>
+
+          @foreach (replies as reply)
+            <section class="spot-post">
+              <div class="spot-avatar lg">{{ reply.initial }}</div>
+              <div>
+                <div class="spot-post-meta">
+                  <strong>{{ reply.author }}</strong>
+                  <span>{{ reply.when }}</span>
+                </div>
+                <div class="spot-post-body">{{ reply.body }}</div>
+              </div>
+            </section>
+          @endforeach
+
+          @if (not replies)
+            <div class="spot-empty">
+              <p class="spot-muted">No replies yet - be the first.</p>
+            </div>
+          @endif
+        </article>
+      @else
+        <div class="spot-card">
+          <div class="spot-empty">
+            <h1>Thread not found</h1>
+            <p class="spot-muted">That conversation may have been removed.</p>
+            <a class="spot-btn" href="/forum">Back to forum</a>
+          </div>
+        </div>
+      @endif
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

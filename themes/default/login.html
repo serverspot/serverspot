@@ -1,0 +1,65 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <span class="active">Log in</span>
+      </nav>
+
+      <div class="spot-account-layout">
+        <section class="spot-auth-card">
+          <span class="spot-auth-icon"><i class="fa-solid fa-right-to-bracket"></i></span>
+          <span class="spot-eyebrow">Welcome back</span>
+          <h1>Log in to {{ site.name }}</h1>
+          <p>Access your profile, purchases, vote rewards, applications, and support tickets.</p>
+
+          <form class="spot-auth-form">
+            <label>
+              <span>Email address</span>
+              <input class="spot-input" id="login-email" type="email" placeholder="you@example.com" autocomplete="email" />
+            </label>
+            <label>
+              <span>Password</span>
+              <input class="spot-input" id="login-password" type="password" placeholder="Enter your password" autocomplete="current-password" />
+            </label>
+            <div class="spot-auth-options">
+              <label class="spot-check">
+                <input id="remember-me" type="checkbox" />
+                <span>Remember me</span>
+              </label>
+              <a href="/support">Forgot password?</a>
+            </div>
+            <button class="spot-btn spot-auth-submit">Log in</button>
+          </form>
+
+          <div class="spot-auth-divider"><span>or continue with</span></div>
+          <a class="spot-social-login" href="/profile">
+            <i class="fa-brands fa-discord"></i>
+            Continue with Discord
+          </a>
+
+          <p class="spot-auth-foot">New to {{ site.name }}? <a href="/profile">Create an account</a></p>
+        </section>
+
+        <aside class="spot-account-promo">
+          <span class="spot-account-promo-icon"><i class="fa-solid fa-shield-halved"></i></span>
+          <span class="spot-eyebrow">One community account</span>
+          <h2>Everything follows you.</h2>
+          <p>Your rank, rewards, tickets, and applications stay together in one secure profile.</p>
+          <ul>
+            <li><i class="fa-solid fa-check"></i> View purchases and rank history</li>
+            <li><i class="fa-solid fa-check"></i> Track vote streaks and rewards</li>
+            <li><i class="fa-solid fa-check"></i> Manage support conversations</li>
+          </ul>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

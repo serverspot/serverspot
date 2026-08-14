@@ -1,0 +1,128 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <section class="spot-network-strip">
+    <div class="spot-network-strip-inner">
+      <div>
+        <span class="spot-live-dot"></span>
+        <p><strong>Network online</strong><span>All systems operational</span></p>
+      </div>
+      <div>
+        <i class="fa-solid fa-users"></i>
+        <p><strong>186 players</strong><span>across 4 realms</span></p>
+      </div>
+      <div>
+        <i class="fa-solid fa-calendar-days"></i>
+        <p><strong>{{ config("season_label") }}</strong><span>New worlds and rewards</span></p>
+      </div>
+      <a href="/players">How to join <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+  </section>
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main spot-home-main">
+    <div class="spot-classic-layout">
+      <div class="spot-content-column">
+        <article class="spot-featured-story">
+          <div class="spot-featured-art" aria-hidden="true"></div>
+          <div class="spot-featured-copy">
+            <span class="spot-story-label">Featured update</span>
+            <h1>{{ config("hero_title") }}</h1>
+            <p>{{ config("hero_subtitle") }}</p>
+            <div class="spot-story-actions">
+              <a class="spot-btn" href="/blog">Read the announcement</a>
+              <a class="spot-text-link" href="/forum">Join the discussion <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </article>
+
+        <div class="spot-classic-heading">
+          <div>
+            <span>From the team</span>
+            <h2>Latest news</h2>
+          </div>
+          <a href="/blog">View all news <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <div class="spot-news-feed">
+          <a class="spot-news-feature" href="/blog">
+            <span class="spot-news-feature-art"><i class="fa-solid fa-mountain-sun"></i></span>
+            <span class="spot-news-feature-copy">
+              <span class="spot-story-label">Server update · 14 Aug</span>
+              <strong>Season 4 is now live</strong>
+              <p>Explore a rebuilt spawn, rebalanced economy, new vote milestones, and four refreshed realms.</p>
+              <span class="spot-text-link">Read more <i class="fa-solid fa-arrow-right"></i></span>
+            </span>
+          </a>
+
+          <div class="spot-news-list">
+            <a href="/blog">
+              <span class="spot-news-list-date"><strong>02</strong><small>Aug</small></span>
+              <span><strong>Builder applications are open</strong><small>Help shape the next generation of hubs and event maps.</small></span>
+            </a>
+            <a href="/blog">
+              <span class="spot-news-list-date"><strong>21</strong><small>Jul</small></span>
+              <span><strong>Weekly build contest returns</strong><small>Compete for rank upgrades, coins, and a showcase at spawn.</small></span>
+            </a>
+            <a href="/blog">
+              <span class="spot-news-list-date"><strong>12</strong><small>Jul</small></span>
+              <span><strong>Community rules refreshed</strong><small>A shorter, clearer guide to keeping every realm welcoming.</small></span>
+            </a>
+          </div>
+        </div>
+
+        <div class="spot-classic-heading">
+          <div>
+            <span>Find your place</span>
+            <h2>Explore the community</h2>
+          </div>
+        </div>
+
+        <div class="spot-community-grid">
+          @foreach (features as feature)
+            <a href="{{ feature.href }}">
+              <span class="spot-community-icon"><i class="{{ feature.icon }}"></i></span>
+              <span>
+                <strong>{{ feature.name }}</strong>
+                <small>{{ feature.description }}</small>
+              </span>
+              <i class="fa-solid fa-chevron-right"></i>
+            </a>
+          @endforeach
+        </div>
+      </div>
+
+      <aside class="spot-home-sidebar">
+        <section class="spot-join-card">
+          <span class="spot-join-label">Start playing</span>
+          <h2>Join the network</h2>
+          <p>Java and Bedrock players can connect with one address.</p>
+          <div class="spot-join-address">
+            <span>{{ config("server_address") }}</span>
+            <i class="fa-regular fa-copy"></i>
+          </div>
+          <a class="spot-btn" href="/players">View connection guide</a>
+        </section>
+
+        <section class="spot-sidebar-panel">
+          <div class="spot-sidebar-title">
+            <h2>Quick links</h2>
+          </div>
+          <div class="spot-sidebar-links">
+            <a href="/votes"><i class="fa-solid fa-gift"></i><span><strong>Vote for rewards</strong><small>Claim daily crate keys</small></span></a>
+            <a href="/store"><i class="fa-solid fa-gem"></i><span><strong>Visit the store</strong><small>Ranks and cosmetics</small></span></a>
+            <a href="/support"><i class="fa-solid fa-life-ring"></i><span><strong>Get support</strong><small>Open a private ticket</small></span></a>
+            <a href="/applications"><i class="fa-solid fa-file-signature"></i><span><strong>Join the team</strong><small>Staff applications</small></span></a>
+          </div>
+        </section>
+
+        @include('assets/top-donors')
+      </aside>
+    </div>
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

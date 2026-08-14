@@ -11,6 +11,7 @@ pub mod forum;
 pub mod loading;
 pub mod login;
 pub mod page;
+pub mod public;
 pub mod settings;
 pub mod shell;
 pub mod store;

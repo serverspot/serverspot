@@ -1,0 +1,41 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <span class="active">Players</span>
+      </nav>
+
+      <div class="spot-section-head">
+        <div>
+          <span class="spot-eyebrow">Who's around</span>
+          <h1 class="spot-page-title">Players</h1>
+          <p>Public profiles, playtime, and the ranks people have earned.</p>
+        </div>
+        <span class="spot-section-aside"><span class="spot-live-dot"></span> 186 online now</span>
+      </div>
+
+      <div class="spot-player-grid">
+        @foreach (items as item)
+          <a class="spot-player-card" href="{{ item.href }}">
+            <div class="spot-avatar lg"><i class="fa-solid fa-user-astronaut"></i></div>
+            <div>
+              <h3>{{ item.name }}</h3>
+              <p>{{ item.description }}</p>
+              <span class="spot-muted">{{ item.meta }}</span>
+            </div>
+          </a>
+        @endforeach
+      </div>
+
+      @include('assets/community-cta')
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

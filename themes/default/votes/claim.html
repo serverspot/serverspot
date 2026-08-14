@@ -1,0 +1,49 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <a href="/votes">Vote rewards</a>
+        @if (item)
+          <span>/</span>
+          <span class="active">{{ item.name }}</span>
+        @endif
+      </nav>
+
+      <a class="spot-back" href="/votes">Back to votes</a>
+
+      @if (item)
+        <article class="spot-card">
+          <header class="spot-thread-hero">
+            <p class="spot-kicker">Vote claim</p>
+            <h1 class="spot-title">{{ item.name }}</h1>
+            <p class="spot-muted">{{ item.meta }}</p>
+          </header>
+          <section class="spot-post is-op">
+            <div class="spot-avatar lg">{{ item.initial }}</div>
+            <div>
+              <div class="spot-post-body">{{ item.description }}</div>
+              <p class="spot-muted" style="margin-top:0.75rem;">Confirm your vote on this site, then return here to claim your reward.</p>
+              <a class="spot-btn" href="{{ item.href }}">Open vote site</a>
+            </div>
+          </section>
+        </article>
+      @else
+        <div class="spot-card">
+          <div class="spot-empty">
+            <h1>Vote site not found</h1>
+            <p class="spot-muted">That vote link may no longer be available.</p>
+            <a class="spot-btn" href="/votes">Back to votes</a>
+          </div>
+        </div>
+      @endif
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

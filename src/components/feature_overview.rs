@@ -439,7 +439,7 @@ fn FeatureOverview(feature: FeatureOverviewKind) -> Element {
             DataPanel {
                 title: "Quick status",
                 RowItem { title: "Public path", meta: copy.domain, trailing: "On website" }
-                RowItem { title: "Theme", meta: "Can customize independently", trailing: "Ready" }
+                RowItem { title: "Theme", meta: "Edit under Settings → Theme", trailing: "Ready" }
                 RowItem { title: "Shared accounts", meta: "Uses website authentication", trailing: "On" }
                 RowItem { title: "Public surface", meta: "Players can visit this on your website", trailing: copy.status }
             }

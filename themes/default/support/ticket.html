@@ -1,0 +1,65 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <a href="/support">Support</a>
+        @if (item)
+          <span>/</span>
+          <span class="active">{{ item.name }}</span>
+        @endif
+      </nav>
+
+      <a class="spot-back" href="/support">Back to support</a>
+
+      @if (item)
+        <article class="spot-card">
+          <header class="spot-thread-hero">
+            <p class="spot-kicker">Support</p>
+            <h1 class="spot-title">{{ item.name }}</h1>
+            <p class="spot-muted">{{ item.meta }}</p>
+          </header>
+
+          <section class="spot-post is-op">
+            <div class="spot-avatar lg">{{ item.initial }}</div>
+            <div>
+              <div class="spot-post-meta">
+                <strong>You</strong>
+                <span>Opened</span>
+              </div>
+              <div class="spot-post-body">{{ item.description }}</div>
+            </div>
+          </section>
+
+          <p class="spot-replies-label">Staff reply</p>
+
+          <section class="spot-post">
+            <div class="spot-avatar lg">S</div>
+            <div>
+              <div class="spot-post-meta">
+                <strong>Support Staff</strong>
+                <span>Just now</span>
+              </div>
+              <div class="spot-post-body">Thanks for opening a ticket. A staff member will review this shortly and follow up here.</div>
+            </div>
+          </section>
+        </article>
+      @else
+        <div class="spot-card">
+          <div class="spot-empty">
+            <h1>Ticket not found</h1>
+            <p class="spot-muted">That ticket may have been closed or removed.</p>
+            <a class="spot-btn" href="/support">Back to support</a>
+          </div>
+        </div>
+      @endif
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

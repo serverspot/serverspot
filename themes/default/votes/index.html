@@ -1,0 +1,42 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <span class="active">Vote rewards</span>
+      </nav>
+
+      <div class="spot-section-head">
+        <div>
+          <span class="spot-eyebrow">Free every day</span>
+          <h1 class="spot-page-title">Vote rewards</h1>
+          <p>Vote on each site once every 24 hours, then claim your keys in game.</p>
+        </div>
+        <span class="spot-section-aside"><i class="fa-solid fa-clock-rotate-left"></i> Resets at midnight</span>
+      </div>
+
+      <div class="spot-vote-grid">
+        @foreach (items as item)
+          <div class="spot-vote-card">
+            <div class="spot-board-icon"><i class="fa-solid fa-gift"></i></div>
+            <div>
+              <h3>{{ item.name }}</h3>
+              <p>{{ item.description }}</p>
+              <span class="spot-muted">{{ item.meta }}</span>
+            </div>
+            <a class="spot-btn small" href="{{ item.href }}">Claim <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+        @endforeach
+      </div>
+
+      @include('assets/community-cta')
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

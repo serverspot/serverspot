@@ -7,6 +7,16 @@ use crate::components::ui::*;
 
 #[component]
 pub fn SettingsGeneral() -> Element {
+    let mut logo_revision = use_signal(|| 0u64);
+    let mut logo_status = use_signal(String::new);
+    let mut uploading_logo = use_signal(|| false);
+    let mut favicon_revision = use_signal(|| 0u64);
+    let mut favicon_status = use_signal(String::new);
+    let mut uploading_favicon = use_signal(|| false);
+    let logo_url = format!("/uploads/site-logo?v={}", logo_revision());
+    let favicon_url = format!("/uploads/site-favicon?v={}", favicon_revision());
+    let logo_template_hint = ["{", "{", " site.logo ", "}", "}", " → /uploads/site-logo"].concat();
+
     rsx! {
         PageHeader {
             title: "General",
@@ -23,6 +33,152 @@ pub fn SettingsGeneral() -> Element {
                 SettingsField { label: "Site name", value: "NovaCraft" }
                 SettingsField { label: "Custom domain", value: "www.example.com" }
                 SettingsField { label: "Subdomain", value: "novacraft" }
+                div {
+                    class: "border-b border-border-subtle py-4 last:border-0",
+                    div {
+                        class: "mb-3",
+                        label { class: "block text-xs font-medium text-text-muted", "Site logo" }
+                        p {
+                            class: "mt-1 text-xs text-text-dim",
+                            "PNG, JPEG, WebP, or GIF. Maximum 4 MB."
+                        }
+                    }
+                    div {
+                        class: "flex flex-col gap-4 sm:flex-row sm:items-center",
+                        div {
+                            class: "ui-squircle grid h-24 w-24 shrink-0 place-items-center overflow-hidden border border-border-subtle bg-surface-elevated",
+                            img {
+                                class: "h-full w-full object-contain p-3",
+                                src: "{logo_url}",
+                                alt: "Current site logo",
+                            }
+                        }
+                        div {
+                            class: "min-w-0 flex-1",
+                            label {
+                                class: "ui-btn ui-squircle ui-btn-secondary inline-flex h-9 cursor-pointer items-center justify-center gap-2 px-3 text-xs font-semibold",
+                                input {
+                                    r#type: "file",
+                                    accept: "image/png,image/jpeg,image/webp,image/gif",
+                                    class: "sr-only",
+                                    disabled: uploading_logo(),
+                                    onchange: move |event| {
+                                        let files = event.files();
+                                        let Some(file) = files.first().cloned() else {
+                                            return;
+                                        };
+                                        let file_name = file.name();
+                                        uploading_logo.set(true);
+                                        logo_status.set("Uploading…".to_string());
+                                        spawn(async move {
+                                            let result = match file.read_bytes().await {
+                                                Ok(bytes) => {
+                                                    upload_site_logo(file_name, bytes.to_vec()).await
+                                                }
+                                                Err(error) => Err(ServerFnError::new(error.to_string())),
+                                            };
+                                            match result {
+                                                Ok(()) => {
+                                                    logo_revision += 1;
+                                                    logo_status.set("Logo uploaded successfully.".to_string());
+                                                }
+                                                Err(error) => {
+                                                    logo_status.set(format!("Upload failed: {error}"));
+                                                }
+                                            }
+                                            uploading_logo.set(false);
+                                        });
+                                    },
+                                }
+                                if uploading_logo() { "Uploading…" } else { "Choose image" }
+                            }
+                            p {
+                                class: "mt-2 break-all font-mono text-xs text-text-muted",
+                                "{logo_template_hint}"
+                            }
+                            if !logo_status().is_empty() {
+                                p { class: "mt-2 text-xs text-text-muted", "{logo_status}" }
+                            }
+                        }
+                    }
+                }
+                div {
+                    class: "border-b border-border-subtle py-4 last:border-0",
+                    div {
+                        class: "mb-3",
+                        label { class: "block text-xs font-medium text-text-muted", "Site favicon" }
+                        p {
+                            class: "mt-1 text-xs text-text-dim",
+                            "PNG, JPEG, WebP, GIF, or ICO. Maximum 2 MB."
+                        }
+                    }
+                    div {
+                        class: "flex flex-col gap-4 sm:flex-row sm:items-center",
+                        div {
+                            class: "ui-squircle grid h-24 w-24 shrink-0 place-items-center overflow-hidden border border-border-subtle bg-surface-elevated",
+                            img {
+                                class: "h-12 w-12 object-contain",
+                                src: "{favicon_url}",
+                                alt: "Current site favicon",
+                            }
+                        }
+                        div {
+                            class: "min-w-0 flex-1",
+                            label {
+                                class: "ui-btn ui-squircle ui-btn-secondary inline-flex h-9 cursor-pointer items-center justify-center gap-2 px-3 text-xs font-semibold",
+                                input {
+                                    r#type: "file",
+                                    accept: "image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon,.ico",
+                                    class: "sr-only",
+                                    disabled: uploading_favicon(),
+                                    onchange: move |event| {
+                                        let files = event.files();
+                                        let Some(file) = files.first().cloned() else {
+                                            return;
+                                        };
+                                        let file_name = file.name();
+                                        uploading_favicon.set(true);
+                                        favicon_status.set("Uploading…".to_string());
+                                        spawn(async move {
+                                            let result = match file.read_bytes().await {
+                                                Ok(bytes) => {
+                                                    upload_site_favicon(file_name, bytes.to_vec()).await
+                                                }
+                                                Err(error) => Err(ServerFnError::new(error.to_string())),
+                                            };
+                                            match result {
+                                                Ok(()) => {
+                                                    favicon_revision += 1;
+                                                    let _ = document::eval(
+                                                        r#"
+                                                        const href = `/uploads/site-favicon?v=${Date.now()}`;
+                                                        for (const link of document.querySelectorAll("link[rel~='icon']")) {
+                                                          link.href = href;
+                                                        }
+                                                        "#,
+                                                    );
+                                                    favicon_status.set("Favicon uploaded successfully.".to_string());
+                                                }
+                                                Err(error) => {
+                                                    favicon_status.set(format!("Upload failed: {error}"));
+                                                }
+                                            }
+                                            uploading_favicon.set(false);
+                                        });
+                                    },
+                                }
+                                if uploading_favicon() { "Uploading…" } else { "Choose favicon" }
+                            }
+                            p {
+                                class: "mt-2 break-all font-mono text-xs text-text-muted",
+                                "/uploads/site-favicon"
+                            }
+                            if !favicon_status().is_empty() {
+                                p { class: "mt-2 text-xs text-text-muted", "{favicon_status}" }
+                            }
+                        }
+                    }
+                }
                 SettingRow {
                     title: "Force HTTPS",
                     description: "Redirect all traffic on your website to HTTPS.",
@@ -48,6 +204,93 @@ pub fn SettingsGeneral() -> Element {
                 }
             }
         }
+    }
+}
+
+#[server]
+async fn upload_site_logo(file_name: String, bytes: Vec<u8>) -> Result<(), ServerFnError> {
+    const MAX_LOGO_SIZE: usize = 4 * 1024 * 1024;
+
+    crate::theme::require_admin_editor_access().await?;
+    if bytes.is_empty() {
+        return Err(ServerFnError::new("The selected image is empty"));
+    }
+    if bytes.len() > MAX_LOGO_SIZE {
+        return Err(ServerFnError::new("The logo must be 4 MB or smaller"));
+    }
+
+    let content_type = detect_brand_content_type(&bytes, false)
+        .ok_or_else(|| ServerFnError::new("Use a valid PNG, JPEG, WebP, or GIF image"))?;
+
+    #[cfg(feature = "server")]
+    {
+        let _ = file_name;
+        std::fs::create_dir_all("data").map_err(|error| ServerFnError::new(error.to_string()))?;
+        std::fs::write("data/site-logo.bin", bytes)
+            .map_err(|error| ServerFnError::new(error.to_string()))?;
+        std::fs::write("data/site-logo.mime", content_type)
+            .map_err(|error| ServerFnError::new(error.to_string()))?;
+        return Ok(());
+    }
+
+    #[cfg(not(feature = "server"))]
+    {
+        let _ = (file_name, bytes, content_type);
+        Err(ServerFnError::new(
+            "Uploading a site logo requires the server runtime",
+        ))
+    }
+}
+
+#[server]
+async fn upload_site_favicon(file_name: String, bytes: Vec<u8>) -> Result<(), ServerFnError> {
+    const MAX_FAVICON_SIZE: usize = 2 * 1024 * 1024;
+
+    crate::theme::require_admin_editor_access().await?;
+    if bytes.is_empty() {
+        return Err(ServerFnError::new("The selected image is empty"));
+    }
+    if bytes.len() > MAX_FAVICON_SIZE {
+        return Err(ServerFnError::new("The favicon must be 2 MB or smaller"));
+    }
+
+    let content_type = detect_brand_content_type(&bytes, true)
+        .ok_or_else(|| ServerFnError::new("Use a valid PNG, JPEG, WebP, GIF, or ICO image"))?;
+
+    #[cfg(feature = "server")]
+    {
+        let _ = file_name;
+        std::fs::create_dir_all("data").map_err(|error| ServerFnError::new(error.to_string()))?;
+        std::fs::write("data/site-favicon.bin", bytes)
+            .map_err(|error| ServerFnError::new(error.to_string()))?;
+        std::fs::write("data/site-favicon.mime", content_type)
+            .map_err(|error| ServerFnError::new(error.to_string()))?;
+        return Ok(());
+    }
+
+    #[cfg(not(feature = "server"))]
+    {
+        let _ = (file_name, bytes, content_type);
+        Err(ServerFnError::new(
+            "Uploading a site favicon requires the server runtime",
+        ))
+    }
+}
+
+#[cfg(feature = "server")]
+fn detect_brand_content_type(bytes: &[u8], allow_ico: bool) -> Option<&'static str> {
+    if bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
+        Some("image/png")
+    } else if bytes.starts_with(b"\xff\xd8\xff") {
+        Some("image/jpeg")
+    } else if bytes.len() >= 12 && bytes.starts_with(b"RIFF") && &bytes[8..12] == b"WEBP" {
+        Some("image/webp")
+    } else if bytes.starts_with(b"GIF87a") || bytes.starts_with(b"GIF89a") {
+        Some("image/gif")
+    } else if allow_ico && bytes.starts_with(b"\x00\x00\x01\x00") {
+        Some("image/x-icon")
+    } else {
+        None
     }
 }
 

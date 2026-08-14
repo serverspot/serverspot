@@ -1,4 +1,4 @@
-use crate::router::Route;
+﻿use crate::router::Route;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Section {
@@ -50,21 +50,6 @@ impl Section {
             Section::Analytics => "Analytics",
             Section::Settings => "Settings",
             Section::Account => "Account",
-        }
-    }
-
-    pub fn accent(self) -> &'static str {
-        match self {
-            Section::Dashboard | Section::Settings | Section::Account => "#87d1fe",
-            Section::Store => "#3ecf8e",
-            Section::Forum => "#5b9dff",
-            Section::Support => "#f0a35e",
-            Section::Content => "#f071a5",
-            Section::Players => "#69bdf2",
-            Section::Leaderboards => "#5eead4",
-            Section::Votes => "#fbbf24",
-            Section::Applications => "#fb7185",
-            Section::Analytics => "#38bdf8",
         }
     }
 
@@ -166,10 +151,6 @@ impl Section {
                     label: "Settings",
                     route: Route::StoreSiteSettings {},
                 },
-                SubLink {
-                    label: "Theme",
-                    route: Route::StoreTheme {},
-                },
             ],
             Section::Forum => &[
                 SubLink {
@@ -191,10 +172,6 @@ impl Section {
                 SubLink {
                     label: "Settings",
                     route: Route::ForumSiteSettings {},
-                },
-                SubLink {
-                    label: "Theme",
-                    route: Route::ForumTheme {},
                 },
             ],
             Section::Support => &[
@@ -218,10 +195,6 @@ impl Section {
                     label: "Settings",
                     route: Route::SupportSiteSettings {},
                 },
-                SubLink {
-                    label: "Theme",
-                    route: Route::SupportTheme {},
-                },
             ],
             Section::Content => &[
                 SubLink {
@@ -240,10 +213,6 @@ impl Section {
                     label: "Settings",
                     route: Route::ContentSiteSettings {},
                 },
-                SubLink {
-                    label: "Theme",
-                    route: Route::ContentTheme {},
-                },
             ],
             Section::Players => &[
                 SubLink {
@@ -257,10 +226,6 @@ impl Section {
                 SubLink {
                     label: "Settings",
                     route: Route::PlayersSiteSettings {},
-                },
-                SubLink {
-                    label: "Theme",
-                    route: Route::PlayersTheme {},
                 },
             ],
             Section::Leaderboards => &[
@@ -276,10 +241,6 @@ impl Section {
                     label: "Settings",
                     route: Route::LeaderboardsSiteSettings {},
                 },
-                SubLink {
-                    label: "Theme",
-                    route: Route::LeaderboardsTheme {},
-                },
             ],
             Section::Votes => &[
                 SubLink {
@@ -294,10 +255,6 @@ impl Section {
                     label: "Settings",
                     route: Route::VotesSiteSettings {},
                 },
-                SubLink {
-                    label: "Theme",
-                    route: Route::VotesTheme {},
-                },
             ],
             Section::Applications => &[
                 SubLink {
@@ -311,10 +268,6 @@ impl Section {
                 SubLink {
                     label: "Settings",
                     route: Route::ApplicationsSiteSettings {},
-                },
-                SubLink {
-                    label: "Theme",
-                    route: Route::ApplicationsTheme {},
                 },
             ],
             Section::Analytics => &[
@@ -337,10 +290,6 @@ impl Section {
                 SubLink {
                     label: "Settings",
                     route: Route::AnalyticsSiteSettings {},
-                },
-                SubLink {
-                    label: "Theme",
-                    route: Route::AnalyticsTheme {},
                 },
             ],
             Section::Settings => &[
@@ -373,6 +322,10 @@ impl Section {
                     route: Route::SettingsLocalisation {},
                 },
                 SubLink {
+                    label: "Theme",
+                    route: Route::SettingsTheme {},
+                },
+                SubLink {
                     label: "Developer",
                     route: Route::SettingsDeveloper {},
                 },
@@ -399,52 +352,62 @@ impl Section {
 
 pub fn section_for(route: &Route) -> Section {
     match route {
-        Route::Login {} => Section::Dashboard,
+        Route::Login {}
+        | Route::PublicProfile {}
+        | Route::PublicHome {}
+        | Route::PublicForumIndex {}
+        | Route::PublicForumThread { .. }
+        | Route::PublicStore {}
+        | Route::PublicStoreProduct { .. }
+        | Route::PublicSupport {}
+        | Route::PublicSupportTicket { .. }
+        | Route::PublicBlog {}
+        | Route::PublicBlogPost { .. }
+        | Route::PublicPlayers {}
+        | Route::PublicPlayer { .. }
+        | Route::PublicLeaderboards {}
+        | Route::PublicLeaderboard { .. }
+        | Route::PublicVotes {}
+        | Route::PublicVotesClaim { .. }
+        | Route::PublicApplications {}
+        | Route::PublicApplicationsForm { .. }
+        | Route::PublicAnalytics {} => Section::Dashboard,
         Route::Dashboard {} | Route::DashboardActivity {} => Section::Dashboard,
         Route::StoreOverview {}
         | Route::StoreProducts {}
         | Route::StoreOrders {}
-        | Route::StoreSiteSettings {}
-        | Route::StoreTheme {} => Section::Store,
+        | Route::StoreSiteSettings {} => Section::Store,
         Route::ForumOverview {}
         | Route::ForumCategories {}
         | Route::ForumPosts {}
         | Route::ForumModeration {}
-        | Route::ForumSiteSettings {}
-        | Route::ForumTheme {} => Section::Forum,
+        | Route::ForumSiteSettings {} => Section::Forum,
         Route::SupportOverview {}
         | Route::SupportTickets {}
         | Route::SupportHelpCentre {}
         | Route::SupportAutomation {}
-        | Route::SupportSiteSettings {}
-        | Route::SupportTheme {} => Section::Support,
+        | Route::SupportSiteSettings {} => Section::Support,
         Route::ContentOverview {}
         | Route::ContentBlog {}
         | Route::ContentPages {}
-        | Route::ContentSiteSettings {}
-        | Route::ContentTheme {} => Section::Content,
+        | Route::ContentSiteSettings {} => Section::Content,
         Route::PlayersOverview {}
         | Route::CommunityPlayers {}
-        | Route::PlayersSiteSettings {}
-        | Route::PlayersTheme {} => Section::Players,
+        | Route::PlayersSiteSettings {} => Section::Players,
         Route::LeaderboardsOverview {}
         | Route::CommunityLeaderboards {}
-        | Route::LeaderboardsSiteSettings {}
-        | Route::LeaderboardsTheme {} => Section::Leaderboards,
+        | Route::LeaderboardsSiteSettings {} => Section::Leaderboards,
         Route::VotesOverview {}
         | Route::CommunityVotes {}
-        | Route::VotesSiteSettings {}
-        | Route::VotesTheme {} => Section::Votes,
+        | Route::VotesSiteSettings {} => Section::Votes,
         Route::ApplicationsOverview {}
         | Route::CommunityApplications {}
-        | Route::ApplicationsSiteSettings {}
-        | Route::ApplicationsTheme {} => Section::Applications,
+        | Route::ApplicationsSiteSettings {} => Section::Applications,
         Route::AnalyticsOverview {}
         | Route::AnalyticsWebsite {}
         | Route::AnalyticsCommunity {}
         | Route::AnalyticsGaming {}
-        | Route::AnalyticsSiteSettings {}
-        | Route::AnalyticsTheme {} => Section::Analytics,
+        | Route::AnalyticsSiteSettings {} => Section::Analytics,
         Route::SettingsGeneral {}
         | Route::AccountsAuth {}
         | Route::AccountsLinking {}
@@ -452,6 +415,8 @@ pub fn section_for(route: &Route) -> Section {
         | Route::AccountsProfiles {}
         | Route::AccountsRoles {}
         | Route::SettingsLocalisation {}
+        | Route::SettingsTheme {}
+        | Route::SettingsThemeEditor {}
         | Route::SettingsDeveloper {}
         | Route::SettingsIntegrations {}
         | Route::SettingsSecurity {}
@@ -463,52 +428,62 @@ pub fn section_for(route: &Route) -> Section {
 pub fn crumb_for(route: &Route) -> &'static str {
     match route {
         Route::Login {} => "Login",
+        Route::PublicProfile {} => "Profile",
+        Route::PublicHome {} => "Home",
+        Route::PublicForumIndex {} => "Forum",
+        Route::PublicForumThread { .. } => "Thread",
+        Route::PublicStore {} => "Store",
+        Route::PublicStoreProduct { .. } => "Product",
+        Route::PublicSupport {} => "Support",
+        Route::PublicSupportTicket { .. } => "Ticket",
+        Route::PublicBlog {} => "Blog",
+        Route::PublicBlogPost { .. } => "Post",
+        Route::PublicPlayers {} => "Players",
+        Route::PublicPlayer { .. } => "Player",
+        Route::PublicLeaderboards {} => "Leaderboards",
+        Route::PublicLeaderboard { .. } => "Board",
+        Route::PublicVotes {} => "Votes",
+        Route::PublicVotesClaim { .. } => "Claim",
+        Route::PublicApplications {} => "Applications",
+        Route::PublicApplicationsForm { .. } => "Form",
+        Route::PublicAnalytics {} => "Analytics",
         Route::Dashboard {} => "Overview",
         Route::DashboardActivity {} => "Activity",
         Route::StoreOverview {} => "Overview",
         Route::StoreProducts {} => "Products",
         Route::StoreOrders {} => "Orders",
         Route::StoreSiteSettings {} => "Settings",
-        Route::StoreTheme {} => "Theme",
         Route::ForumOverview {} => "Overview",
         Route::ForumCategories {} => "Categories",
         Route::ForumPosts {} => "Posts",
         Route::ForumModeration {} => "Moderation",
         Route::ForumSiteSettings {} => "Settings",
-        Route::ForumTheme {} => "Theme",
         Route::SupportOverview {} => "Overview",
         Route::SupportTickets {} => "Tickets",
         Route::SupportHelpCentre {} => "Help centre",
         Route::SupportAutomation {} => "Automation",
         Route::SupportSiteSettings {} => "Settings",
-        Route::SupportTheme {} => "Theme",
         Route::ContentOverview {} => "Overview",
         Route::ContentBlog {} => "Posts",
         Route::ContentPages {} => "Pages",
         Route::ContentSiteSettings {} => "Settings",
-        Route::ContentTheme {} => "Theme",
         Route::PlayersOverview {} => "Overview",
         Route::CommunityPlayers {} => "Profiles",
         Route::PlayersSiteSettings {} => "Settings",
-        Route::PlayersTheme {} => "Theme",
         Route::LeaderboardsOverview {} => "Overview",
         Route::CommunityLeaderboards {} => "Rankings",
         Route::LeaderboardsSiteSettings {} => "Settings",
-        Route::LeaderboardsTheme {} => "Theme",
         Route::VotesOverview {} => "Overview",
         Route::CommunityVotes {} => "Rewards",
         Route::VotesSiteSettings {} => "Settings",
-        Route::VotesTheme {} => "Theme",
         Route::ApplicationsOverview {} => "Overview",
         Route::CommunityApplications {} => "Inbox",
         Route::ApplicationsSiteSettings {} => "Settings",
-        Route::ApplicationsTheme {} => "Theme",
         Route::AnalyticsOverview {} => "Overview",
         Route::AnalyticsWebsite {} => "Website",
         Route::AnalyticsCommunity {} => "Community",
         Route::AnalyticsGaming {} => "Gaming",
         Route::AnalyticsSiteSettings {} => "Settings",
-        Route::AnalyticsTheme {} => "Theme",
         Route::SettingsGeneral {} => "General",
         Route::AccountsAuth {} => "Authentication",
         Route::AccountsLinking {} => "Account linking",
@@ -516,6 +491,8 @@ pub fn crumb_for(route: &Route) -> &'static str {
         Route::AccountsProfiles {} => "User profiles",
         Route::AccountsRoles {} => "Roles",
         Route::SettingsLocalisation {} => "Localisation",
+        Route::SettingsTheme {} => "Theme",
+        Route::SettingsThemeEditor {} => "Edit theme",
         Route::SettingsDeveloper {} => "Developer",
         Route::SettingsIntegrations {} => "Integrations",
         Route::SettingsSecurity {} => "Security",
@@ -525,16 +502,5 @@ pub fn crumb_for(route: &Route) -> &'static str {
 }
 
 pub fn is_theme_editor(route: &Route) -> bool {
-    matches!(
-        route,
-        Route::StoreTheme {}
-            | Route::ForumTheme {}
-            | Route::SupportTheme {}
-            | Route::ContentTheme {}
-            | Route::PlayersTheme {}
-            | Route::LeaderboardsTheme {}
-            | Route::VotesTheme {}
-            | Route::ApplicationsTheme {}
-            | Route::AnalyticsTheme {}
-    )
+    matches!(route, Route::SettingsThemeEditor {})
 }

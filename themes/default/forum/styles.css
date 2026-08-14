@@ -1,0 +1,14 @@
+/* Forum feature styles (shared chrome lives in assets/utils.css) */
+
+.spot-forum-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .spot-forum-layout {
+    grid-template-columns: 1fr;
+  }
+}

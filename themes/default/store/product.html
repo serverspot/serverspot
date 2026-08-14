@@ -1,0 +1,46 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <a href="/store">Store</a>
+        @if (item)
+          <span>/</span>
+          <span class="active">{{ item.name }}</span>
+        @endif
+      </nav>
+
+      <a class="spot-back" href="/store">Back to store</a>
+
+      @if (item)
+        <article class="spot-card">
+          <div class="spot-product-detail">
+            <div class="spot-product-media lg">{{ item.initial }}</div>
+            <div class="spot-product-body">
+              <p class="spot-kicker">Store</p>
+              <h1 class="spot-title">{{ item.name }}</h1>
+              <div class="spot-price">{{ item.meta }}</div>
+              <p class="spot-muted">{{ item.description }}</p>
+              <a class="spot-btn" href="{{ item.href }}">Buy now</a>
+            </div>
+          </div>
+        </article>
+      @else
+        <div class="spot-card">
+          <div class="spot-empty">
+            <h1>Product not found</h1>
+            <p class="spot-muted">That item may have been removed from the store.</p>
+            <a class="spot-btn" href="/store">Back to store</a>
+          </div>
+        </div>
+      @endif
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

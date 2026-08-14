@@ -1,0 +1,102 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <span class="active">Profile</span>
+      </nav>
+
+      <section class="spot-profile-hero">
+        <div class="spot-profile-avatar">{{ user.initial }}</div>
+        <div class="spot-profile-copy">
+          <span class="spot-eyebrow">Community profile</span>
+          <h1>{{ user.name }}</h1>
+          <p>{{ user.role }} · Joined {{ user.joined }}</p>
+        </div>
+        <span class="spot-profile-status"><span class="spot-live-dot"></span> Online</span>
+      </section>
+
+      <div class="spot-profile-stats">
+        <div>
+          <i class="fa-solid fa-clock"></i>
+          <strong>{{ user.playtime }}</strong>
+          <span>Playtime</span>
+        </div>
+        <div>
+          <i class="fa-solid fa-fire"></i>
+          <strong>{{ user.vote_streak }}</strong>
+          <span>Vote streak</span>
+        </div>
+        <div>
+          <i class="fa-solid fa-ticket"></i>
+          <strong>{{ user.tickets }}</strong>
+          <span>Open tickets</span>
+        </div>
+        <div>
+          <i class="fa-solid fa-crown"></i>
+          <strong>{{ user.rank }}</strong>
+          <span>Current rank</span>
+        </div>
+      </div>
+
+      <div class="spot-duo spot-profile-columns">
+        <section class="spot-card">
+          <div class="spot-card-header">
+            <h2 class="spot-card-title">Account details</h2>
+            <span class="spot-badge">Verified</span>
+          </div>
+          <div class="spot-profile-details">
+            <div>
+              <span>Username</span>
+              <strong>{{ user.name }}</strong>
+            </div>
+            <div>
+              <span>Email</span>
+              <strong>{{ user.email }}</strong>
+            </div>
+            <div>
+              <span>Minecraft account</span>
+              <strong>{{ user.minecraft }}</strong>
+            </div>
+            <div>
+              <span>Discord</span>
+              <strong>{{ user.discord }}</strong>
+            </div>
+          </div>
+          <div class="spot-profile-actions">
+            <a class="spot-btn small" href="/profile">Edit profile</a>
+            <a class="spot-btn spot-btn-ghost small" href="/login">Log out</a>
+          </div>
+        </section>
+
+        <section class="spot-card">
+          <div class="spot-card-header">
+            <h2 class="spot-card-title">Recent activity</h2>
+            <a class="spot-section-aside" href="/votes">View rewards</a>
+          </div>
+          <div class="spot-activity-list">
+            <div class="spot-activity-item">
+              <span class="spot-activity-icon"><i class="fa-solid fa-gift"></i></span>
+              <div><strong>Vote reward claimed</strong><span>Daily crate key · 2 hours ago</span></div>
+            </div>
+            <div class="spot-activity-item">
+              <span class="spot-activity-icon"><i class="fa-solid fa-cart-shopping"></i></span>
+              <div><strong>Store purchase delivered</strong><span>VIP Rank · 3 days ago</span></div>
+            </div>
+            <div class="spot-activity-item">
+              <span class="spot-activity-icon"><i class="fa-solid fa-comments"></i></span>
+              <div><strong>Forum reply posted</strong><span>Season 4 spawn redesign · 5 days ago</span></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

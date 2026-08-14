@@ -1,0 +1,27 @@
+<header class="spot-header">
+  <div class="spot-header-bg" aria-hidden="true"></div>
+
+  <div class="spot-header-inner">
+    <div class="spot-header-side">
+      <span class="spot-header-side-icon"><i class="fa-solid fa-gamepad"></i></span>
+      <div>
+        <span>186 players online</span>
+        <strong>{{ config("server_address") }}</strong>
+      </div>
+    </div>
+
+    <a class="spot-header-brand" href="/" aria-label="{{ site.name }}">
+      <span class="spot-logo">
+        <img src="{{ site.logo }}" alt="{{ site.name }}">
+      </span>
+    </a>
+
+    <a class="spot-header-side is-right" href="{{ config('discord_url') }}">
+      <span class="spot-header-side-icon"><i class="fa-brands fa-discord"></i></span>
+      <div>
+        <span>529 members online</span>
+        <strong>{{ display_url(config("discord_url")) }}</strong>
+      </div>
+    </a>
+  </div>
+</header>

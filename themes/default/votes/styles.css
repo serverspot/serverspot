@@ -1,0 +1,59 @@
+/* Votes feature styles */
+
+.spot-vote-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.spot-vote-card {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.95rem;
+  border: 1px solid var(--tblr-border-color);
+  border-radius: var(--tblr-card-border-radius);
+  background: var(--tblr-bg-surface);
+  box-shadow: var(--spot-shadow);
+}
+
+.spot-vote-card:hover {
+  border-color: rgba(var(--tblr-primary-rgb), 0.35);
+}
+
+.spot-vote-card h3 {
+  margin: 0 0 0.2rem;
+  color: var(--tblr-body-color);
+  font-size: 0.875rem;
+  font-weight: 640;
+}
+
+.spot-vote-card p {
+  margin: 0 0 0.2rem;
+  color: var(--tblr-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.spot-vote-card .spot-muted {
+  font-size: 0.72rem;
+}
+
+@media (max-width: 760px) {
+  .spot-vote-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .spot-vote-card {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .spot-vote-card .spot-btn.small {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 0.35rem;
+  }
+}

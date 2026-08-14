@@ -13,3 +13,7 @@
 /node_modules/
 /tmp-hugeicons/
 
+
+# Runtime uploads and local theme config overrides
+/data/
+

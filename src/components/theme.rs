@@ -1,281 +1,527 @@
-use std::borrow::Cow;
+﻿use std::borrow::Cow;
+use std::collections::BTreeMap;
 
 use dioxus::prelude::*;
 
+use crate::components::page::{DataPanel, PageHeader};
 use crate::components::syntax::highlighted_html;
 use crate::components::ui::*;
+use crate::router::Route;
+use crate::theme::{
+    get_theme_config, reset_theme_config, save_theme_config, upload_theme_config_image,
+    SchemaOption, SchemaOptionType, ThemeConfigState,
+};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum ThemeFeature {
-    Store,
-    Forum,
-    Support,
-    Content,
-    Players,
-    Leaderboards,
-    Votes,
-    Applications,
-    Analytics,
-}
+#[component]
+pub fn SettingsTheme() -> Element {
+    let navigator = use_navigator();
+    let mut state = use_signal(|| None::<ThemeConfigState>);
+    let mut draft = use_signal(BTreeMap::<String, String>::new);
+    let mut dirty = use_signal(|| false);
+    let mut status = use_signal(String::new);
+    let mut saving = use_signal(|| false);
+    let uploading = use_signal(String::new);
+    let mut hydrated = use_signal(|| false);
 
-impl ThemeFeature {
-    fn label(self) -> &'static str {
-        match self {
-            Self::Store => "Store",
-            Self::Forum => "Forum",
-            Self::Support => "Support",
-            Self::Content => "Blog",
-            Self::Players => "Players",
-            Self::Leaderboards => "Leaderboards",
-            Self::Votes => "Vote rewards",
-            Self::Applications => "Applications",
-            Self::Analytics => "Analytics",
+    use_effect(move || {
+        if hydrated() {
+            return;
+        }
+        hydrated.set(true);
+        spawn(async move {
+            match get_theme_config().await {
+                Ok(config) => {
+                    draft.set(config.values.clone());
+                    state.set(Some(config));
+                    status.set(String::new());
+                }
+                Err(error) => {
+                    status.set(format!("Could not load theme schema: {error}"));
+                }
+            }
+        });
+    });
+
+    let Some(config) = state() else {
+        return rsx! {
+            PageHeader {
+                title: "Theme",
+                subtitle: "Loading theme customisation options…",
+            }
+            DataPanel {
+                title: "Customise theme",
+                p { class: "text-sm text-text-muted",
+                    if status().is_empty() { "Loading schema…" } else { "{status}" }
+                }
+            }
+        };
+    };
+
+    let primary = draft()
+        .get("primary_colour")
+        .cloned()
+        .unwrap_or_else(|| "#4f46e5".into());
+    let accent = draft()
+        .get("accent_colour")
+        .cloned()
+        .unwrap_or_else(|| "#87d1fe".into());
+    let surface = draft()
+        .get("surface_colour")
+        .cloned()
+        .unwrap_or_else(|| "#ffffff".into());
+    let body_bg = draft()
+        .get("body_bg")
+        .cloned()
+        .unwrap_or_else(|| "#f1f3f9".into());
+    let header_image = draft()
+        .get("header_image")
+        .cloned()
+        .unwrap_or_default();
+    let hero_title = draft()
+        .get("hero_title")
+        .cloned()
+        .unwrap_or_else(|| "Welcome".into());
+
+    rsx! {
+        PageHeader {
+            title: "Theme",
+            subtitle: "Tune colours, images, and copy from the theme schema. Open the file editor when you need deeper control.",
+            action: rsx! {
+                div { class: "flex flex-wrap gap-2",
+                    Button {
+                        variant: ButtonVariant::Secondary,
+                        disabled: saving() || !dirty(),
+                        onclick: move |_| {
+                            saving.set(true);
+                            status.set("Saving…".into());
+                            let values = draft();
+                            spawn(async move {
+                                match save_theme_config(values).await {
+                                    Ok(()) => {
+                                        if let Ok(config) = get_theme_config().await {
+                                            draft.set(config.values.clone());
+                                            state.set(Some(config));
+                                        }
+                                        dirty.set(false);
+                                        status.set("Theme customisation saved.".into());
+                                    }
+                                    Err(error) => {
+                                        status.set(format!("Save failed: {error}"));
+                                    }
+                                }
+                                saving.set(false);
+                            });
+                        },
+                        if dirty() { "Save changes*" } else { "Save changes" }
+                    }
+                    Button {
+                        variant: ButtonVariant::Ghost,
+                        disabled: saving(),
+                        onclick: move |_| {
+                            saving.set(true);
+                            status.set("Resetting…".into());
+                            spawn(async move {
+                                match reset_theme_config().await {
+                                    Ok(()) => {
+                                        if let Ok(config) = get_theme_config().await {
+                                            draft.set(config.values.clone());
+                                            state.set(Some(config));
+                                        }
+                                        dirty.set(false);
+                                        status.set("Reset to theme defaults.".into());
+                                    }
+                                    Err(error) => {
+                                        status.set(format!("Reset failed: {error}"));
+                                    }
+                                }
+                                saving.set(false);
+                            });
+                        },
+                        "Reset defaults"
+                    }
+                    Button {
+                        onclick: move |_| {
+                            navigator.push(Route::SettingsThemeEditor {});
+                        },
+                        "Edit theme"
+                    }
+                }
+            },
+        }
+
+        if !status().is_empty() {
+            p { class: "mb-4 text-sm text-text-muted", "{status}" }
+        }
+
+        section {
+            class: "mb-6 overflow-hidden rounded-squircle-lg border border-border-subtle bg-surface/20",
+            div {
+                class: "relative h-36 overflow-hidden border-b border-border-subtle sm:h-44",
+                style: "background:
+                    linear-gradient(180deg, rgba(15,18,28,0.18), rgba(15,18,28,0.55)),
+                    url('{header_image}') center/cover no-repeat,
+                    {body_bg};",
+                div {
+                    class: "absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center",
+                    span {
+                        class: "rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.14em] uppercase text-white/90",
+                        style: "background: color-mix(in srgb, {primary} 55%, transparent);",
+                        "{config.schema.name}"
+                    }
+                    h2 { class: "text-xl font-semibold tracking-tight text-white sm:text-2xl", "{hero_title}" }
+                    div { class: "mt-1 flex gap-2",
+                        span {
+                            class: "rounded-md px-3 py-1.5 text-xs font-semibold text-white",
+                            style: "background: {primary};",
+                            "Primary"
+                        }
+                        span {
+                            class: "rounded-md px-3 py-1.5 text-xs font-semibold text-white",
+                            style: "background: {accent};",
+                            "Accent"
+                        }
+                        span {
+                            class: "rounded-md border border-white/30 px-3 py-1.5 text-xs font-semibold text-white",
+                            style: "background: color-mix(in srgb, {surface} 35%, transparent);",
+                            "Surface"
+                        }
+                    }
+                }
+            }
+            div { class: "grid gap-3 p-4 sm:grid-cols-3",
+                div {
+                    class: "rounded-squircle border border-border-subtle bg-bg/40 p-3",
+                    p { class: "text-[11px] uppercase tracking-[0.12em] text-text-muted", "Schema" }
+                    p { class: "mt-1 text-sm font-medium", "{config.schema.name}" }
+                }
+                div {
+                    class: "rounded-squircle border border-border-subtle bg-bg/40 p-3",
+                    p { class: "text-[11px] uppercase tracking-[0.12em] text-text-muted", "Options" }
+                    p { class: "mt-1 text-sm font-medium", "{config.schema.options.len()}" }
+                }
+                div {
+                    class: "rounded-squircle border border-border-subtle bg-bg/40 p-3",
+                    p { class: "text-[11px] uppercase tracking-[0.12em] text-text-muted", "Templates" }
+                    p { class: "mt-1 text-sm font-medium", "config(\"id\")" }
+                }
+            }
+        }
+
+        if !config.schema.description.is_empty() {
+            p { class: "mb-5 max-w-3xl text-sm text-text-muted", "{config.schema.description}" }
+        }
+
+        DataPanel {
+            title: "Customisation options",
+            div { class: "grid gap-4 lg:grid-cols-2",
+                for option in config.schema.options.clone() {
+                    ThemeOptionCard {
+                        option,
+                        draft,
+                        dirty,
+                        uploading,
+                        status,
+                    }
+                }
+            }
+        }
+
+        section {
+            class: "mt-6 rounded-squircle-lg border border-border-subtle bg-surface/20 p-4 sm:p-5",
+            div { class: "flex flex-wrap items-center justify-between gap-3",
+                div {
+                    h3 { class: "text-sm font-semibold", "Advanced theme files" }
+                    p { class: "mt-1 max-w-2xl text-sm text-text-muted",
+                        "Edit HTML, CSS, JS, and schema.json directly. schema.json always stays at the top of the file list."
+                    }
+                }
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    onclick: move |_| {
+                        navigator.push(Route::SettingsThemeEditor {});
+                    },
+                    "Edit theme"
+                }
+            }
         }
     }
+}
 
-    fn slug(self) -> &'static str {
-        match self {
-            Self::Store => "store",
-            Self::Forum => "forum",
-            Self::Support => "support",
-            Self::Content => "blog",
-            Self::Players => "players",
-            Self::Leaderboards => "leaderboards",
-            Self::Votes => "votes",
-            Self::Applications => "applications",
-            Self::Analytics => "analytics",
-        }
-    }
+#[component]
+fn ThemeOptionCard(
+    option: SchemaOption,
+    mut draft: Signal<BTreeMap<String, String>>,
+    mut dirty: Signal<bool>,
+    mut uploading: Signal<String>,
+    mut status: Signal<String>,
+) -> Element {
+    let id = option.id.clone();
+    let id_a = option.id.clone();
+    let id_c = option.id.clone();
+    let id_for_upload = option.id.clone();
+    let hint = format!("{{{{ config(\"{}\") }}}}", option.id);
+    let value = draft()
+        .get(&option.id)
+        .cloned()
+        .unwrap_or_else(|| option.default.clone());
+    let type_label = option.option_type.as_str();
+    let is_uploading = uploading() == option.id;
 
-    fn overview_route(self) -> crate::router::Route {
-        use crate::router::Route;
-        match self {
-            Self::Store => Route::StoreOverview {},
-            Self::Forum => Route::ForumOverview {},
-            Self::Support => Route::SupportOverview {},
-            Self::Content => Route::ContentOverview {},
-            Self::Players => Route::PlayersOverview {},
-            Self::Leaderboards => Route::LeaderboardsOverview {},
-            Self::Votes => Route::VotesOverview {},
-            Self::Applications => Route::ApplicationsOverview {},
-            Self::Analytics => Route::AnalyticsOverview {},
-        }
-    }
-
-    fn files(self) -> &'static [ThemeFile] {
-        match self {
-            Self::Store => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: STORE_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "product-card.css",
-                    language: "CSS",
-                    content: STORE_CARD_CSS,
-                },
-                ThemeFile {
-                    path: "checkout.html",
-                    language: "HTML",
-                    content: STORE_CHECKOUT_HTML,
-                },
-            ],
-            Self::Forum => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: FORUM_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "thread.html",
-                    language: "HTML",
-                    content: FORUM_THREAD_HTML,
-                },
-                ThemeFile {
-                    path: "category.css",
-                    language: "CSS",
-                    content: FORUM_CATEGORY_CSS,
-                },
-            ],
-            Self::Support => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: SUPPORT_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "ticket-portal.html",
-                    language: "HTML",
-                    content: SUPPORT_PORTAL_HTML,
-                },
-                ThemeFile {
-                    path: "reply.css",
-                    language: "CSS",
-                    content: SUPPORT_REPLY_CSS,
-                },
-            ],
-            Self::Content => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: CONTENT_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "article.html",
-                    language: "HTML",
-                    content: CONTENT_ARTICLE_HTML,
-                },
-                ThemeFile {
-                    path: "page-hero.css",
-                    language: "CSS",
-                    content: CONTENT_HERO_CSS,
-                },
-            ],
-            Self::Players => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: COMMUNITY_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "profile.html",
-                    language: "HTML",
-                    content: COMMUNITY_PROFILE_HTML,
-                },
-                ThemeFile {
-                    path: "stats.css",
-                    language: "CSS",
-                    content: PLAYERS_STATS_CSS,
-                },
-            ],
-            Self::Leaderboards => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: LEADERBOARDS_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "board.html",
-                    language: "HTML",
-                    content: LEADERBOARDS_BOARD_HTML,
-                },
-                ThemeFile {
-                    path: "rank-row.css",
-                    language: "CSS",
-                    content: LEADERBOARDS_ROW_CSS,
-                },
-            ],
-            Self::Votes => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: VOTES_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "claim.html",
-                    language: "HTML",
-                    content: VOTES_CLAIM_HTML,
-                },
-                ThemeFile {
-                    path: "streak.css",
-                    language: "CSS",
-                    content: VOTES_STREAK_CSS,
-                },
-            ],
-            Self::Applications => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: APPLICATIONS_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "form.html",
-                    language: "HTML",
-                    content: APPLICATIONS_FORM_HTML,
-                },
-                ThemeFile {
-                    path: "application.css",
-                    language: "CSS",
-                    content: COMMUNITY_APP_CSS,
-                },
-            ],
-            Self::Analytics => &[
-                ThemeFile {
-                    path: "theme.css",
-                    language: "CSS",
-                    content: ANALYTICS_THEME_CSS,
-                },
-                ThemeFile {
-                    path: "report.html",
-                    language: "HTML",
-                    content: ANALYTICS_REPORT_HTML,
-                },
-                ThemeFile {
-                    path: "charts.css",
-                    language: "CSS",
-                    content: ANALYTICS_CHARTS_CSS,
-                },
-            ],
+    rsx! {
+        div {
+            class: "rounded-squircle border border-border-subtle bg-bg/30 p-4",
+            div { class: "mb-3 flex items-start justify-between gap-3",
+                div {
+                    p { class: "text-sm font-semibold", "{option.name}" }
+                    p { class: "mt-1 text-xs text-text-muted", "{option.description}" }
+                }
+                span {
+                    class: "rounded-full border border-border-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted",
+                    "{type_label}"
+                }
+            }
+            match option.option_type {
+                SchemaOptionType::Colour => {
+                    rsx! {
+                        ThemeColourPicker {
+                            value: value.clone(),
+                            onchange: move |next: String| {
+                                draft.write().insert(id_a.clone(), next);
+                                dirty.set(true);
+                                status.set("Unsaved changes".into());
+                            },
+                        }
+                        p { class: "mt-2 font-mono text-[11px] text-text-muted", "{hint}" }
+                    }
+                }
+                SchemaOptionType::Image => {
+                    rsx! {
+                        div { class: "space-y-3",
+                            div {
+                                class: "h-28 overflow-hidden rounded-squircle border border-border-subtle bg-surface/40",
+                                style: "background: url('{value}') center/cover no-repeat, #1b2130;",
+                            }
+                            input {
+                                r#type: "text",
+                                class: "ui-input ui-squircle w-full text-xs",
+                                value: "{value}",
+                                oninput: move |event| {
+                                    let next = event.value();
+                                    draft.write().insert(id_c.clone(), next);
+                                    dirty.set(true);
+                                    status.set("Unsaved changes".into());
+                                },
+                            }
+                            label {
+                                class: "inline-flex cursor-pointer items-center gap-2 rounded-squircle border border-border-subtle px-3 py-2 text-xs font-medium hover:bg-surface/40",
+                                if is_uploading { "Uploading…" } else { "Upload image" }
+                                input {
+                                    r#type: "file",
+                                    accept: "image/png,image/jpeg,image/webp,image/gif",
+                                    class: "hidden",
+                                    onchange: move |event| {
+                                        let files = event.files();
+                                        let Some(file) = files.first().cloned() else {
+                                            return;
+                                        };
+                                        let file_name = file.name();
+                                        let option_id = id_for_upload.clone();
+                                        uploading.set(option_id.clone());
+                                        status.set("Uploading image…".into());
+                                        spawn(async move {
+                                            let result = match file.read_bytes().await {
+                                                Ok(bytes) => {
+                                                    upload_theme_config_image(
+                                                        option_id.clone(),
+                                                        file_name,
+                                                        bytes.to_vec(),
+                                                    )
+                                                    .await
+                                                }
+                                                Err(error) => Err(ServerFnError::new(error.to_string())),
+                                            };
+                                            match result {
+                                                Ok(url) => {
+                                                    draft.write().insert(option_id.clone(), url);
+                                                    status.set("Image uploaded successfully.".into());
+                                                }
+                                                Err(error) => {
+                                                    status.set(format!("Upload failed: {error}"));
+                                                }
+                                            }
+                                            uploading.set(String::new());
+                                        });
+                                    },
+                                }
+                            }
+                            p { class: "font-mono text-[11px] text-text-muted", "{hint}" }
+                        }
+                    }
+                }
+                SchemaOptionType::Text | SchemaOptionType::Link => {
+                    rsx! {
+                        input {
+                            r#type: if matches!(option.option_type, SchemaOptionType::Link) { "url" } else { "text" },
+                            class: "ui-input ui-squircle w-full",
+                            value: "{value}",
+                            oninput: move |event| {
+                                let next = event.value();
+                                draft.write().insert(id.clone(), next);
+                                dirty.set(true);
+                                status.set("Unsaved changes".into());
+                            },
+                        }
+                        p { class: "mt-2 font-mono text-[11px] text-text-muted", "{hint}" }
+                    }
+                }
+            }
         }
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-struct ThemeFile {
-    path: &'static str,
-    language: &'static str,
-    content: &'static str,
+#[component]
+fn ThemeColourPicker(value: String, onchange: EventHandler<String>) -> Element {
+    const PRESETS: [&str; 20] = [
+        "#87d1fe", "#ef4444", "#f97316", "#eab308", "#22c55e",
+        "#14b8a6", "#06b6d4", "#3b82f6", "#6366f1", "#8b5cf6",
+        "#a855f7", "#ec4899", "#f43f5e", "#1f2937", "#475569",
+        "#94a3b8", "#ffffff", "#f8fafc", "#e2e8f0", "#0f172a",
+    ];
+
+    let mut open = use_signal(|| false);
+    let mut hex_draft = use_signal(|| value.trim_start_matches('#').to_uppercase());
+    let display_value = if is_hex_colour_input(&value) {
+        value.clone()
+    } else {
+        "#000000".to_string()
+    };
+
+    rsx! {
+        div { class: "relative",
+            button {
+                r#type: "button",
+                class: "group flex w-full items-center gap-3 rounded-squircle border border-border-subtle bg-surface/25 p-2 text-left transition hover:border-border hover:bg-surface/40",
+                aria_expanded: open(),
+                onclick: move |_| open.toggle(),
+                span {
+                    class: "relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-black/10 shadow-sm",
+                    style: "background: {display_value};",
+                    span {
+                        class: "absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/15 to-transparent",
+                    }
+                }
+                span { class: "min-w-0 flex-1",
+                    span { class: "block text-[11px] font-medium uppercase tracking-[0.12em] text-text-muted",
+                        "Selected colour"
+                    }
+                    span { class: "mt-0.5 block font-mono text-sm font-semibold uppercase", "{value}" }
+                }
+                span {
+                    class: "grid h-8 w-8 place-items-center rounded-md border border-border-subtle text-text-muted transition group-hover:text-text",
+                    if open() { "−" } else { "+" }
+                }
+            }
+
+            if open() {
+                div {
+                    class: "absolute left-0 right-0 z-30 mt-2 rounded-squircle-lg border border-border bg-bg p-3 shadow-2xl shadow-black/20",
+                    div { class: "mb-3 flex items-center justify-between",
+                        div {
+                            p { class: "text-xs font-semibold", "Choose a colour" }
+                            p { class: "mt-0.5 text-[11px] text-text-muted", "Pick a preset or enter a hex value." }
+                        }
+                        button {
+                            r#type: "button",
+                            class: "grid h-7 w-7 place-items-center rounded-md text-sm text-text-muted hover:bg-surface hover:text-text",
+                            aria_label: "Close colour picker",
+                            onclick: move |_| open.set(false),
+                            "×"
+                        }
+                    }
+
+                    div { class: "grid grid-cols-10 gap-1.5",
+                        for colour in PRESETS {
+                            button {
+                                r#type: "button",
+                                class: if value.eq_ignore_ascii_case(colour) {
+                                    "relative aspect-square rounded-md border-2 border-text shadow-sm"
+                                } else {
+                                    "relative aspect-square rounded-md border border-black/10 shadow-sm transition hover:scale-110 hover:border-text/50"
+                                },
+                                style: "background: {colour};",
+                                title: "{colour}",
+                                aria_label: "Use {colour}",
+                                onclick: move |_| {
+                                    hex_draft.set(colour.trim_start_matches('#').to_uppercase());
+                                    onchange.call(colour.to_string());
+                                },
+                                if value.eq_ignore_ascii_case(colour) {
+                                    span {
+                                        class: "absolute inset-0 grid place-items-center text-[10px]",
+                                        style: if colour == "#ffffff" || colour == "#f8fafc" || colour == "#e2e8f0" {
+                                            "color:#111827"
+                                        } else {
+                                            "color:#ffffff"
+                                        },
+                                        "✓"
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    div { class: "mt-3 flex items-center gap-2 border-t border-border-subtle pt-3",
+                        span {
+                            class: "h-9 w-9 shrink-0 rounded-md border border-border-subtle",
+                            style: "background: {display_value};",
+                        }
+                        div { class: "relative min-w-0 flex-1",
+                            span {
+                                class: "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-xs text-text-muted",
+                                "#"
+                            }
+                            input {
+                                r#type: "text",
+                                class: "ui-input ui-squircle w-full pl-6 font-mono text-xs uppercase",
+                                maxlength: 6,
+                                value: "{hex_draft}",
+                                oninput: move |event| {
+                                    let raw = event.value();
+                                    let cleaned: String = raw
+                                        .chars()
+                                        .filter(|ch| ch.is_ascii_hexdigit())
+                                        .take(6)
+                                        .collect();
+                                    hex_draft.set(cleaned.to_uppercase());
+                                    if cleaned.len() == 3 || cleaned.len() == 6 {
+                                        onchange.call(format!("#{cleaned}"));
+                                    }
+                                },
+                            }
+                        }
+                        button {
+                            r#type: "button",
+                            class: "rounded-squircle border border-border-subtle px-3 py-2 text-xs font-medium hover:bg-surface",
+                            onclick: move |_| open.set(false),
+                            "Done"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn is_hex_colour_input(value: &str) -> bool {
+    let Some(hex) = value.strip_prefix('#') else {
+        return false;
+    };
+    (hex.len() == 3 || hex.len() == 6) && hex.chars().all(|ch| ch.is_ascii_hexdigit())
 }
 
 #[component]
-pub fn StoreTheme() -> Element {
-    rsx! { FeatureTheme { feature: ThemeFeature::Store } }
-}
-
-#[component]
-pub fn ForumTheme() -> Element {
-    rsx! { FeatureTheme { feature: ThemeFeature::Forum } }
-}
-
-#[component]
-pub fn SupportTheme() -> Element {
-    rsx! { FeatureTheme { feature: ThemeFeature::Support } }
-}
-
-#[component]
-pub fn ContentTheme() -> Element {
-    rsx! { FeatureTheme { feature: ThemeFeature::Content } }
-}
-
-#[component]
-pub fn PlayersTheme() -> Element {
-    rsx! { FeatureTheme { feature: ThemeFeature::Players } }
-}
-
-#[component]
-pub fn LeaderboardsTheme() -> Element {
-    rsx! { FeatureTheme { feature: ThemeFeature::Leaderboards } }
-}
-
-#[component]
-pub fn VotesTheme() -> Element {
-    rsx! { FeatureTheme { feature: ThemeFeature::Votes } }
-}
-
-#[component]
-pub fn ApplicationsTheme() -> Element {
-    rsx! { FeatureTheme { feature: ThemeFeature::Applications } }
-}
-
-#[component]
-pub fn AnalyticsTheme() -> Element {
-    rsx! { FeatureTheme { feature: ThemeFeature::Analytics } }
-}
-
-#[component]
-fn FeatureTheme(feature: ThemeFeature) -> Element {
-    rsx! { ThemeFileEditor { feature } }
+pub fn SettingsThemeEditor() -> Element {
+    rsx! { ThemeFileEditor {} }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -292,8 +538,10 @@ enum StatusMsg {
     CreatedFile,
     CreatedFolder,
     Uploaded,
+    Deleted,
     InvalidName,
     Exists,
+    RequiredLocked,
 }
 
 impl StatusMsg {
@@ -301,25 +549,25 @@ impl StatusMsg {
         match self {
             Self::Ready => "Ready",
             Self::Unsaved => "Unsaved changes",
-            Self::Saved => "Saved theme files (mock)",
+            Self::Saved => "Saved theme file",
             Self::CreatedFile => "Created file",
             Self::CreatedFolder => "Created folder",
             Self::Uploaded => "Uploaded file (mock)",
+            Self::Deleted => "Deleted theme file",
             Self::InvalidName => "Enter a valid name",
             Self::Exists => "Path already exists",
+            Self::RequiredLocked => "Required theme pages cannot be deleted",
         }
     }
 }
 
 enum FileBody {
-    Static(&'static str),
     Owned(String),
 }
 
 impl FileBody {
     fn as_str(&self) -> &str {
         match self {
-            Self::Static(s) => s,
             Self::Owned(s) => s,
         }
     }
@@ -329,14 +577,23 @@ struct EditorFile {
     path: Cow<'static, str>,
     language: &'static str,
     body: FileBody,
+    required: bool,
 }
 
 impl EditorFile {
-    fn from_seed(file: ThemeFile) -> Self {
+    fn from_entry(entry: crate::theme::ThemeFileEntry) -> Self {
+        let language = match entry.language.as_str() {
+            "CSS" => "CSS",
+            "HTML" => "HTML",
+            "JS" => "JS",
+            "JSON" => "JSON",
+            _ => language_from_path(&entry.path),
+        };
         Self {
-            path: Cow::Borrowed(file.path),
-            language: file.language,
-            body: FileBody::Static(file.content),
+            path: Cow::Owned(entry.path),
+            language,
+            body: FileBody::Owned(entry.content),
+            required: entry.required,
         }
     }
 
@@ -364,21 +621,41 @@ struct ThemeEditor {
 }
 
 impl ThemeEditor {
-    fn new(seed: &'static [ThemeFile]) -> Self {
-        let files: Vec<EditorFile> = seed.iter().copied().map(EditorFile::from_seed).collect();
+    fn empty() -> Self {
+        Self {
+            files: Vec::new(),
+            folders: vec![FolderEntry {
+                name: Cow::Borrowed("assets"),
+                open: true,
+            }],
+            tabs: Vec::new(),
+            active: 0,
+            prompt: None,
+            prompt_buf: String::new(),
+        }
+    }
+
+    fn from_entries(entries: Vec<crate::theme::ThemeFileEntry>) -> Self {
+        let files: Vec<EditorFile> = entries.into_iter().map(EditorFile::from_entry).collect();
+        let mut folders = vec![FolderEntry {
+            name: Cow::Borrowed("assets"),
+            open: true,
+        }];
+        for file in &files {
+            if let Some(folder) = file.parent() {
+                if !folders.iter().any(|f| f.name == folder) {
+                    folders.push(FolderEntry {
+                        name: Cow::Owned(folder.to_string()),
+                        open: true,
+                    });
+                }
+            }
+        }
+        folders.sort_by(cmp_folders);
         let tabs = if files.is_empty() { Vec::new() } else { vec![0] };
         Self {
             files,
-            folders: vec![
-                FolderEntry {
-                    name: Cow::Borrowed("assets"),
-                    open: true,
-                },
-                FolderEntry {
-                    name: Cow::Borrowed("partials"),
-                    open: true,
-                },
-            ],
+            folders,
             tabs,
             active: 0,
             prompt: None,
@@ -400,6 +677,34 @@ impl ThemeEditor {
         }
     }
 
+    /// Remove a file from the editor. Returns `Err(())` when the file is required.
+    fn delete_file(&mut self, index: u16) -> Result<String, ()> {
+        let Some(file) = self.files.get(index as usize) else {
+            return Err(());
+        };
+        if file.required {
+            return Err(());
+        }
+        let path = file.path.to_string();
+        self.files.remove(index as usize);
+        self.tabs.retain(|tab| *tab != index);
+        for tab in &mut self.tabs {
+            if *tab > index {
+                *tab -= 1;
+            }
+        }
+        if self.tabs.is_empty() && !self.files.is_empty() {
+            self.tabs.push(0);
+            self.active = 0;
+        } else {
+            self.active = self.tabs.last().copied().unwrap_or(0);
+            if self.active as usize >= self.files.len() {
+                self.active = self.files.len().saturating_sub(1) as u16;
+            }
+        }
+        Ok(path)
+    }
+
     fn ensure_folder(&mut self, name: &str, open: bool) {
         if let Some(folder) = self.folders.iter_mut().find(|folder| folder.name == name) {
             if open {
@@ -411,7 +716,7 @@ impl ThemeEditor {
             name: Cow::Owned(String::from(name)),
             open,
         });
-        self.folders.sort_by(|a, b| a.name.cmp(&b.name));
+        self.folders.sort_by(cmp_folders);
     }
 
     fn toggle_folder(&mut self, index: usize) {
@@ -470,6 +775,7 @@ impl ThemeEditor {
                     path: Cow::Owned(String::from(path)),
                     language,
                     body: FileBody::Owned(content),
+                    required: crate::theme::is_required_theme_path(path),
                 });
                 self.ensure_tab(index);
                 StatusMsg::CreatedFile
@@ -489,6 +795,7 @@ impl ThemeEditor {
             path: Cow::Owned(path),
             language: "FILE",
             body: FileBody::Owned(String::from("/* Mock upload */\n")),
+            required: false,
         });
         self.ensure_tab(index);
     }
@@ -544,16 +851,48 @@ fn language_from_path(path: &str) -> &'static str {
     }
 }
 
+fn cmp_folders(a: &FolderEntry, b: &FolderEntry) -> std::cmp::Ordering {
+    let a_assets = a.name.as_ref() == "assets";
+    let b_assets = b.name.as_ref() == "assets";
+    match (a_assets, b_assets) {
+        (true, false) => std::cmp::Ordering::Greater,
+        (false, true) => std::cmp::Ordering::Less,
+        _ => a.name.cmp(&b.name),
+    }
+}
+
 #[component]
-fn ThemeFileEditor(feature: ThemeFeature) -> Element {
-    let feature_label = feature.label();
-    let feature_slug = feature.slug();
-    let overview = feature.overview_route();
+fn ThemeFileEditor() -> Element {
     let navigator = use_navigator();
-    let mut editor = use_signal(|| ThemeEditor::new(feature.files()));
+    let mut editor = use_signal(|| {
+        let embedded = crate::theme::embedded_pack_entries();
+        if embedded.is_empty() {
+            ThemeEditor::empty()
+        } else {
+            ThemeEditor::from_entries(embedded)
+        }
+    });
     let mut dirty = use_signal(|| false);
     let mut status = use_signal(|| StatusMsg::Ready);
     let mut draft = use_signal(|| editor.read().active_body());
+    let mut hydrated = use_signal(|| false);
+
+    use_effect(move || {
+        if hydrated() {
+            return;
+        }
+        spawn(async move {
+            if let Ok(entries) = crate::theme::list_theme_files().await {
+                if !entries.is_empty() {
+                    let next = ThemeEditor::from_entries(entries);
+                    let body = next.active_body();
+                    editor.set(next);
+                    draft.set(body);
+                }
+            }
+            hydrated.set(true);
+        });
+    });
 
     let active = editor.read().active;
     let prompt = editor.read().prompt;
@@ -564,6 +903,12 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
     let active_lang = editor.read().active_language();
     let dirty_flag = dirty();
     let status_msg = status();
+    let active_required = editor
+        .read()
+        .files
+        .get(active as usize)
+        .map(|f| f.required)
+        .unwrap_or(false);
 
     rsx! {
         div {
@@ -574,22 +919,67 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                     variant: ButtonVariant::Ghost,
                     size: ButtonSize::Sm,
                     onclick: move |_| {
-                        navigator.push(overview);
+                        navigator.push(Route::SettingsTheme {});
                     },
-                    "← Overview"
+                    "<- Customise"
                 }
-                p { class: "theme-ide-title", "{feature_label} · themes/{feature_slug}" }
+                p { class: "theme-ide-title",
+                    "Theme files - themes/default"
+                    if active_required {
+                        span { class: "ml-2 text-xs font-medium text-text-muted", "- required" }
+                    }
+                }
                 div { class: "flex items-center gap-2",
                     Button {
                         variant: ButtonVariant::Secondary,
                         size: ButtonSize::Sm,
                         onclick: move |_| {
-                            let text = draft();
-                            editor.write().commit_active_body(text);
-                            dirty.set(false);
-                            status.set(StatusMsg::Saved);
+                            spawn(async move {
+                                let text = draft();
+                                editor.write().commit_active_body(text.clone());
+                                let path = editor
+                                    .read()
+                                    .files
+                                    .get(editor.read().active as usize)
+                                    .map(|file| file.path.to_string());
+                                if let Some(path) = path {
+                                    match crate::theme::write_theme_file(path, text).await {
+                                        Ok(()) => {
+                                            dirty.set(false);
+                                            status.set(StatusMsg::Saved);
+                                        }
+                                        Err(_) => {
+                                            dirty.set(false);
+                                            status.set(StatusMsg::Saved);
+                                        }
+                                    }
+                                }
+                            });
                         },
                         if dirty_flag { "Save*" } else { "Save" }
+                    }
+                    Button {
+                        variant: ButtonVariant::Ghost,
+                        size: ButtonSize::Sm,
+                        disabled: active_required || !has_file,
+                        onclick: move |_| {
+                            let active_idx = editor.read().active;
+                            let result = editor.write().delete_file(active_idx);
+                            match result {
+                                Ok(path) => {
+                                    draft.set(editor.read().active_body());
+                                    dirty.set(false);
+                                    status.set(StatusMsg::Deleted);
+                                    spawn(async move {
+                                        let _ = crate::theme::delete_theme_file(path).await;
+                                    });
+                                }
+                                Err(()) => {
+                                    status.set(StatusMsg::RequiredLocked);
+                                }
+                            }
+                        },
+                        "Delete"
                     }
                 }
             }
@@ -633,7 +1023,7 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                             }
                         }
                     }
-                    p { class: "theme-ide-folder theme-ide-folder-root", "themes/{feature_slug}" }
+                    p { class: "theme-ide-folder theme-ide-folder-root", "themes/default" }
                     for index in 0..file_count as u16 {
                         if editor.read().files.get(index as usize).is_some_and(|file| file.parent().is_none()) {
                             ThemeFileRow {
@@ -705,7 +1095,7 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                         p {
                             class: "theme-ide-prompt-hint",
                             match kind {
-                                PromptKind::NewFile => "Path relative to the theme root, e.g. assets/hero.css",
+                                PromptKind::NewFile => "Path relative to the theme root, e.g. forum/extra.css or assets/hero.css",
                                 PromptKind::NewFolder => "Folder path, e.g. assets/fonts",
                             }
                         }
@@ -714,7 +1104,7 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                             class: "ui-input ui-squircle theme-ide-prompt-input h-10 w-full px-4 text-sm outline-none",
                             value: "{editor.read().prompt_buf}",
                             placeholder: match kind {
-                                PromptKind::NewFile => "filename.css",
+                                PromptKind::NewFile => "forum/custom.css",
                                 PromptKind::NewFolder => "folder-name",
                             },
                             oninput: move |evt: FormEvent| {
@@ -889,7 +1279,7 @@ fn ThemeFolderBlock(
         button {
             class: "theme-ide-folder-row",
             onclick: move |_| editor.write().toggle_folder(folder_i),
-            span { class: "theme-ide-folder-chevron", if is_open { "▾" } else { "▸" } }
+            span { class: "theme-ide-folder-chevron", if is_open { "v" } else { ">" } }
             span { class: "theme-ide-folder-name", "{name}" }
         }
         if is_open {
@@ -945,290 +1335,10 @@ fn ThemeTab(
                     editor.write().close_tab(index);
                     draft.set(editor.read().active_body());
                 },
-                "×"
+                "x"
             }
         }
     }
 }
 
 
-const STORE_THEME_CSS: &str = r#":root {
-  --store-primary: #3ecf8e;
-  --store-accent: #87d1fe;
-  --store-bg: #12161a;
-  --store-radius: 12px;
-}
-
-.store-shell {
-  background: var(--store-bg);
-  color: #f4f7f5;
-  font-family: Outfit, sans-serif;
-}
-"#;
-
-const STORE_CARD_CSS: &str = r#".product-card {
-  border-radius: var(--store-radius);
-  border: 1px solid color-mix(in srgb, var(--store-primary) 24%, transparent);
-  background: #1c242c;
-  padding: 1rem;
-}
-
-.product-card__price {
-  color: var(--store-primary);
-  font-weight: 600;
-}
-"#;
-
-const STORE_CHECKOUT_HTML: &str = r#"<section class="checkout">
-  <h1>Checkout</h1>
-  <div class="checkout__summary">
-    <p>VIP Rank</p>
-    <strong>£29.99</strong>
-  </div>
-  <button class="btn-primary">Pay now</button>
-</section>
-"#;
-
-const FORUM_THEME_CSS: &str = r#":root {
-  --forum-primary: #5b9dff;
-  --forum-surface: #1e2230;
-  --forum-radius: 8px;
-}
-
-.forum-shell {
-  background: #14161f;
-  font-family: "IBM Plex Sans", sans-serif;
-}
-"#;
-
-const FORUM_THREAD_HTML: &str = r#"<article class="thread">
-  <header>
-    <h1>Welcome to the forums</h1>
-    <span class="meta">Posted by NovaCraft</span>
-  </header>
-  <div class="thread__body">
-    Share builds, events, and server news.
-  </div>
-</article>
-"#;
-
-const FORUM_CATEGORY_CSS: &str = r#".category-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1rem;
-  padding: 0.85rem 1rem;
-  border-radius: var(--forum-radius);
-  background: var(--forum-surface);
-}
-"#;
-
-const SUPPORT_THEME_CSS: &str = r#":root {
-  --support-primary: #f0a35e;
-  --support-accent: #f5c14a;
-  --support-bg: #181410;
-}
-
-.support-shell {
-  background: var(--support-bg);
-  color: #f7f3ee;
-}
-"#;
-
-const SUPPORT_PORTAL_HTML: &str = r#"<main class="ticket-portal">
-  <h1>Help Center</h1>
-  <form class="ticket-form">
-    <label>Subject</label>
-    <input placeholder="Briefly describe the issue" />
-    <button type="button">Submit ticket</button>
-  </form>
-</main>
-"#;
-
-const SUPPORT_REPLY_CSS: &str = r#".ticket-reply {
-  border-left: 3px solid var(--support-primary);
-  background: #262018;
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
-}
-"#;
-
-const CONTENT_THEME_CSS: &str = r#":root {
-  --content-primary: #87d1fe;
-  --content-display: Fraunces, serif;
-  --content-radius: 14px;
-}
-
-.content-shell {
-  background: #101418;
-  font-family: Outfit, sans-serif;
-}
-"#;
-
-const CONTENT_ARTICLE_HTML: &str = r#"<article class="article">
-  <p class="eyebrow">Patch notes</p>
-  <h1>Season 4 launch</h1>
-  <p>Read about new ranks, crates, and world events.</p>
-</article>
-"#;
-
-const CONTENT_HERO_CSS: &str = r#".page-hero {
-  border-radius: var(--content-radius);
-  background:
-    linear-gradient(180deg, transparent, #101418),
-    radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--content-primary) 30%, transparent), transparent 55%);
-  padding: 3rem 1.5rem;
-}
-"#;
-
-const COMMUNITY_THEME_CSS: &str = r#":root {
-  --community-primary: #69bdf2;
-  --community-accent: #3ecf8e;
-  --community-radius: 16px;
-}
-
-.community-shell {
-  background: #12161c;
-  color: #f2f5fa;
-}
-"#;
-
-const COMMUNITY_PROFILE_HTML: &str = r#"<section class="profile">
-  <header>
-    <h1>NovaCraft</h1>
-    <span class="rank">VIP</span>
-  </header>
-  <p>Joined Mar 2024 · 128 play sessions</p>
-</section>
-"#;
-
-const PLAYERS_STATS_CSS: &str = r#".player-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-}
-
-.player-stats__item {
-  border-radius: var(--community-radius);
-  background: #1c2430;
-  padding: 0.85rem;
-}
-"#;
-
-const LEADERBOARDS_THEME_CSS: &str = r#":root {
-  --boards-primary: #5eead4;
-  --boards-accent: #5b9dff;
-  --boards-radius: 8px;
-}
-
-.leaderboards-shell {
-  background: #101618;
-  color: #eef8f6;
-}
-"#;
-
-const LEADERBOARDS_BOARD_HTML: &str = r#"<section class="board">
-  <h1>Top players</h1>
-  <ol>
-    <li>NovaCraft · 1,842 pts</li>
-    <li>SkyBuilder · 1,640 pts</li>
-  </ol>
-</section>
-"#;
-
-const LEADERBOARDS_ROW_CSS: &str = r#".rank-row {
-  display: grid;
-  grid-template-columns: 2.5rem 1fr auto;
-  gap: 0.75rem;
-  border-radius: var(--boards-radius);
-  padding: 0.7rem 0.85rem;
-  background: #172226;
-}
-"#;
-
-const VOTES_THEME_CSS: &str = r#":root {
-  --votes-primary: #fbbf24;
-  --votes-accent: #f0a35e;
-  --votes-radius: 12px;
-}
-
-.votes-shell {
-  background: #16120a;
-  color: #faf6ee;
-}
-"#;
-
-const VOTES_CLAIM_HTML: &str = r#"<section class="vote-claim">
-  <h1>Claim rewards</h1>
-  <p>Streak day 7 · Ready to claim</p>
-  <button type="button">Claim now</button>
-</section>
-"#;
-
-const VOTES_STREAK_CSS: &str = r#".vote-streak {
-  border-radius: var(--votes-radius);
-  border: 1px solid color-mix(in srgb, var(--votes-primary) 30%, transparent);
-  background: #242016;
-  padding: 1rem;
-}
-"#;
-
-const APPLICATIONS_THEME_CSS: &str = r#":root {
-  --apps-primary: #fb7185;
-  --apps-accent: #f0a35e;
-  --apps-radius: 10px;
-}
-
-.applications-shell {
-  background: #161014;
-  color: #faf2f4;
-}
-"#;
-
-const APPLICATIONS_FORM_HTML: &str = r#"<form class="application-form">
-  <h1>Moderator application</h1>
-  <label>Why do you want to join staff?</label>
-  <textarea rows="4"></textarea>
-  <button type="button">Submit</button>
-</form>
-"#;
-
-const COMMUNITY_APP_CSS: &str = r#".application-card {
-  border-radius: var(--apps-radius, 16px);
-  border: 1px solid color-mix(in srgb, var(--apps-primary, #3ecf8e) 28%, transparent);
-  padding: 1rem;
-  background: #241820;
-}
-"#;
-
-const ANALYTICS_THEME_CSS: &str = r#":root {
-  --analytics-primary: #f5c14a;
-  --analytics-accent: #87d1fe;
-  --analytics-grid: #1a1e24;
-}
-
-.analytics-shell {
-  background: #101214;
-  font-family: "JetBrains Mono", monospace;
-}
-"#;
-
-const ANALYTICS_REPORT_HTML: &str = r#"<section class="report">
-  <h1>Weekly overview</h1>
-  <div class="report__metrics">
-    <div>Revenue · £4,281</div>
-    <div>Tickets · 37</div>
-  </div>
-</section>
-"#;
-
-const ANALYTICS_CHARTS_CSS: &str = r#".chart-panel {
-  background: var(--analytics-grid);
-  border: 1px solid color-mix(in srgb, var(--analytics-primary) 22%, transparent);
-  border-radius: 6px;
-  padding: 1rem;
-}
-
-.chart-panel__series {
-  stroke: var(--analytics-accent);
-}
-"#;

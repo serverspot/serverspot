@@ -1,0 +1,49 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <span class="active">Blog</span>
+      </nav>
+
+      <div class="spot-section-head">
+        <div>
+          <span class="spot-eyebrow">News and patch notes</span>
+          <h1 class="spot-page-title">Blog</h1>
+          <p>Updates, events, and behind the scenes work from the team.</p>
+        </div>
+        <a class="spot-section-aside" href="/forum">Discuss on the forum <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+
+      <div class="spot-blog-list">
+        @foreach (items as item)
+          <a class="spot-blog-card" href="{{ item.href }}">
+            <span class="spot-blog-thumb">
+              <i class="fa-solid fa-mountain-sun"></i>
+              <span class="spot-blog-tag">Updates</span>
+            </span>
+            <span class="spot-blog-body">
+              <span class="spot-blog-meta">{{ item.meta }}</span>
+              <h2>{{ item.name }}</h2>
+              <p>{{ item.description }}</p>
+              <span class="spot-blog-more">Read the post <i class="fa-solid fa-arrow-right"></i></span>
+            </span>
+          </a>
+        @endforeach
+      </div>
+
+      <div class="spot-pagination">
+        <span><i class="fa-solid fa-chevron-left"></i></span>
+        <span class="is-active">1</span>
+        <span><i class="fa-solid fa-chevron-right"></i></span>
+      </div>
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

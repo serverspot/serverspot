@@ -1,0 +1,54 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <span class="active">Store</span>
+      </nav>
+
+      <div class="spot-section-head">
+        <div>
+          <span class="spot-eyebrow">Support the server</span>
+          <h1 class="spot-page-title">Store</h1>
+          <p>Ranks, crates, and cosmetics. Every purchase keeps the realms online.</p>
+        </div>
+        <span class="spot-section-aside"><i class="fa-solid fa-shield-halved"></i> Instant delivery</span>
+      </div>
+
+      <div class="spot-product-grid">
+        @foreach (items as item)
+          <a class="spot-product-card" href="{{ item.href }}">
+            <div class="spot-product-media"><i class="fa-solid fa-gem"></i></div>
+            <div class="spot-product-body">
+              <h3>{{ item.name }}</h3>
+              <p>{{ item.description }}</p>
+              <div class="spot-product-foot">
+                <span class="spot-price">{{ item.meta }}</span>
+                <span class="spot-product-link">View <i class="fa-solid fa-arrow-right"></i></span>
+              </div>
+            </div>
+          </a>
+        @endforeach
+      </div>
+
+      <div class="spot-section-head">
+        <div>
+          <span class="spot-eyebrow">Thank you</span>
+          <h2 class="spot-page-title">Community support</h2>
+        </div>
+      </div>
+
+      <div class="spot-duo">
+        @include('assets/top-donors')
+        @include('assets/recent-purchases')
+      </div>
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

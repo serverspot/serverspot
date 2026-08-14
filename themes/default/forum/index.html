@@ -1,0 +1,63 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <span class="active">Forum</span>
+      </nav>
+
+      <div class="spot-section-head">
+        <div>
+          <span class="spot-eyebrow">Community</span>
+          <h1 class="spot-page-title">Forum</h1>
+          <p>Ask questions, share builds, and keep up with server discussion.</p>
+        </div>
+        <span class="spot-section-aside">{{ boards_count }} boards</span>
+      </div>
+
+      <div class="spot-card">
+        @foreach (boards as board)
+          <a class="spot-board-row" href="{{ board.href }}">
+            <div class="spot-board-icon"><i class="fa-solid fa-comments"></i></div>
+            <div class="spot-board-copy">
+              <h3>{{ board.name }}</h3>
+              <p>{{ board.description }}</p>
+            </div>
+            <div class="spot-board-meta">
+              <span>{{ board.threads }} threads</span>
+              <span>{{ board.today }} today</span>
+            </div>
+          </a>
+        @endforeach
+      </div>
+
+      <div class="spot-section-head">
+        <div>
+          <span class="spot-eyebrow">Fresh posts</span>
+          <h2 class="spot-page-title">Latest threads</h2>
+        </div>
+      </div>
+
+      <div class="spot-card">
+        @foreach (latest as item)
+          <a class="spot-side-item" href="{{ item.href }}">
+            <span class="spot-avatar sm">{{ item.initial }}</span>
+            <div>
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.author }} · {{ item.when }}</span>
+            </div>
+          </a>
+        @endforeach
+      </div>
+
+      @include('assets/community-cta')
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

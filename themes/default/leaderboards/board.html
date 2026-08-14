@@ -1,0 +1,57 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <a href="/leaderboards">Leaderboards</a>
+        @if (item)
+          <span>/</span>
+          <span class="active">{{ item.name }}</span>
+        @endif
+      </nav>
+
+      <a class="spot-back" href="/leaderboards">Back to leaderboards</a>
+
+      @if (item)
+        <article class="spot-card">
+          <header class="spot-thread-hero">
+            <p class="spot-kicker">Leaderboards</p>
+            <h1 class="spot-title">{{ item.name }}</h1>
+            <p class="spot-muted">{{ item.description }} - {{ item.meta }}</p>
+          </header>
+
+          <div class="spot-rank-table">
+            @foreach (ranks as rank)
+              <div class="spot-rank-row">
+                <span class="spot-rank-place">{{ rank.place }}</span>
+                <span class="spot-rank-name">{{ rank.name }}</span>
+                <span class="spot-rank-score">{{ rank.score }}</span>
+              </div>
+            @endforeach
+
+            @if (not ranks)
+              <div class="spot-empty">
+                <p class="spot-muted">No rankings yet.</p>
+              </div>
+            @endif
+          </div>
+        </article>
+      @else
+        <div class="spot-card">
+          <div class="spot-empty">
+            <h1>Board not found</h1>
+            <p class="spot-muted">That leaderboard may have been removed.</p>
+            <a class="spot-btn" href="/leaderboards">Back to leaderboards</a>
+          </div>
+        </div>
+      @endif
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

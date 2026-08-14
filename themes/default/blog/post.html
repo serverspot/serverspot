@@ -1,0 +1,46 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <a href="/blog">Blog</a>
+        @if (item)
+          <span>/</span>
+          <span class="active">{{ item.name }}</span>
+        @endif
+      </nav>
+
+      <a class="spot-back" href="/blog">Back to blog</a>
+
+      @if (item)
+        <article class="spot-card">
+          <header class="spot-thread-hero">
+            <p class="spot-kicker">{{ item.meta }}</p>
+            <h1 class="spot-title">{{ item.name }}</h1>
+          </header>
+          <section class="spot-post is-op">
+            <div class="spot-avatar lg">{{ item.initial }}</div>
+            <div>
+              <div class="spot-post-body">{{ item.description }}</div>
+            </div>
+          </section>
+        </article>
+      @else
+        <div class="spot-card">
+          <div class="spot-empty">
+            <h1>Post not found</h1>
+            <p class="spot-muted">That article may have been unpublished.</p>
+            <a class="spot-btn" href="/blog">Back to blog</a>
+          </div>
+        </div>
+      @endif
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

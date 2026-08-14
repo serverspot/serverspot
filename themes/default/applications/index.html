@@ -1,0 +1,43 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <span class="active">Applications</span>
+      </nav>
+
+      <div class="spot-section-head">
+        <div>
+          <span class="spot-eyebrow">Join the team</span>
+          <h1 class="spot-page-title">Applications</h1>
+          <p>Tell us what you would like to help with. We review every application.</p>
+        </div>
+        <span class="spot-section-aside">Open roles</span>
+      </div>
+
+      <div class="spot-card">
+        @foreach (items as item)
+          <a class="spot-board-row" href="{{ item.href }}">
+            <div class="spot-board-icon"><i class="fa-solid fa-file-signature"></i></div>
+            <div class="spot-board-copy">
+              <h3>{{ item.name }}</h3>
+              <p>{{ item.description }}</p>
+            </div>
+            <div class="spot-board-meta">
+              <span>{{ item.meta }}</span>
+            </div>
+          </a>
+        @endforeach
+      </div>
+
+      @include('assets/community-cta')
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

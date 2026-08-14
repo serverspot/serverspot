@@ -1,0 +1,55 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <a href="/players">Players</a>
+        @if (item)
+          <span>/</span>
+          <span class="active">{{ item.name }}</span>
+        @endif
+      </nav>
+
+      <a class="spot-back" href="/players">Back to players</a>
+
+      @if (item)
+        <article class="spot-card">
+          <header class="spot-thread-hero">
+            <div class="spot-player-profile-head">
+              <div class="spot-avatar lg">{{ item.initial }}</div>
+              <div>
+                <p class="spot-kicker">Player</p>
+                <h1 class="spot-title">{{ item.name }}</h1>
+                <p class="spot-muted">{{ item.meta }}</p>
+              </div>
+            </div>
+          </header>
+        </article>
+
+        <div class="spot-card">
+          <div class="spot-card-header">
+            <h2 class="spot-card-title">About</h2>
+          </div>
+          <section class="spot-post">
+            <div class="spot-post-body">{{ item.description }}</div>
+          </section>
+        </div>
+      @else
+        <div class="spot-card">
+          <div class="spot-empty">
+            <h1>Player not found</h1>
+            <p class="spot-muted">That profile may be private or removed.</p>
+            <a class="spot-btn" href="/players">Back to players</a>
+          </div>
+        </div>
+      @endif
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

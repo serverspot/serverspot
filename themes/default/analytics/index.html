@@ -1,0 +1,37 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <span class="active">Analytics</span>
+      </nav>
+
+      <div class="spot-section-head">
+        <div>
+          <span class="spot-eyebrow">Server health</span>
+          <h1 class="spot-page-title">Analytics</h1>
+          <p>A public snapshot of how the network is doing this season.</p>
+        </div>
+        <span class="spot-section-aside">Last 30 days</span>
+      </div>
+
+      <div class="spot-stat-grid">
+        @foreach (items as item)
+          <div class="spot-stat-card">
+            <div class="spot-board-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="spot-stat-value">{{ item.meta }}</div>
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.description }}</p>
+          </div>
+        @endforeach
+      </div>
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

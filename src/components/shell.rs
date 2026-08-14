@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 
-use crate::components::brand::{favicon_svg, BrandMark};
+use crate::components::brand::BrandMark;
+use crate::components::loading::LoadingScreen;
 use crate::components::page::{PageTransition, PoweredByFooter};
 use crate::components::ui::*;
 use crate::gravatar::CurrentUser;
@@ -23,7 +24,6 @@ pub fn AppShell() -> Element {
     let section = section_for(&route);
     let crumb = crumb_for(&route);
     let theme_ide = is_theme_editor(&route);
-    let mut favicon_accent = use_signal(|| Option::<&'static str>::None);
     let mut side_open = use_signal(|| true);
 
     use_effect(move || {
@@ -31,37 +31,6 @@ pub fn AppShell() -> Element {
         if matches!(*sheet.peek(), Some(SheetAnim::Open)) {
             sheet.set(Some(SheetAnim::Closing));
         }
-    });
-
-    use_effect(move || {
-        let route = router().current::<Route>();
-        let accent = section_for(&route).accent();
-        if *favicon_accent.peek() == Some(accent) {
-            return;
-        }
-        favicon_accent.set(Some(accent));
-
-        let svg = favicon_svg(accent);
-        let eval = document::eval(
-            r#"
-            const svg = await dioxus.recv();
-            if (window.__ssFaviconUrl) {
-              try { URL.revokeObjectURL(window.__ssFaviconUrl); } catch (_) {}
-            }
-            for (const el of [...document.querySelectorAll("link[rel~='icon']")]) {
-              el.remove();
-            }
-            const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
-            window.__ssFaviconUrl = url;
-            const link = document.createElement("link");
-            link.rel = "icon";
-            link.type = "image/svg+xml";
-            link.setAttribute("data-ss-favicon", "1");
-            link.href = url;
-            document.head.appendChild(link);
-            "#,
-        );
-        let _ = eval.send(svg);
     });
 
     let sheet_anim = sheet();
@@ -104,6 +73,7 @@ pub fn AppShell() -> Element {
 
     rsx! {
         document::Title { "{section.document_title()}" }
+        LoadingScreen {}
 
         div {
             class: "relative h-dvh overflow-hidden bg-bg text-text",

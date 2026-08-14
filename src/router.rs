@@ -21,7 +21,12 @@ use crate::components::{
         VotesSiteSettings,
     },
     forum::{ForumCategories, ForumModeration, ForumPosts},
-    login::Login,
+    public::{
+        PublicAnalytics, PublicApplications, PublicApplicationsForm, PublicBlog, PublicBlogPost,
+        PublicForumIndex, PublicForumThread, PublicHome, PublicLeaderboard, PublicLeaderboards,
+        PublicLogin as Login, PublicPlayer, PublicPlayers, PublicProfile, PublicShell, PublicStore,
+        PublicStoreProduct, PublicSupport, PublicSupportTicket, PublicVotes, PublicVotesClaim,
+    },
     settings::{
         SettingsDeveloper, SettingsGeneral, SettingsHosting, SettingsIntegrations,
         SettingsLocalisation, SettingsSecurity,
@@ -29,144 +34,167 @@ use crate::components::{
     shell::AppShell,
     store::{StoreOrders, StoreProducts},
     support::{SupportAutomation, SupportHelpCentre, SupportTickets},
-    theme::{
-        AnalyticsTheme, ApplicationsTheme, ContentTheme, ForumTheme, LeaderboardsTheme,
-        PlayersTheme, StoreTheme, SupportTheme, VotesTheme,
-    },
+    theme::{SettingsTheme, SettingsThemeEditor},
 };
 
 #[derive(Debug, Clone, Copy, Routable, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
-    #[route("/login")]
-    Login {},
+    #[layout(PublicShell)]
+        #[route("/")]
+        PublicHome {},
+        #[route("/login")]
+        Login {},
+        #[route("/profile")]
+        PublicProfile {},
+        #[route("/forum")]
+        PublicForumIndex {},
+        #[route("/forum/thread/:id")]
+        PublicForumThread { id: u32 },
+        #[route("/store")]
+        PublicStore {},
+        #[route("/store/product/:id")]
+        PublicStoreProduct { id: u32 },
+        #[route("/support")]
+        PublicSupport {},
+        #[route("/support/ticket/:id")]
+        PublicSupportTicket { id: u32 },
+        #[route("/blog")]
+        PublicBlog {},
+        #[route("/blog/post/:id")]
+        PublicBlogPost { id: u32 },
+        #[route("/players")]
+        PublicPlayers {},
+        #[route("/players/:id")]
+        PublicPlayer { id: u32 },
+        #[route("/leaderboards")]
+        PublicLeaderboards {},
+        #[route("/leaderboards/:id")]
+        PublicLeaderboard { id: u32 },
+        #[route("/votes")]
+        PublicVotes {},
+        #[route("/votes/claim/:id")]
+        PublicVotesClaim { id: u32 },
+        #[route("/applications")]
+        PublicApplications {},
+        #[route("/applications/form/:id")]
+        PublicApplicationsForm { id: u32 },
+        #[route("/analytics")]
+        PublicAnalytics {},
+    #[end_layout]
 
     #[layout(AppShell)]
-        #[route("/")]
+        #[route("/admin")]
         Dashboard {},
-        #[route("/activity")]
+        #[route("/admin/activity")]
         DashboardActivity {},
 
-        #[route("/store")]
+        #[route("/admin/store")]
         StoreOverview {},
-        #[route("/store/products")]
+        #[route("/admin/store/products")]
         StoreProducts {},
-        #[route("/store/orders")]
+        #[route("/admin/store/orders")]
         StoreOrders {},
-        #[route("/store/settings")]
+        #[route("/admin/store/settings")]
         StoreSiteSettings {},
-        #[route("/store/theme")]
-        StoreTheme {},
 
-        #[route("/forum")]
+        #[route("/admin/forum")]
         ForumOverview {},
-        #[route("/forum/categories")]
+        #[route("/admin/forum/categories")]
         ForumCategories {},
-        #[route("/forum/posts")]
+        #[route("/admin/forum/posts")]
         ForumPosts {},
-        #[route("/forum/moderation")]
+        #[route("/admin/forum/moderation")]
         ForumModeration {},
-        #[route("/forum/settings")]
+        #[route("/admin/forum/settings")]
         ForumSiteSettings {},
-        #[route("/forum/theme")]
-        ForumTheme {},
 
-        #[route("/support")]
+        #[route("/admin/support")]
         SupportOverview {},
-        #[route("/support/tickets")]
+        #[route("/admin/support/tickets")]
         SupportTickets {},
-        #[route("/support/help")]
+        #[route("/admin/support/help")]
         SupportHelpCentre {},
-        #[route("/support/automation")]
+        #[route("/admin/support/automation")]
         SupportAutomation {},
-        #[route("/support/settings")]
+        #[route("/admin/support/settings")]
         SupportSiteSettings {},
-        #[route("/support/theme")]
-        SupportTheme {},
 
-        #[route("/blog")]
+        #[route("/admin/blog")]
         ContentOverview {},
-        #[route("/blog/posts")]
+        #[route("/admin/blog/posts")]
         ContentBlog {},
-        #[route("/blog/pages")]
+        #[route("/admin/blog/pages")]
         ContentPages {},
-        #[route("/blog/settings")]
+        #[route("/admin/blog/settings")]
         ContentSiteSettings {},
-        #[route("/blog/theme")]
-        ContentTheme {},
 
-        #[route("/players")]
+        #[route("/admin/players")]
         PlayersOverview {},
-        #[route("/players/profiles")]
+        #[route("/admin/players/profiles")]
         CommunityPlayers {},
-        #[route("/players/settings")]
+        #[route("/admin/players/settings")]
         PlayersSiteSettings {},
-        #[route("/players/theme")]
-        PlayersTheme {},
 
-        #[route("/leaderboards")]
+        #[route("/admin/leaderboards")]
         LeaderboardsOverview {},
-        #[route("/leaderboards/rankings")]
+        #[route("/admin/leaderboards/rankings")]
         CommunityLeaderboards {},
-        #[route("/leaderboards/settings")]
+        #[route("/admin/leaderboards/settings")]
         LeaderboardsSiteSettings {},
-        #[route("/leaderboards/theme")]
-        LeaderboardsTheme {},
 
-        #[route("/votes")]
+        #[route("/admin/votes")]
         VotesOverview {},
-        #[route("/votes/rewards")]
+        #[route("/admin/votes/rewards")]
         CommunityVotes {},
-        #[route("/votes/settings")]
+        #[route("/admin/votes/settings")]
         VotesSiteSettings {},
-        #[route("/votes/theme")]
-        VotesTheme {},
 
-        #[route("/applications")]
+        #[route("/admin/applications")]
         ApplicationsOverview {},
-        #[route("/applications/inbox")]
+        #[route("/admin/applications/inbox")]
         CommunityApplications {},
-        #[route("/applications/settings")]
+        #[route("/admin/applications/settings")]
         ApplicationsSiteSettings {},
-        #[route("/applications/theme")]
-        ApplicationsTheme {},
 
-        #[route("/analytics")]
+        #[route("/admin/analytics")]
         AnalyticsOverview {},
-        #[route("/analytics/website")]
+        #[route("/admin/analytics/website")]
         AnalyticsWebsite {},
-        #[route("/analytics/community")]
+        #[route("/admin/analytics/community")]
         AnalyticsCommunity {},
-        #[route("/analytics/gaming")]
+        #[route("/admin/analytics/gaming")]
         AnalyticsGaming {},
-        #[route("/analytics/settings")]
+        #[route("/admin/analytics/settings")]
         AnalyticsSiteSettings {},
-        #[route("/analytics/theme")]
-        AnalyticsTheme {},
 
-        #[route("/settings")]
+        #[route("/admin/settings")]
         SettingsGeneral {},
-        #[route("/settings/authentication")]
+        #[route("/admin/settings/authentication")]
         AccountsAuth {},
-        #[route("/settings/linking")]
+        #[route("/admin/settings/linking")]
         AccountsLinking {},
-        #[route("/settings/connections")]
+        #[route("/admin/settings/connections")]
         AccountsConnections {},
-        #[route("/settings/profiles")]
+        #[route("/admin/settings/profiles")]
         AccountsProfiles {},
-        #[route("/settings/roles")]
+        #[route("/admin/settings/roles")]
         AccountsRoles {},
-        #[route("/settings/localisation")]
+        #[route("/admin/settings/localisation")]
         SettingsLocalisation {},
-        #[route("/settings/developer")]
+        #[route("/admin/settings/developer")]
         SettingsDeveloper {},
-        #[route("/settings/integrations")]
+        #[route("/admin/settings/integrations")]
         SettingsIntegrations {},
-        #[route("/settings/security")]
+        #[route("/admin/settings/security")]
         SettingsSecurity {},
-        #[route("/settings/hosting")]
+        #[route("/admin/settings/hosting")]
         SettingsHosting {},
+        #[route("/admin/settings/theme")]
+        SettingsTheme {},
+        #[route("/admin/settings/theme/edit")]
+        SettingsThemeEditor {},
 
-        #[route("/account")]
+        #[route("/admin/account")]
         Account {},
 }

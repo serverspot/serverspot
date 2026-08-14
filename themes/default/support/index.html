@@ -1,0 +1,71 @@
+<div class="spot-page">
+  @include('assets/header')
+
+  <div class="spot-shell">
+    @include('assets/rail')
+
+    <main class="spot-main">
+      <nav class="spot-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <span class="active">Support</span>
+      </nav>
+
+      <div class="spot-section-head">
+        <div>
+          <span class="spot-eyebrow">We're here to help</span>
+          <h1 class="spot-page-title">Support</h1>
+          <p>Open a ticket and a staff member will pick it up, usually within a few hours.</p>
+        </div>
+        <a class="spot-btn small" href="/support">New ticket</a>
+      </div>
+
+      <div class="spot-card">
+        @foreach (items as item)
+          <a class="spot-board-row" href="{{ item.href }}">
+            <div class="spot-board-icon"><i class="fa-solid fa-ticket"></i></div>
+            <div class="spot-board-copy">
+              <h3>{{ item.name }}</h3>
+              <p>{{ item.description }}</p>
+            </div>
+            <div class="spot-board-meta">
+              <span>{{ item.meta }}</span>
+            </div>
+          </a>
+        @endforeach
+      </div>
+
+      <div class="spot-section-head">
+        <div>
+          <span class="spot-eyebrow">Before you ask</span>
+          <h2 class="spot-page-title">Common topics</h2>
+        </div>
+      </div>
+
+      <div class="spot-topic-grid">
+        <a class="spot-topic" href="/support">
+          <span class="spot-board-icon"><i class="fa-solid fa-flag-checkered"></i></span>
+          <strong>Getting started</strong>
+          <span>Basics for new players</span>
+        </a>
+        <a class="spot-topic" href="/support">
+          <span class="spot-board-icon"><i class="fa-solid fa-credit-card"></i></span>
+          <strong>Store and payments</strong>
+          <span>Ranks, keys, and refunds</span>
+        </a>
+        <a class="spot-topic" href="/support">
+          <span class="spot-board-icon"><i class="fa-solid fa-wifi"></i></span>
+          <strong>Connection issues</strong>
+          <span>Timeouts and whitelist help</span>
+        </a>
+        <a class="spot-topic" href="/support">
+          <span class="spot-board-icon"><i class="fa-solid fa-shield-halved"></i></span>
+          <strong>Report a player</strong>
+          <span>Abuse and rule breaks</span>
+        </a>
+      </div>
+    </main>
+  </div>
+
+  @include('assets/footer')
+</div>

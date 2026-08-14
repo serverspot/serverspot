@@ -6787,6 +6787,8 @@ dependencies = [
  "anyhow",
  "dioxus",
  "dotenvy",
+ "serde",
+ "serde_json",
  "sha2",
  "surrealdb",
 ]
