@@ -1,7 +1,8 @@
 use dioxus::prelude::*;
 
+use crate::server_funcs::get_theme_config;
 use crate::theme::{
-    css_custom_properties, get_theme_config, load_merged_config, public_content_security_policy,
+    css_custom_properties, load_merged_config, public_content_security_policy,
     read_theme_source_shared, render_template, sanitize_css_bundle, sanitize_css_image_url,
     theme_css_bundle, TemplateContext, TemplateValue, ThemeConfigState, ACTIVE_THEME,
 };

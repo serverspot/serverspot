@@ -7,10 +7,11 @@ use crate::components::page::{DataPanel, PageHeader};
 use crate::components::syntax::highlighted_html;
 use crate::components::ui::*;
 use crate::router::Route;
-use crate::theme::{
-    get_theme_config, reset_theme_config, save_theme_config, upload_theme_config_image,
-    SchemaOption, SchemaOptionType, ThemeConfigState,
+use crate::server_funcs::{
+    delete_theme_file, get_theme_config, list_theme_files, reset_theme_config, save_theme_config,
+    upload_theme_config_image, write_theme_file,
 };
+use crate::theme::{SchemaOption, SchemaOptionType, ThemeConfigState};
 
 #[component]
 pub fn SettingsTheme() -> Element {
@@ -882,7 +883,7 @@ fn ThemeFileEditor() -> Element {
             return;
         }
         spawn(async move {
-            if let Ok(entries) = crate::theme::list_theme_files().await {
+            if let Ok(entries) = list_theme_files().await {
                 if !entries.is_empty() {
                     let next = ThemeEditor::from_entries(entries);
                     let body = next.active_body();
@@ -943,7 +944,7 @@ fn ThemeFileEditor() -> Element {
                                     .get(editor.read().active as usize)
                                     .map(|file| file.path.to_string());
                                 if let Some(path) = path {
-                                    match crate::theme::write_theme_file(path, text).await {
+                                    match write_theme_file(path, text).await {
                                         Ok(()) => {
                                             dirty.set(false);
                                             status.set(StatusMsg::Saved);
@@ -971,7 +972,7 @@ fn ThemeFileEditor() -> Element {
                                     dirty.set(false);
                                     status.set(StatusMsg::Deleted);
                                     spawn(async move {
-                                        let _ = crate::theme::delete_theme_file(path).await;
+                                        let _ = delete_theme_file(path).await;
                                     });
                                 }
                                 Err(()) => {

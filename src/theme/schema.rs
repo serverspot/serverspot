@@ -2,7 +2,6 @@
 
 use std::collections::BTreeMap;
 
-use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[allow(unused_imports)]
@@ -291,123 +290,74 @@ fn detect_image_content_type(bytes: &[u8]) -> Option<&'static str> {
     }
 }
 
-#[server]
-pub async fn get_theme_config() -> Result<ThemeConfigState, ServerFnError> {
-    load_merged_config(ACTIVE_THEME).map_err(ServerFnError::new)
-}
-
-#[server]
-pub async fn save_theme_config(values: BTreeMap<String, String>) -> Result<(), ServerFnError> {
-    crate::theme::security::require_admin_editor_access().await?;
-    let schema = load_theme_schema(ACTIVE_THEME).map_err(ServerFnError::new)?;
+#[cfg(feature = "server")]
+pub(crate) fn persist_theme_config(values: BTreeMap<String, String>) -> Result<(), String> {
+    let schema = load_theme_schema(ACTIVE_THEME)?;
     let mut cleaned = BTreeMap::new();
     for option in &schema.options {
         let Some(value) = values.get(&option.id) else {
             continue;
         };
-        validate_value_for_type(option.option_type.clone(), value)
-            .map_err(ServerFnError::new)?;
+        validate_value_for_type(option.option_type.clone(), value)?;
         cleaned.insert(option.id.clone(), value.trim().to_string());
     }
 
-    #[cfg(feature = "server")]
-    {
-        std::fs::create_dir_all("data").map_err(|error| ServerFnError::new(error.to_string()))?;
-        let payload = ThemeConfigValues { values: cleaned };
-        let raw = serde_json::to_string_pretty(&payload)
-            .map_err(|error| ServerFnError::new(error.to_string()))?;
-        std::fs::write(CONFIG_PATH, raw).map_err(|error| ServerFnError::new(error.to_string()))?;
-        return Ok(());
-    }
-
-    #[cfg(not(feature = "server"))]
-    {
-        let _ = cleaned;
-        Err(ServerFnError::new(
-            "saving theme config requires the server runtime",
-        ))
-    }
+    std::fs::create_dir_all("data").map_err(|error| error.to_string())?;
+    let payload = ThemeConfigValues { values: cleaned };
+    let raw = serde_json::to_string_pretty(&payload).map_err(|error| error.to_string())?;
+    std::fs::write(CONFIG_PATH, raw).map_err(|error| error.to_string())?;
+    Ok(())
 }
 
-#[server]
-pub async fn reset_theme_config() -> Result<(), ServerFnError> {
-    crate::theme::security::require_admin_editor_access().await?;
-    #[cfg(feature = "server")]
-    {
-        if std::path::Path::new(CONFIG_PATH).exists() {
-            std::fs::remove_file(CONFIG_PATH)
-                .map_err(|error| ServerFnError::new(error.to_string()))?;
-        }
-        return Ok(());
+#[cfg(feature = "server")]
+pub(crate) fn reset_theme_config_file() -> Result<(), String> {
+    if std::path::Path::new(CONFIG_PATH).exists() {
+        std::fs::remove_file(CONFIG_PATH).map_err(|error| error.to_string())?;
     }
-
-    #[cfg(not(feature = "server"))]
-    {
-        Err(ServerFnError::new(
-            "resetting theme config requires the server runtime",
-        ))
-    }
+    Ok(())
 }
 
-#[server]
-pub async fn upload_theme_config_image(
-    option_id: String,
-    file_name: String,
-    bytes: Vec<u8>,
-) -> Result<String, ServerFnError> {
+#[cfg(feature = "server")]
+pub(crate) fn store_theme_config_image(
+    option_id: &str,
+    file_name: &str,
+    bytes: &[u8],
+) -> Result<String, String> {
     const MAX_IMAGE_SIZE: usize = 6 * 1024 * 1024;
 
-    crate::theme::security::require_admin_editor_access().await?;
-    let option_id = sanitize_option_id_for_path(option_id.trim()).map_err(ServerFnError::new)?;
-    let schema = load_theme_schema(ACTIVE_THEME).map_err(ServerFnError::new)?;
+    let option_id = sanitize_option_id_for_path(option_id.trim())?;
+    let schema = load_theme_schema(ACTIVE_THEME)?;
     let option = schema
         .option(&option_id)
-        .ok_or_else(|| ServerFnError::new(format!("unknown option `{option_id}`")))?;
+        .ok_or_else(|| format!("unknown option `{option_id}`"))?;
     if option.option_type != SchemaOptionType::Image {
-        return Err(ServerFnError::new(format!(
-            "option `{option_id}` is not an image field"
-        )));
+        return Err(format!("option `{option_id}` is not an image field"));
     }
     if bytes.is_empty() {
-        return Err(ServerFnError::new("The selected image is empty"));
+        return Err("The selected image is empty".into());
     }
     if bytes.len() > MAX_IMAGE_SIZE {
-        return Err(ServerFnError::new("Images must be 6 MB or smaller"));
+        return Err("Images must be 6 MB or smaller".into());
     }
 
-    #[cfg(feature = "server")]
-    {
-        let content_type = detect_image_content_type(&bytes)
-            .ok_or_else(|| ServerFnError::new("Use a valid PNG, JPEG, WebP, or GIF image"))?;
-        let _ = file_name;
-        std::fs::create_dir_all(ASSET_DIR)
-            .map_err(|error| ServerFnError::new(error.to_string()))?;
-        let bin_path = format!("{ASSET_DIR}/{option_id}.bin");
-        let mime_path = format!("{ASSET_DIR}/{option_id}.mime");
-        std::fs::write(&bin_path, &bytes)
-            .map_err(|error| ServerFnError::new(error.to_string()))?;
-        std::fs::write(&mime_path, content_type)
-            .map_err(|error| ServerFnError::new(error.to_string()))?;
+    let content_type = detect_image_content_type(bytes)
+        .ok_or_else(|| "Use a valid PNG, JPEG, WebP, or GIF image".to_string())?;
+    let _ = file_name;
+    std::fs::create_dir_all(ASSET_DIR).map_err(|error| error.to_string())?;
+    let bin_path = format!("{ASSET_DIR}/{option_id}.bin");
+    let mime_path = format!("{ASSET_DIR}/{option_id}.mime");
+    std::fs::write(&bin_path, bytes).map_err(|error| error.to_string())?;
+    std::fs::write(&mime_path, content_type).map_err(|error| error.to_string())?;
 
-        let mut overrides = load_config_overrides();
-        let public_url = public_image_url(&option_id);
-        overrides.values.insert(option_id.clone(), public_url.clone());
-        let raw = serde_json::to_string_pretty(&overrides)
-            .map_err(|error| ServerFnError::new(error.to_string()))?;
-        std::fs::create_dir_all("data")
-            .map_err(|error| ServerFnError::new(error.to_string()))?;
-        std::fs::write(CONFIG_PATH, raw)
-            .map_err(|error| ServerFnError::new(error.to_string()))?;
-        Ok(public_url)
-    }
-
-    #[cfg(not(feature = "server"))]
-    {
-        let _ = (option_id, file_name, bytes);
-        Err(ServerFnError::new(
-            "uploading theme images requires the server runtime",
-        ))
-    }
+    let mut overrides = load_config_overrides();
+    let public_url = public_image_url(&option_id);
+    overrides
+        .values
+        .insert(option_id.clone(), public_url.clone());
+    let raw = serde_json::to_string_pretty(&overrides).map_err(|error| error.to_string())?;
+    std::fs::create_dir_all("data").map_err(|error| error.to_string())?;
+    std::fs::write(CONFIG_PATH, raw).map_err(|error| error.to_string())?;
+    Ok(public_url)
 }
 
 #[cfg(test)]

@@ -3,8 +3,6 @@ use std::{
     sync::{Arc, OnceLock, RwLock},
 };
 
-use dioxus::prelude::*;
-
 #[allow(unused_imports)]
 use crate::theme::registry::{is_required_theme_path, root_required_files, theme_features};
 
@@ -211,17 +209,12 @@ fn language_for(path: &str) -> &'static str {
     }
 }
 
-#[server]
-pub async fn list_theme_files() -> Result<Vec<ThemeFileEntry>, ServerFnError> {
-    crate::theme::security::require_admin_editor_access().await?;
+#[cfg(feature = "server")]
+pub(crate) fn list_theme_file_entries() -> Result<Vec<ThemeFileEntry>, String> {
     let mut entries = Vec::new();
-
-    #[cfg(feature = "server")]
-    {
-        let root = std::path::PathBuf::from(format!("themes/{ACTIVE_THEME}"));
-        if root.exists() {
-            collect_pack_dir(&root, "", &mut entries)?;
-        }
+    let root = std::path::PathBuf::from(format!("themes/{ACTIVE_THEME}"));
+    if root.exists() {
+        collect_pack_dir(&root, "", &mut entries)?;
     }
 
     if entries.is_empty() {
@@ -237,10 +230,10 @@ fn collect_pack_dir(
     dir: &std::path::Path,
     prefix: &str,
     out: &mut Vec<ThemeFileEntry>,
-) -> Result<(), ServerFnError> {
+) -> Result<(), String> {
     use std::fs;
-    for entry in fs::read_dir(dir).map_err(|e| ServerFnError::new(e.to_string()))? {
-        let entry = entry.map_err(|e| ServerFnError::new(e.to_string()))?;
+    for entry in fs::read_dir(dir).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
         let path = entry.path();
         let name = path
             .file_name()
@@ -259,7 +252,7 @@ fn collect_pack_dir(
             collect_pack_dir(&path, &rel, out)?;
             continue;
         }
-        let content = fs::read_to_string(&path).map_err(|e| ServerFnError::new(e.to_string()))?;
+        let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         out.push(ThemeFileEntry {
             path: rel.clone(),
             language: language_for(&name).to_string(),
@@ -270,88 +263,52 @@ fn collect_pack_dir(
     Ok(())
 }
 
-#[server]
-pub async fn read_theme_file(path: String) -> Result<String, ServerFnError> {
-    crate::theme::security::require_admin_editor_access().await?;
-    let path = crate::theme::security::sanitize_pack_relative_path(&path)
-        .map_err(ServerFnError::new)?;
+#[cfg(feature = "server")]
+pub(crate) fn read_theme_file_from_pack(path: &str) -> Result<String, String> {
+    let path = crate::theme::security::sanitize_pack_relative_path(path)?;
     let logical = format!("{ACTIVE_THEME}/{path}");
-
-    #[cfg(feature = "server")]
-    {
-        let disk = crate::theme::security::resolve_disk_path_inside_theme(&path)
-            .map_err(ServerFnError::new)?;
-        if disk.exists() {
-            let content =
-                std::fs::read_to_string(disk).map_err(|e| ServerFnError::new(e.to_string()))?;
-            if content.len() > crate::theme::security::MAX_THEME_FILE_BYTES {
-                return Err(ServerFnError::new("theme file is too large"));
-            }
-            return Ok(content);
+    let disk = crate::theme::security::resolve_disk_path_inside_theme(&path)?;
+    if disk.exists() {
+        let content = std::fs::read_to_string(disk).map_err(|e| e.to_string())?;
+        if content.len() > crate::theme::security::MAX_THEME_FILE_BYTES {
+            return Err("theme file is too large".into());
         }
+        return Ok(content);
     }
 
-    read_theme_source(&logical).ok_or_else(|| ServerFnError::new("theme file not found"))
+    read_theme_source(&logical).ok_or_else(|| "theme file not found".into())
 }
 
-#[server]
-pub async fn write_theme_file(path: String, content: String) -> Result<(), ServerFnError> {
-    crate::theme::security::require_admin_editor_access().await?;
-    let path = crate::theme::security::sanitize_pack_relative_path(&path)
-        .map_err(ServerFnError::new)?;
+#[cfg(feature = "server")]
+pub(crate) fn write_theme_file_to_disk(path: &str, content: &str) -> Result<(), String> {
+    let path = crate::theme::security::sanitize_pack_relative_path(path)?;
     if content.len() > crate::theme::security::MAX_THEME_FILE_BYTES {
-        return Err(ServerFnError::new("theme file is too large"));
+        return Err("theme file is too large".into());
     }
     if path == "schema.json" {
-        crate::theme::schema::parse_schema_json(&content).map_err(ServerFnError::new)?;
+        crate::theme::schema::parse_schema_json(content)?;
     }
 
-    #[cfg(feature = "server")]
-    {
-        let disk = crate::theme::security::resolve_disk_path_inside_theme(&path)
-            .map_err(ServerFnError::new)?;
-        if let Some(parent) = disk.parent() {
-            std::fs::create_dir_all(parent).map_err(|e| ServerFnError::new(e.to_string()))?;
-        }
-        std::fs::write(disk, content).map_err(|e| ServerFnError::new(e.to_string()))?;
-        invalidate_theme_caches();
-        return Ok(());
+    let disk = crate::theme::security::resolve_disk_path_inside_theme(&path)?;
+    if let Some(parent) = disk.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-
-    #[cfg(not(feature = "server"))]
-    {
-        let _ = (path, content);
-        Err(ServerFnError::new(
-            "writing theme files requires the server runtime",
-        ))
-    }
+    std::fs::write(disk, content).map_err(|e| e.to_string())?;
+    invalidate_theme_caches();
+    Ok(())
 }
 
-#[server]
-pub async fn delete_theme_file(path: String) -> Result<(), ServerFnError> {
-    crate::theme::security::require_admin_editor_access().await?;
-    let path = crate::theme::security::sanitize_pack_relative_path(&path)
-        .map_err(ServerFnError::new)?;
+#[cfg(feature = "server")]
+pub(crate) fn delete_theme_file_from_disk(path: &str) -> Result<(), String> {
+    let path = crate::theme::security::sanitize_pack_relative_path(path)?;
     if is_required_theme_path(&path) {
-        return Err(ServerFnError::new("required theme pages cannot be deleted"));
+        return Err("required theme pages cannot be deleted".into());
     }
 
-    #[cfg(feature = "server")]
-    {
-        let disk = crate::theme::security::resolve_disk_path_inside_theme(&path)
-            .map_err(ServerFnError::new)?;
-        if disk.exists() {
-            std::fs::remove_file(&disk).map_err(|e| ServerFnError::new(e.to_string()))?;
-        }
-        invalidate_theme_caches();
-        return Ok(());
+    let disk = crate::theme::security::resolve_disk_path_inside_theme(&path)?;
+    if disk.exists() {
+        std::fs::remove_file(&disk).map_err(|e| e.to_string())?;
     }
-
-    #[cfg(not(feature = "server"))]
-    {
-        let _ = path;
-        Err(ServerFnError::new(
-            "deleting theme files requires the server runtime",
-        ))
-    }
+    invalidate_theme_caches();
+    Ok(())
 }
