@@ -1,8 +1,14 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
+
 use crate::components::brand::BrandMark;
+
 #[component]
 pub fn LoadingScreen() -> Element {
+    let _lang = i18n();
     let mut mounted = use_signal(|| true);
+
     use_effect(move || {
         spawn(async move {
             let mut eval = document::eval(
@@ -12,23 +18,23 @@ pub fn LoadingScreen() -> Element {
             mounted.set(false);
         });
     });
+
     if !mounted() {
         return rsx! {};
     }
+
     rsx! {
         div {
             class: "splash-screen fixed inset-0 z-[100] flex flex-col items-center justify-center",
-            style: "background: #1c1c24; color: #f4f4f7;",
             aria_busy: "true",
             aria_live: "polite",
-            div { class: "flex flex-col items-center gap-8 px-6",
-                BrandMark { class: "splash-logo h-16 w-16 sm:h-20 sm:w-20" }
-                div { class: "splash-bar-track",
-                    div { class: "splash-bar-fill" }
+
+            div { class: "splash-inner",
+                div { class: "splash-mark",
+                    BrandMark { class: "splash-mark-base" }
+                    BrandMark { class: "splash-mark-fill" }
                 }
-                p { class: "splash-label text-xs font-medium tracking-[0.18em] uppercase text-text-muted",
-                    "Loading"
-                }
+                p { class: "splash-label", { t!("loading-label") } }
             }
         }
     }

@@ -1,475 +1,560 @@
 use dioxus::prelude::*;
-use crate::components::page::{
-    DataPanel, InfoCard, PageHeader, RowItem, StatPill, StatusChip,
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
+
+use crate::components::community::{
+    placeholder_players, placeholder_vote_sites, vote_site_status_class, vote_site_status_label,
+    Application, ApplicationStatus, BoardPodium, BoardReset, BoardStandings, LeaderboardBoard,
+    Player, PlayerStatus, PlayersLeaderboardsStyles, VoteReward, VotesApplicationsStyles,
+    VoteSiteStatus,
 };
+use crate::components::page::{DataPanel, PageHeader, RowItem, StatPill};
 use crate::components::ui::*;
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum FeatureOverviewKind {
-    Store,
-    Forum,
-    Support,
-    Content,
-    Players,
-    Leaderboards,
-    Votes,
-    Applications,
-    Analytics,
-}
-#[derive(Clone, Copy)]
-struct OverviewCopy {
-    title: &'static str,
-    subtitle: &'static str,
-    about: &'static str,
-    accent: &'static str,
-    domain: &'static str,
-    status: &'static str,
-    stats: [(&'static str, &'static str); 4],
-    highlights: [&'static str; 5],
-    activity: [(&'static str, &'static str, &'static str); 4],
-    next_steps: [(&'static str, &'static str); 3],
-}
-impl FeatureOverviewKind {
-    const fn data(self) -> OverviewCopy {
-        match self {
-            Self::Store => {
-                OverviewCopy {
-                    title: "Store",
-                    subtitle: "Sell ranks, crates, and packages with checkout, coupons, and stock controls.",
-                    about: "The web store lets players browse packages, apply coupons, gift purchases, and receive rewards automatically across your connected game servers.",
-                    accent: "#3ecf8e",
-                    domain: "www.example.com/store",
-                    status: "Live",
-                    stats: [
-                        ("Revenue", "£4,281"),
-                        ("Orders", "96"),
-                        ("Products", "28"),
-                        ("Conversion", "3.8%"),
-                    ],
-                    highlights: [
-                        "Product catalog with ranks, items, and bundles",
-                        "Coupons, gifts, and creator codes",
-                        "Order tracking and refunds",
-                        "Storefront theme on your main website",
-                        "Delivery to game servers and Discord roles",
-                    ],
-                    activity: [
-                        ("Order #4821 · VIP Rank", "NovaCraft · Paid", "£29.99"),
-                        ("Order #4818 · Crate Keys", "SkyBuilder · Paid", "£9.99"),
-                        ("Coupon SUMMER20 used", "20% off lifetime ranks", "8 uses"),
-                        ("Stock low · Cosmetics Pack", "4 left in inventory", "Alert"),
-                    ],
-                    next_steps: [
-                        ("Products", "Add or edit packages for the shop"),
-                        ("Orders", "Review payments and delivery status"),
-                        ("Settings", "Configure store path and branding"),
-                    ],
-                }
-            }
-            Self::Forum => {
-                OverviewCopy {
-                    title: "Forum",
-                    subtitle: "Community discussion with categories, moderation, and rich posts.",
-                    about: "Forums give your players a place to share builds, suggestions, and announcements with markdown, reactions, mentions, and staff moderation tools.",
-                    accent: "#5b9dff",
-                    domain: "www.example.com/forum",
-                    status: "Live",
-                    stats: [
-                        ("Threads", "1,204"),
-                        ("Posts today", "52"),
-                        ("Members", "3,481"),
-                        ("Open reports", "3"),
-                    ],
-                    highlights: [
-                        "Categories, posts, and comments",
-                        "Markdown, reactions, and mentions",
-                        "Attachments, tags, pinning, and locking",
-                        "Reports and moderation workflows",
-                        "Permission-aware category visibility",
-                    ],
-                    activity: [
-                        ("Season 4 spawn redesign", "Survival · 24 replies", "2m"),
-                        ("Rank perks feedback", "Suggestions · 11 replies", "18m"),
-                        ("Spam report opened", "Suggestions · Review queue", "New"),
-                        ("Patch notes 1.21.4", "Announcements · Pinned", "1h"),
-                    ],
-                    next_steps: [
-                        ("Categories", "Organize boards and visibility"),
-                        ("Posts", "Browse recent threads"),
-                        ("Moderation", "Clear reports and bans"),
-                    ],
-                }
-            }
-            Self::Support => {
-                OverviewCopy {
-                    title: "Support",
-                    subtitle: "Tickets, help centre articles, and staff automation in one portal.",
-                    about: "Support combines a ticket inbox with a searchable help centre so players can get answers quickly while staff manage priorities, notes, and departments.",
-                    accent: "#f0a35e",
-                    domain: "www.example.com/support",
-                    status: "Live",
-                    stats: [
-                        ("Open tickets", "12"),
-                        ("Pending", "5"),
-                        ("Articles", "32"),
-                        ("Avg. reply", "14m"),
-                    ],
-                    highlights: [
-                        "Ticket categories and priority levels",
-                        "Staff assignment and internal notes",
-                        "Help centre FAQs and guides",
-                        "AI-assisted first replies",
-                        "Department and SLA tooling",
-                    ],
-                    activity: [
-                        (
-                            "#1842 · Payment not received",
-                            "Store · High priority",
-                            "11m",
-                        ),
-                        (
-                            "#1839 · Can't join lobby",
-                            "Gameplay · Assigned Mira",
-                            "34m",
-                        ),
-                        (
-                            "Article updated · Vote rewards",
-                            "Help centre · Featured",
-                            "1h",
-                        ),
-                        ("AI first reply rule", "Automation · Enabled", "On"),
-                    ],
-                    next_steps: [
-                        ("Tickets", "Work the staff queue"),
-                        ("Help centre", "Publish guides and FAQs"),
-                        ("Automation", "Tune AI and idle policies"),
-                    ],
-                }
-            }
-            Self::Content => {
-                OverviewCopy {
-                    title: "Blog",
-                    subtitle: "Blog posts, news, drafts, and custom pages for your audience.",
-                    about: "Blog publishing covers news, articles, and marketing pages with authors, approvals, featured placement, and scheduled publishing.",
-                    accent: "#f071a5",
-                    domain: "www.example.com/news",
-                    status: "Live",
-                    stats: [
-                        ("Published", "48"),
-                        ("Drafts", "6"),
-                        ("Scheduled", "3"),
-                        ("Authors", "5"),
-                    ],
-                    highlights: [
-                        "Blog posts and news articles",
-                        "Categories, tags, and markdown editor",
-                        "Drafts and scheduled publishing",
-                        "Author management and approvals",
-                        "Homepage and featured placement",
-                    ],
-                    activity: [
-                        ("Season 4 launch recap", "News · Published", "Today"),
-                        ("Economy changes", "Blog · Draft", "Edit"),
-                        ("Weekend crate event", "Scheduled Fri 18:00", "Queue"),
-                        ("Homepage slider updated", "3 slides · Live", "2h"),
-                    ],
-                    next_steps: [
-                        ("Posts", "Write or schedule a post"),
-                        ("Pages", "Manage custom pages and widgets"),
-                        ("Settings", "Configure blog path and branding"),
-                    ],
-                }
-            }
-            Self::Players => {
-                OverviewCopy {
-                    title: "Players",
-                    subtitle: "Dedicated gaming profiles with stats, ranks, and linked accounts.",
-                    about: "Player profiles surface playtime, achievements, ranks, and linked game identities across every server connected to the platform.",
-                    accent: "#69bdf2",
-                    domain: "www.example.com/players",
-                    status: "Live",
-                    stats: [
-                        ("Players", "1,842"),
-                        ("Linked", "1,204"),
-                        ("Games", "3"),
-                        ("Servers", "7"),
-                    ],
-                    highlights: [
-                        "Linked game accounts",
-                        "Statistics, playtime, and ranks",
-                        "Achievements and badges",
-                        "Leaderboard positions",
-                        "Multi-game and multi-server support",
-                    ],
-                    activity: [
-                        ("NovaCraft profile viewed", "VIP · Level 84", "2m"),
-                        ("SkyBuilder linked Survival", "Verification code Q1M9", "14m"),
-                        ("Badge awarded · Builder", "ClayMage", "1h"),
-                        ("New player registered", "QuietLeaf", "3h"),
-                    ],
-                    next_steps: [
-                        ("Profiles", "Browse and search players"),
-                        ("Settings", "Configure players path and branding"),
-                        ("Theme", "Customize profile presentation"),
-                    ],
-                }
-            }
-            Self::Leaderboards => {
-                OverviewCopy {
-                    title: "Leaderboards",
-                    subtitle: "Rankings and statistics across games, servers, and time ranges.",
-                    about: "Leaderboards pull stats from APIs, server plugins, or manual input so you can publish top players, economy boards, and seasonal contests.",
-                    accent: "#5eead4",
-                    domain: "www.example.com/leaderboards",
-                    status: "Live",
-                    stats: [
-                        ("Boards", "4"),
-                        ("Tracked stats", "18"),
-                        ("Data sources", "3"),
-                        ("Updates / hr", "12"),
-                    ],
-                    highlights: [
-                        "Multiple boards and games",
-                        "Custom statistics and history",
-                        "Time-based rankings",
-                        "API, plugin, and manual sources",
-                        "Public ranking pages",
-                    ],
-                    activity: [
-                        ("Top players refreshed", "Survival · Live feed", "1m"),
-                        ("Most kills weekly reset", "Skyblock board", "Sun"),
-                        ("Economy ranking spike", "SkyBuilder · #2", "22m"),
-                        ("Plugin sync healthy", "3 servers reporting", "OK"),
-                    ],
-                    next_steps: [
-                        ("Rankings", "Inspect live boards"),
-                        ("Settings", "Configure leaderboards path and branding"),
-                        ("Theme", "Style ranking presentation"),
-                    ],
-                }
-            }
-            Self::Votes => {
-                OverviewCopy {
-                    title: "Vote rewards",
-                    subtitle: "Track votes, streaks, and automatic reward delivery.",
-                    about: "Vote rewards connect listing sites to in-game commands, currency, roles, and badges, with streak tracking and claim flows for players.",
-                    accent: "#fbbf24",
-                    domain: "www.example.com/vote",
-                    status: "Live",
-                    stats: [
-                        ("Votes today", "214"),
-                        ("Streaks", "86"),
-                        ("Claims pending", "19"),
-                        ("Vote sites", "5"),
-                    ],
-                    highlights: [
-                        "Vote tracking and site integrations",
-                        "Reward claiming and streaks",
-                        "Vote leaderboards",
-                        "In-game commands, items, and roles",
-                        "Discord and server delivery",
-                    ],
-                    activity: [
-                        ("NovaCraft claimed day 7", "Streak reward delivered", "4m"),
-                        ("MinecraftServers callback", "Vote recorded", "9m"),
-                        ("Pending claims", "19 players offline", "Queue"),
-                        ("Top voter this month", "AetherFox · 128 votes", "#1"),
-                    ],
-                    next_steps: [
-                        ("Rewards", "Manage sites and claim rules"),
-                        ("Settings", "Configure vote path and branding"),
-                        ("Theme", "Customize the claim page"),
-                    ],
-                }
-            }
-            Self::Applications => {
-                OverviewCopy {
-                    title: "Applications",
-                    subtitle: "Staff recruitment forms, review workflows, and history.",
-                    about: "Applications collect custom forms for moderator, builder, and helper roles with reviewer assignment, notes, voting, and status tracking.",
-                    accent: "#fb7185",
-                    domain: "www.example.com/apply",
-                    status: "Live",
-                    stats: [
-                        ("Submitted", "7"),
-                        ("Reviewing", "3"),
-                        ("Accepted", "12"),
-                        ("Denied", "9"),
-                    ],
-                    highlights: [
-                        "Custom forms and questions",
-                        "Applicant profiles",
-                        "Review workflow and history",
-                        "Assign reviewers and add notes",
-                        "Staff voting on applications",
-                    ],
-                    activity: [
-                        ("Moderator · PixelPanda", "Submitted 2h ago", "Review"),
-                        ("Builder · ClayMage", "Reviewing · Notes added", "Vote"),
-                        ("Helper · QuietLeaf", "Submitted 3 days ago", "Assign"),
-                        ("Form published · Helper", "4 questions · Open", "Live"),
-                    ],
-                    next_steps: [
-                        ("Inbox", "Review open applications"),
-                        ("Settings", "Configure applications path and branding"),
-                        ("Theme", "Brand the application portal"),
-                    ],
-                }
-            }
-            Self::Analytics => {
-                OverviewCopy {
-                    title: "Analytics",
-                    subtitle: "Website, community, and gaming insights in one dashboard.",
-                    about: "Analytics brings together traffic, engagement, revenue, tickets, votes, and server activity with graphs, reports, and exportable datasets.",
-                    accent: "#38bdf8",
-                    domain: "www.example.com/analytics",
-                    status: "Live",
-                    stats: [
-                        ("Revenue", "£1,094"),
-                        ("Visitors", "8,420"),
-                        ("Conversion", "3.8%"),
-                        ("Ticket CSAT", "94%"),
-                    ],
-                    highlights: [
-                        "Website users and page views",
-                        "Forum and registration engagement",
-                        "Player counts, votes, and boards",
-                        "Graphs and scheduled reports",
-                        "CSV and API data exports",
-                    ],
-                    activity: [
-                        ("Weekly checkout up", "+12% vs last week", "Trend"),
-                        ("Discord traffic share", "27% of sessions", "Source"),
-                        ("Survival peak players", "412 online", "Peak"),
-                        ("Export ready · Revenue", "Last 7 days CSV", "Download"),
-                    ],
-                    next_steps: [
-                        ("Website", "Inspect traffic and pages"),
-                        ("Community", "Review engagement metrics"),
-                        ("Gaming", "Check server activity"),
-                    ],
-                }
-            }
-        }
-    }
-}
-#[component]
-pub fn StoreOverview() -> Element {
-    rsx! {
-        FeatureOverview { feature: FeatureOverviewKind::Store }
-    }
-}
-#[component]
-pub fn ForumOverview() -> Element {
-    rsx! {
-        FeatureOverview { feature: FeatureOverviewKind::Forum }
-    }
-}
-#[component]
-pub fn SupportOverview() -> Element {
-    rsx! {
-        FeatureOverview { feature: FeatureOverviewKind::Support }
-    }
-}
-#[component]
-pub fn ContentOverview() -> Element {
-    rsx! {
-        FeatureOverview { feature: FeatureOverviewKind::Content }
-    }
-}
+use crate::i18n::t_key;
+use crate::router::Route;
+
 #[component]
 pub fn PlayersOverview() -> Element {
+    let _lang = i18n();
+    let navigator = use_navigator();
+    let players = use_hook(placeholder_players);
+    let online = players
+        .iter()
+        .filter(|player| player.status == PlayerStatus::Online)
+        .count();
+    let spotlight = players.iter().copied().max_by_key(|player| player.level);
+    let recent: Vec<Player> = use_hook(|| {
+        let mut list = placeholder_players();
+        list.sort_by(|a, b| b.level.cmp(&a.level));
+        list.into_iter().take(4).collect()
+    });
+
     rsx! {
-        FeatureOverview { feature: FeatureOverviewKind::Players }
-    }
-}
-#[component]
-pub fn LeaderboardsOverview() -> Element {
-    rsx! {
-        FeatureOverview { feature: FeatureOverviewKind::Leaderboards }
-    }
-}
-#[component]
-pub fn VotesOverview() -> Element {
-    rsx! {
-        FeatureOverview { feature: FeatureOverviewKind::Votes }
-    }
-}
-#[component]
-pub fn ApplicationsOverview() -> Element {
-    rsx! {
-        FeatureOverview { feature: FeatureOverviewKind::Applications }
-    }
-}
-#[component]
-pub fn AnalyticsOverview() -> Element {
-    rsx! {
-        FeatureOverview { feature: FeatureOverviewKind::Analytics }
-    }
-}
-#[component]
-fn FeatureOverview(feature: FeatureOverviewKind) -> Element {
-    let copy = feature.data();
-    rsx! {
+        PlayersLeaderboardsStyles {}
         PageHeader {
-            title: copy.title,
-            subtitle: copy.subtitle,
-            Button { variant: ButtonVariant::Secondary, "View on website" }
+            title: t_key("feature-overview-players-title"),
+            subtitle: t_key("community-players-subtitle"),
+            action: rsx! {
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    onclick: move |_| {
+                        navigator.push(Route::CommunityPlayers {});
+                    },
+                    { t!("feature-overview-open-roster") }
+                }
+            },
         }
-        div { class: "mb-6 flex flex-wrap items-center gap-2",
-            StatusChip { label: copy.status, tone: copy.accent }
-            span { class: "rounded-squircle-sm border border-border-subtle bg-surface/40 px-2.5 py-1 font-mono text-xs text-text-muted",
-                "{copy.domain}"
+
+        section { class: "motion-cascade stat-strip mb-8",
+            StatPill { label: t_key("feature-overview-total-players"), value: "1,842", accent: "#69bdf2" }
+            StatPill { label: t_key("feature-overview-linked-accounts"), value: "1,204", accent: "#3ecf8e" }
+            StatPill {
+                label: t_key("feature-overview-online-now"),
+                value: online.to_string(),
+                accent: "#5b9dff",
+            }
+            StatPill { label: t_key("feature-overview-servers"), value: "7", accent: "#87d1fe" }
+        }
+
+        if let Some(player) = spotlight {
+            div { class: "roster-spotlight",
+                span { class: "roster-spotlight-ribbon", { t!("feature-overview-spotlight") } }
+                Avatar { email: player.email, size: 64, alt: player.username }
+                div { class: "min-w-0",
+                    div { class: "flex flex-wrap items-center gap-2",
+                        p { class: "text-lg font-semibold tracking-tight text-text",
+                            "{player.username}"
+                        }
+                        span {
+                            class: "roster-rank-badge",
+                            style: "--badge-color: {player.rank.tone()};",
+                            "{player.rank.label()}"
+                        }
+                    }
+                    p { class: "mt-1 max-w-md text-sm text-text-muted", "{player.bio}" }
+                    Button {
+                        class: "mt-3",
+                        variant: ButtonVariant::Secondary,
+                        size: ButtonSize::Sm,
+                        onclick: move |_| {
+                            navigator
+                                .push(Route::PlayersProfileDetail {
+                                    id: player.id,
+                                });
+                        },
+                        { t!("feature-overview-open-file") }
+                    }
+                }
+                div { class: "roster-spotlight-stats",
+                    div { class: "roster-spotlight-stat",
+                        p { class: "roster-spotlight-stat-value", "{player.level}" }
+                        p { class: "roster-spotlight-stat-label", { t!("community-label-level") } }
+                    }
+                    div { class: "roster-spotlight-stat",
+                        p { class: "roster-spotlight-stat-value", "{player.playtime_hours}h" }
+                        p { class: "roster-spotlight-stat-label", { t!("community-label-playtime") } }
+                    }
+                    div { class: "roster-spotlight-stat",
+                        p { class: "roster-spotlight-stat-value", "{player.votes}" }
+                        p { class: "roster-spotlight-stat-label", { t!("community-label-votes") } }
+                    }
+                }
             }
         }
-        section { class: "mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 md:grid-cols-4",
-            for (label, value) in copy.stats {
-                StatPill { label, value, accent: copy.accent }
+
+        section { class: "mb-2 flex items-baseline justify-between gap-3",
+            h2 { class: "text-sm font-semibold text-text", { t!("feature-overview-recently-active") } }
+            button {
+                class: "text-xs font-semibold transition-colors",
+                style: "color: #69bdf2;",
+                r#type: "button",
+                onclick: move |_| {
+                    navigator.push(Route::CommunityPlayers {});
+                },
+                { t!("feature-overview-full-roster") }
             }
         }
-        div { class: "mb-6",
-            InfoCard { title: "About this feature", body: copy.about }
-        }
-        div { class: "grid gap-4 lg:grid-cols-2",
-            DataPanel { title: "What it includes",
-                ul { class: "space-y-2.5",
-                    for text in copy.highlights {
-                        li { class: "flex gap-2.5 text-sm text-text-secondary",
-                            span { class: "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" }
-                            span { "{text}" }
+        div { class: "motion-cascade motion-cascade-tight roster-recent",
+            for player in recent {
+                {
+                    let player_id = player.id;
+                    rsx! {
+                        button {
+                            key: "{player.id}",
+                            class: "roster-recent-row",
+                            r#type: "button",
+                            onclick: move |_| {
+                                navigator
+                                    .push(Route::PlayersProfileDetail {
+                                        id: player_id,
+                                    });
+                            },
+                            Avatar { email: player.email, size: 36, alt: player.username }
+                            div { class: "min-w-0 flex-1",
+                                p { class: "truncate text-sm font-medium text-text", "{player.username}" }
+                                p { class: "mt-0.5 truncate text-xs text-text-muted",
+                                    { t!("community-level-rank-line", rank: player.rank.label(), level: player.level) }
+                                }
+                            }
+                            span { class: "text-xs text-text-muted", "{player.last_seen}" }
                         }
                     }
                 }
             }
-            DataPanel { title: "Recent activity",
-                for (title, meta, trailing) in copy.activity {
-                    RowItem { title, meta, trailing }
+        }
+    }
+}
+
+#[component]
+pub fn LeaderboardsOverview() -> Element {
+    let _lang = i18n();
+    let navigator = use_navigator();
+    let boards = use_context::<Signal<Vec<LeaderboardBoard>>>();
+    let board_count = use_memo(move || boards.read().len());
+    let with_rewards = use_memo(move || {
+        boards
+            .read()
+            .iter()
+            .filter(|b| !b.rewards.is_empty())
+            .count()
+    });
+    let next_reset = use_memo(move || {
+        boards
+            .read()
+            .iter()
+            .filter(|b| b.reset != BoardReset::Never)
+            .map(|b| b.reset.label())
+            .next()
+            .unwrap_or_else(|| t_key("community-board-reset-none"))
+    });
+    let ranked_players =
+        use_memo(move || boards.read().iter().map(|b| b.entries.len()).sum::<usize>());
+    let boards_now = use_memo(move || boards());
+
+    rsx! {
+        PlayersLeaderboardsStyles {}
+
+        div { class: "board-console-masthead",
+            div { class: "min-w-0",
+                p { class: "board-console-eyebrow", { t!("community-leaderboard-admin") } }
+                h1 { class: "board-console-title", { t!("feature-overview-boards-live", count: board_count()) } }
+                p { class: "board-console-sub",
+                    { t!("feature-overview-boards-sub") }
                 }
             }
-            DataPanel { title: "Suggested next steps",
-                for (title, meta) in copy.next_steps {
-                    RowItem { title, meta, trailing: "Open" }
+            div { class: "flex flex-wrap items-center gap-2",
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    size: ButtonSize::Sm,
+                    onclick: move |_| {
+                        navigator.push(Route::CommunityLeaderboards {});
+                    },
+                    { t!("feature-overview-all-boards") }
+                }
+                Button {
+                    size: ButtonSize::Sm,
+                    onclick: move |_| {
+                        navigator.push(Route::LeaderboardsBoardNew {});
+                    },
+                    IconPlus {}
+                    { t!("community-new-board") }
                 }
             }
-            DataPanel { title: "Quick status",
+        }
+
+        section { class: "motion-cascade board-stat-strip",
+            div { class: "board-stat-tile",
+                span { class: "board-stat-tile-label", { t!("feature-overview-stat-boards") } }
+                span { class: "board-stat-tile-value", "{board_count}" }
+                span { class: "board-stat-tile-meta", { t!("feature-overview-stat-boards-meta") } }
+            }
+            div { class: "board-stat-tile",
+                span { class: "board-stat-tile-label", { t!("feature-overview-stat-with-rewards") } }
+                span { class: "board-stat-tile-value", "{with_rewards}" }
+                span { class: "board-stat-tile-meta", { t!("feature-overview-stat-with-rewards-meta") } }
+            }
+            div { class: "board-stat-tile",
+                span { class: "board-stat-tile-label", { t!("feature-overview-stat-ranked-seats") } }
+                span { class: "board-stat-tile-value", "{ranked_players}" }
+                span { class: "board-stat-tile-meta", { t!("feature-overview-stat-ranked-seats-meta") } }
+            }
+            div { class: "board-stat-tile",
+                span { class: "board-stat-tile-label", { t!("feature-overview-stat-next-reset") } }
+                span { class: "board-stat-tile-value", "{next_reset}" }
+                span { class: "board-stat-tile-meta", { t!("feature-overview-stat-next-reset-meta") } }
+            }
+        }
+
+        if boards_now().is_empty() {
+            p { class: "text-sm text-text-muted",
+                { t!("community-boards-empty") }
+            }
+        } else {
+            div { class: "motion-cascade board-card-grid",
+                for board in boards_now() {
+                    {
+                        let board_id = board.id;
+                        let top: Vec<_> = board.entries.iter().copied().take(3).collect();
+                        let rest: Vec<_> = board.entries.iter().copied().skip(3).take(3).collect();
+                        let reward_line = board
+                            .rewards
+                            .first()
+                            .map(|r| {
+                                format!("#{place} · {summary}", place = r.place, summary = r.summary)
+                            })
+                            .unwrap_or_else(|| t_key("community-no-rank-rewards"));
+                        rsx! {
+                            article {
+                                key: "{board.id}",
+                                class: "board-card",
+                                style: "--board-accent: {board.accent}",
+                                div { class: "board-card-head",
+                                    div { class: "min-w-0",
+                                        h2 { class: "board-card-title", "{board.name}" }
+                                        p { class: "board-card-meta",
+                                            { t!("community-board-ranked-meta", count: board.entries.len(), source: board.source.label()) }
+                                        }
+                                    }
+                                    div { class: "board-card-chips",
+                                        span { class: "board-chip is-accent", "{board.stat.label()}" }
+                                        span { class: "board-chip", "{board.reset.label()}" }
+                                    }
+                                }
+
+                                BoardPodium { entries: top }
+                                BoardStandings { entries: rest, skip_top: 0 }
+
+                                div { class: "board-card-foot",
+                                    div { class: "board-card-reward",
+                                        strong { "{board.rewards.len()}" }
+                                        span { "{reward_line}" }
+                                    }
+                                    div { class: "board-card-actions",
+                                        button {
+                                            r#type: "button",
+                                            class: "board-card-btn is-primary",
+                                            onclick: move |_| {
+                                                navigator
+                                                    .push(Route::LeaderboardsBoardEdit {
+                                                        id: board_id,
+                                                    });
+                                            },
+                                            { t!("feature-overview-open-board") }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn VotesOverview() -> Element {
+    let _lang = i18n();
+    let rewards = use_context::<Signal<Vec<VoteReward>>>();
+    let navigator = use_navigator();
+    let list = use_memo(move || rewards());
+    let sites = use_hook(placeholder_vote_sites);
+    let votes_today: u32 = sites.iter().map(|s| s.votes_today).sum();
+    let live = sites
+        .iter()
+        .filter(|s| s.status == VoteSiteStatus::Live)
+        .count();
+    let enabled_rewards = list().iter().filter(|r| r.active).count();
+    let top_rewards = use_memo(move || {
+        let mut top = list();
+        top.sort_by(|a, b| b.claims.cmp(&a.claims));
+        top.into_iter().take(3).collect::<Vec<_>>()
+    });
+
+    rsx! {
+        VotesApplicationsStyles {}
+        div { class: "vote-console-masthead",
+            div { class: "min-w-0",
+                p { class: "vote-console-eyebrow", { t!("feature-overview-vote-console") } }
+                h1 { class: "vote-console-title",
+                    { t!("feature-overview-vote-sites-live", live: live, total: sites.len()) }
+                }
+                p { class: "vote-console-sub",
+                    { t!("feature-overview-vote-summary", votes: votes_today, rewards: enabled_rewards) }
+                }
+            }
+            div { class: "flex flex-wrap items-center gap-2",
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    size: ButtonSize::Sm,
+                    onclick: move |_| {
+                        navigator.push(Route::VotesSiteSettings {});
+                    },
+                    { t!("feature-overview-sites-callbacks") }
+                }
+                Button {
+                    size: ButtonSize::Sm,
+                    onclick: move |_| {
+                        navigator.push(Route::CommunityVotes {});
+                    },
+                    { t!("nav-sub-rewards") }
+                }
+            }
+        }
+
+        section { class: "vote-site-panel",
+            div { class: "vote-site-panel-head",
+                h2 { class: "text-sm font-semibold text-text", { t!("feature-overview-connected-sites") } }
+                span { class: "text-xs text-text-muted", { t!("feature-overview-callback-refresh") } }
+            }
+            div { class: "vote-site-table",
+                div { class: "vote-site-row is-head",
+                    span { { t!("feature-overview-col-site") } }
+                    span { { t!("feature-overview-col-status") } }
+                    span { { t!("feature-overview-col-votes-today") } }
+                    span { { t!("feature-overview-col-cooldown") } }
+                    span { { t!("feature-overview-col-last-callback") } }
+                }
+                for site in sites {
+                    div { key: "{site.id}", class: "vote-site-row",
+                        span { class: "vote-site-name", "{site.name}" }
+                        span {
+                            span { class: vote_site_status_class(site.status),
+                                "{vote_site_status_label(site.status)}"
+                            }
+                        }
+                        span { class: "tabular-nums", "{site.votes_today}" }
+                        span { "{site.cooldown}" }
+                        span { class: "text-text-muted", "{site.last_callback}" }
+                    }
+                }
+            }
+        }
+
+        div { class: "motion-cascade grid gap-4 lg:grid-cols-2",
+            DataPanel { title: t_key("feature-overview-top-rewards"),
+                for reward in top_rewards() {
+                    RowItem {
+                        title: reward.name.clone(),
+                        meta: format!("{} · {}", reward.trigger_kind, reward.reward_summary),
+                        trailing: t!("community-claims-count", count: reward.claims),
+                    }
+                }
+            }
+            DataPanel { title: t_key("feature-overview-quick-status"),
                 RowItem {
-                    title: "Public path",
-                    meta: copy.domain,
-                    trailing: "On website",
+                    title: t_key("feature-overview-public-claim-path"),
+                    meta: String::from("www.example.com/vote"),
+                    trailing: t_key("feature-overview-on-website"),
                 }
                 RowItem {
-                    title: "Theme",
-                    meta: "Can customize independently",
-                    trailing: "Ready",
+                    title: t_key("feature-overview-callback-timeout"),
+                    meta: t_key("feature-overview-callback-timeout-meta"),
+                    trailing: t_key("feature-overview-status-ok"),
                 }
                 RowItem {
-                    title: "Shared accounts",
-                    meta: "Uses website authentication",
-                    trailing: "On",
+                    title: t_key("feature-overview-auto-claim"),
+                    meta: t_key("feature-overview-auto-claim-meta"),
+                    trailing: t_key("common-on"),
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn ApplicationsOverview() -> Element {
+    let _lang = i18n();
+    let applications = use_context::<Signal<Vec<Application>>>();
+    let navigator = use_navigator();
+    let list = applications();
+    let submitted = list
+        .iter()
+        .filter(|a| a.status == ApplicationStatus::Submitted)
+        .count();
+    let reviewing = list
+        .iter()
+        .filter(|a| a.status == ApplicationStatus::Reviewing)
+        .count();
+    let accepted = list
+        .iter()
+        .filter(|a| a.status == ApplicationStatus::Accepted)
+        .count();
+    let denied = list
+        .iter()
+        .filter(|a| a.status == ApplicationStatus::Denied)
+        .count();
+
+    let roles: Vec<String> = list
+        .iter()
+        .map(|a| a.role.clone())
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .collect();
+
+    let recent: Vec<Application> = {
+        let mut items = list.clone();
+        items.sort_by(|a, b| b.id.cmp(&a.id));
+        items.into_iter().take(3).collect()
+    };
+
+    let open_count = submitted + reviewing;
+
+    rsx! {
+        VotesApplicationsStyles {}
+
+        div { class: "app-console-masthead",
+            div { class: "min-w-0",
+                p { class: "app-console-eyebrow", { t!("feature-overview-applications") } }
+                h1 { class: "app-console-title",
+                    { t!("feature-overview-applications-need-decision", count: open_count) }
+                }
+                p { class: "app-console-sub",
+                    { t!("feature-overview-applications-summary", submitted: submitted, reviewing: reviewing, roles: roles.len()) }
+                }
+            }
+            div { class: "flex flex-wrap items-center gap-2",
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    size: ButtonSize::Sm,
+                    onclick: move |_| {
+                        navigator.push(Route::ApplicationsSiteSettings {});
+                    },
+                    { t!("feature-overview-form-settings") }
+                }
+                Button {
+                    size: ButtonSize::Sm,
+                    onclick: move |_| {
+                        navigator.push(Route::CommunityApplications {});
+                    },
+                    { t!("feature-overview-open-inbox") }
+                }
+            }
+        }
+
+        section { class: "app-console-panel",
+            div { class: "app-console-panel-head",
+                h2 { class: "text-sm font-semibold text-text", { t!("feature-overview-recent-submissions") } }
+                span { class: "text-xs text-text-muted", { t!("feature-overview-newest-first") } }
+            }
+            if recent.is_empty() {
+                p { class: "px-4 py-6 text-sm text-text-muted",
+                    { t!("feature-overview-applications-empty") }
+                }
+            } else {
+                div { class: "app-console-table is-compact",
+                    div { class: "app-console-row is-head",
+                        span { { t!("feature-overview-col-applicant") } }
+                        span { { t!("feature-overview-col-role") } }
+                        span { { t!("feature-overview-col-status") } }
+                        span { { t!("feature-overview-col-votes") } }
+                        span { { t!("feature-overview-col-submitted") } }
+                    }
+                    for app in recent {
+                        {
+                            let app_id = app.id;
+                            rsx! {
+                                button {
+                                    key: "{app.id}",
+                                    r#type: "button",
+                                    class: "app-console-row is-clickable",
+                                    onclick: move |_| {
+                                        navigator
+                                            .push(Route::ApplicationReview {
+                                                id: app_id,
+                                            });
+                                    },
+                                    span { class: "app-console-name", "{app.applicant}" }
+                                    span { "{app.role}" }
+                                    span { "{app.status.label()}" }
+                                    span { class: "tabular-nums", "{app.votes_yes} / {app.votes_no}" }
+                                    span { class: "text-text-muted", "{app.submitted}" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        div { class: "mt-4 grid gap-4 lg:grid-cols-2",
+            DataPanel { title: t_key("feature-overview-pipeline"),
+                RowItem {
+                    title: t_key("community-app-status-submitted"),
+                    meta: t_key("feature-overview-pipeline-submitted-meta"),
+                    trailing: format!("{submitted}"),
                 }
                 RowItem {
-                    title: "Public surface",
-                    meta: "Players can visit this on your website",
-                    trailing: copy.status,
+                    title: t_key("community-app-status-reviewing"),
+                    meta: t_key("feature-overview-pipeline-reviewing-meta"),
+                    trailing: format!("{reviewing}"),
+                }
+                RowItem {
+                    title: t_key("community-app-status-accepted"),
+                    meta: t_key("feature-overview-pipeline-accepted-meta"),
+                    trailing: format!("{accepted}"),
+                }
+                RowItem {
+                    title: t_key("community-app-status-denied"),
+                    meta: t_key("feature-overview-pipeline-denied-meta"),
+                    trailing: format!("{denied}"),
+                }
+            }
+            DataPanel { title: t_key("feature-overview-open-roles"),
+                if roles.is_empty() {
+                    RowItem {
+                        title: t_key("feature-overview-no-roles"),
+                        meta: t_key("feature-overview-no-roles-meta"),
+                        trailing: String::from("—"),
+                    }
+                } else {
+                    for name in roles {
+                        RowItem {
+                            title: name.clone(),
+                            meta: t_key("feature-overview-accepting-applications"),
+                            trailing: t_key("feature-overview-role-open"),
+                        }
+                    }
                 }
             }
         }

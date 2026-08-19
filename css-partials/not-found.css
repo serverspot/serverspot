@@ -1,0 +1,65 @@
+@layer utilities {
+  .admin-missing {
+    display: flex;
+    min-height: min(28rem, 70vh);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1.25rem;
+    text-align: center;
+    animation: reveal-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .admin-missing-mark {
+    animation: reveal-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .admin-missing-brand {
+    margin-top: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+    animation: reveal-fade 0.45s ease 0.08s both;
+  }
+
+  .admin-missing-line {
+    margin-top: 0.55rem;
+    max-width: 18rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+    animation: reveal-fade 0.45s ease 0.14s both;
+  }
+
+  .admin-missing-link {
+    margin-top: 1.5rem;
+    border: 0;
+    background: none;
+    padding: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: color 0.15s ease;
+    animation: reveal-fade 0.45s ease 0.22s both;
+  }
+
+  .admin-missing-link:hover {
+    color: var(--color-accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .admin-missing,
+    .admin-missing-mark,
+    .admin-missing-brand,
+    .admin-missing-line,
+    .admin-missing-link {
+      animation: none;
+    }
+
+    .admin-missing-link {
+      transition: none;
+    }
+  }
+}

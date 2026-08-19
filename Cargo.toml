@@ -10,6 +10,7 @@ edition = "2021"
 anyhow = "1.0.104"
 base64 = "0.22"
 dioxus = { version = "0.7.1", features = ["router", "fullstack"] }
+dioxus-i18n = "0.5.1"
 dotenvy = { version = "0.15.7", features = ["clap"], optional = true }
 sha2 = "0.10"
 surrealdb = { version = "3.2.3", optional = true }
@@ -28,3 +29,10 @@ forum = []
 
 [package.metadata.docs.rs]
 features = ["web"]
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = true
+opt-level = 3

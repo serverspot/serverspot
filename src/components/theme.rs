@@ -1,306 +1,48 @@
 use dioxus::prelude::*;
+use dioxus_i18n::prelude::*;
+use dioxus_i18n::t;
+
 use crate::components::syntax::highlighted_html;
 use crate::components::ui::*;
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum ThemeFeature {
-    Store,
-    Forum,
-    Support,
-    Content,
-    Players,
-    Leaderboards,
-    Votes,
-    Applications,
-    Analytics,
-}
-impl ThemeFeature {
-    fn label(self) -> &'static str {
-        match self {
-            Self::Store => "Store",
-            Self::Forum => "Forum",
-            Self::Support => "Support",
-            Self::Content => "Blog",
-            Self::Players => "Players",
-            Self::Leaderboards => "Leaderboards",
-            Self::Votes => "Vote rewards",
-            Self::Applications => "Applications",
-            Self::Analytics => "Analytics",
-        }
-    }
-    fn slug(self) -> &'static str {
-        match self {
-            Self::Store => "store",
-            Self::Forum => "forum",
-            Self::Support => "support",
-            Self::Content => "blog",
-            Self::Players => "players",
-            Self::Leaderboards => "leaderboards",
-            Self::Votes => "votes",
-            Self::Applications => "applications",
-            Self::Analytics => "analytics",
-        }
-    }
-    fn overview_route(self) -> crate::router::Route {
-        use crate::router::Route;
-        match self {
-            Self::Store => Route::StoreOverview {},
-            Self::Forum => Route::ForumOverview {},
-            Self::Support => Route::SupportOverview {},
-            Self::Content => Route::ContentOverview {},
-            Self::Players => Route::PlayersOverview {},
-            Self::Leaderboards => Route::LeaderboardsOverview {},
-            Self::Votes => Route::VotesOverview {},
-            Self::Applications => Route::ApplicationsOverview {},
-            Self::Analytics => Route::AnalyticsOverview {},
-        }
-    }
-    fn files(self) -> &'static [ThemeFile] {
-        match self {
-            Self::Store => {
-                &[
-                    ThemeFile {
-                        path: "theme.css",
-                        language: "CSS",
-                        content: STORE_THEME_CSS,
-                    },
-                    ThemeFile {
-                        path: "product-card.css",
-                        language: "CSS",
-                        content: STORE_CARD_CSS,
-                    },
-                    ThemeFile {
-                        path: "checkout.html",
-                        language: "HTML",
-                        content: STORE_CHECKOUT_HTML,
-                    },
-                ]
-            }
-            Self::Forum => {
-                &[
-                    ThemeFile {
-                        path: "theme.css",
-                        language: "CSS",
-                        content: FORUM_THEME_CSS,
-                    },
-                    ThemeFile {
-                        path: "thread.html",
-                        language: "HTML",
-                        content: FORUM_THREAD_HTML,
-                    },
-                    ThemeFile {
-                        path: "category.css",
-                        language: "CSS",
-                        content: FORUM_CATEGORY_CSS,
-                    },
-                ]
-            }
-            Self::Support => {
-                &[
-                    ThemeFile {
-                        path: "theme.css",
-                        language: "CSS",
-                        content: SUPPORT_THEME_CSS,
-                    },
-                    ThemeFile {
-                        path: "ticket-portal.html",
-                        language: "HTML",
-                        content: SUPPORT_PORTAL_HTML,
-                    },
-                    ThemeFile {
-                        path: "reply.css",
-                        language: "CSS",
-                        content: SUPPORT_REPLY_CSS,
-                    },
-                ]
-            }
-            Self::Content => {
-                &[
-                    ThemeFile {
-                        path: "theme.css",
-                        language: "CSS",
-                        content: CONTENT_THEME_CSS,
-                    },
-                    ThemeFile {
-                        path: "article.html",
-                        language: "HTML",
-                        content: CONTENT_ARTICLE_HTML,
-                    },
-                    ThemeFile {
-                        path: "page-hero.css",
-                        language: "CSS",
-                        content: CONTENT_HERO_CSS,
-                    },
-                ]
-            }
-            Self::Players => {
-                &[
-                    ThemeFile {
-                        path: "theme.css",
-                        language: "CSS",
-                        content: COMMUNITY_THEME_CSS,
-                    },
-                    ThemeFile {
-                        path: "profile.html",
-                        language: "HTML",
-                        content: COMMUNITY_PROFILE_HTML,
-                    },
-                    ThemeFile {
-                        path: "stats.css",
-                        language: "CSS",
-                        content: PLAYERS_STATS_CSS,
-                    },
-                ]
-            }
-            Self::Leaderboards => {
-                &[
-                    ThemeFile {
-                        path: "theme.css",
-                        language: "CSS",
-                        content: LEADERBOARDS_THEME_CSS,
-                    },
-                    ThemeFile {
-                        path: "board.html",
-                        language: "HTML",
-                        content: LEADERBOARDS_BOARD_HTML,
-                    },
-                    ThemeFile {
-                        path: "rank-row.css",
-                        language: "CSS",
-                        content: LEADERBOARDS_ROW_CSS,
-                    },
-                ]
-            }
-            Self::Votes => {
-                &[
-                    ThemeFile {
-                        path: "theme.css",
-                        language: "CSS",
-                        content: VOTES_THEME_CSS,
-                    },
-                    ThemeFile {
-                        path: "claim.html",
-                        language: "HTML",
-                        content: VOTES_CLAIM_HTML,
-                    },
-                    ThemeFile {
-                        path: "streak.css",
-                        language: "CSS",
-                        content: VOTES_STREAK_CSS,
-                    },
-                ]
-            }
-            Self::Applications => {
-                &[
-                    ThemeFile {
-                        path: "theme.css",
-                        language: "CSS",
-                        content: APPLICATIONS_THEME_CSS,
-                    },
-                    ThemeFile {
-                        path: "form.html",
-                        language: "HTML",
-                        content: APPLICATIONS_FORM_HTML,
-                    },
-                    ThemeFile {
-                        path: "application.css",
-                        language: "CSS",
-                        content: COMMUNITY_APP_CSS,
-                    },
-                ]
-            }
-            Self::Analytics => {
-                &[
-                    ThemeFile {
-                        path: "theme.css",
-                        language: "CSS",
-                        content: ANALYTICS_THEME_CSS,
-                    },
-                    ThemeFile {
-                        path: "report.html",
-                        language: "HTML",
-                        content: ANALYTICS_REPORT_HTML,
-                    },
-                    ThemeFile {
-                        path: "charts.css",
-                        language: "CSS",
-                        content: ANALYTICS_CHARTS_CSS,
-                    },
-                ]
-            }
-        }
-    }
-}
-#[derive(Clone, Copy, PartialEq, Eq)]
+use crate::i18n::t_key;
+use crate::router::Route;
+
+#[derive(Clone, PartialEq, Eq)]
 struct ThemeFile {
-    path: &'static str,
-    language: &'static str,
-    content: &'static str,
+    path: String,
+    language: String,
+    content: String,
 }
-#[component]
-pub fn StoreTheme() -> Element {
-    rsx! {
-        FeatureTheme { feature: ThemeFeature::Store }
+
+fn theme_file(path: &str, language: &str, content: &str) -> ThemeFile {
+    ThemeFile {
+        path: path.to_owned(),
+        language: language.to_owned(),
+        content: content.to_owned(),
     }
 }
+
+fn site_theme_files() -> Vec<ThemeFile> {
+    vec![
+        theme_file("theme.css", "CSS", SITE_THEME_CSS),
+        theme_file("layout.css", "CSS", SITE_LAYOUT_CSS),
+        theme_file("preview.html", "HTML", SITE_PREVIEW_HTML),
+    ]
+}
+
 #[component]
-pub fn ForumTheme() -> Element {
+pub fn SettingsTheme() -> Element {
     rsx! {
-        FeatureTheme { feature: ThemeFeature::Forum }
+        ThemeFileEditor {}
     }
 }
-#[component]
-pub fn SupportTheme() -> Element {
-    rsx! {
-        FeatureTheme { feature: ThemeFeature::Support }
-    }
-}
-#[component]
-pub fn ContentTheme() -> Element {
-    rsx! {
-        FeatureTheme { feature: ThemeFeature::Content }
-    }
-}
-#[component]
-pub fn PlayersTheme() -> Element {
-    rsx! {
-        FeatureTheme { feature: ThemeFeature::Players }
-    }
-}
-#[component]
-pub fn LeaderboardsTheme() -> Element {
-    rsx! {
-        FeatureTheme { feature: ThemeFeature::Leaderboards }
-    }
-}
-#[component]
-pub fn VotesTheme() -> Element {
-    rsx! {
-        FeatureTheme { feature: ThemeFeature::Votes }
-    }
-}
-#[component]
-pub fn ApplicationsTheme() -> Element {
-    rsx! {
-        FeatureTheme { feature: ThemeFeature::Applications }
-    }
-}
-#[component]
-pub fn AnalyticsTheme() -> Element {
-    rsx! {
-        FeatureTheme { feature: ThemeFeature::Analytics }
-    }
-}
-#[component]
-fn FeatureTheme(feature: ThemeFeature) -> Element {
-    rsx! {
-        ThemeFileEditor { feature }
-    }
-}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum PromptKind {
     NewFile,
     NewFolder,
 }
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum StatusMsg {
     Ready,
@@ -312,60 +54,66 @@ enum StatusMsg {
     InvalidName,
     Exists,
 }
+
 impl StatusMsg {
-    const fn as_str(self) -> &'static str {
+    fn label(self) -> String {
         match self {
-            Self::Ready => "Ready",
-            Self::Unsaved => "Unsaved changes",
-            Self::Saved => "Saved theme files (mock)",
-            Self::CreatedFile => "Created file",
-            Self::CreatedFolder => "Created folder",
-            Self::Uploaded => "Uploaded file (mock)",
-            Self::InvalidName => "Enter a valid name",
-            Self::Exists => "Path already exists",
+            Self::Ready => t_key("theme-status-ready"),
+            Self::Unsaved => t_key("theme-status-unsaved"),
+            Self::Saved => t_key("theme-status-saved"),
+            Self::CreatedFile => t_key("theme-status-created-file"),
+            Self::CreatedFolder => t_key("theme-status-created-folder"),
+            Self::Uploaded => t_key("theme-status-uploaded"),
+            Self::InvalidName => t_key("theme-status-invalid-name"),
+            Self::Exists => t_key("theme-status-exists"),
         }
     }
 }
+
 struct EditorFile {
     path: String,
     language: String,
     body: String,
 }
+
 impl EditorFile {
     fn from_seed(file: ThemeFile) -> Self {
         Self {
-            path: file.path.to_owned(),
-            language: file.language.to_owned(),
-            body: file.content.to_owned(),
+            path: file.path,
+            language: file.language,
+            body: file.content,
         }
     }
+
     fn parent(&self) -> Option<&str> {
         self.path.rsplit_once('/').map(|(folder, _)| folder)
     }
+
     fn name(&self) -> &str {
         self.path.rsplit('/').next().unwrap_or(self.path.as_str())
     }
 }
+
 struct FolderEntry {
     name: String,
     open: bool,
 }
+
 struct ThemeEditor {
     files: Vec<EditorFile>,
     folders: Vec<FolderEntry>,
     tabs: Vec<u16>,
     active: u16,
-    prompt: Option<PromptKind>,
-    prompt_buf: String,
 }
+
 impl ThemeEditor {
-    fn new(seed: &'static [ThemeFile]) -> Self {
-        let files: Vec<EditorFile> = seed
-            .iter()
-            .copied()
-            .map(EditorFile::from_seed)
-            .collect();
-        let tabs = if files.is_empty() { Vec::new() } else { vec![0] };
+    fn new(seed: Vec<ThemeFile>) -> Self {
+        let files: Vec<EditorFile> = seed.into_iter().map(EditorFile::from_seed).collect();
+        let tabs = if files.is_empty() {
+            Vec::new()
+        } else {
+            vec![0]
+        };
         Self {
             files,
             folders: vec![
@@ -380,58 +128,49 @@ impl ThemeEditor {
             ],
             tabs,
             active: 0,
-            prompt: None,
-            prompt_buf: String::new(),
         }
     }
+
     fn ensure_tab(&mut self, index: u16) {
         if !self.tabs.contains(&index) {
             self.tabs.push(index);
         }
         self.active = index;
     }
+
     fn close_tab(&mut self, index: u16) {
         self.tabs.retain(|tab| *tab != index);
         if self.active == index {
             self.active = self.tabs.last().copied().unwrap_or(0);
         }
     }
+
     fn ensure_folder(&mut self, name: &str, open: bool) {
-        if let Some(folder) = self.folders.iter_mut().find(|folder| folder.name == name)
-        {
+        if let Some(folder) = self.folders.iter_mut().find(|folder| folder.name == name) {
             if open {
                 folder.open = true;
             }
             return;
         }
-        self.folders
-            .push(FolderEntry {
-                name: String::from(name),
-                open,
-            });
+        self.folders.push(FolderEntry {
+            name: String::from(name),
+            open,
+        });
         self.folders.sort_by(|a, b| a.name.cmp(&b.name));
     }
+
     fn toggle_folder(&mut self, index: usize) {
         if let Some(folder) = self.folders.get_mut(index) {
             folder.open = !folder.open;
         }
     }
-    fn open_prompt(&mut self, kind: PromptKind) {
-        self.prompt = Some(kind);
-        self.prompt_buf.clear();
-    }
-    fn close_prompt(&mut self) {
-        self.prompt = None;
-        self.prompt_buf.clear();
-    }
-    fn create_from_prompt(&mut self) -> Option<StatusMsg> {
-        let Some(kind) = self.prompt else {
-            return None;
-        };
-        let normalized = self.prompt_buf.trim().replace('\\', "/");
+
+    fn create_from_prompt(&mut self, kind: PromptKind, prompt_buf: &str) -> Option<StatusMsg> {
+        let normalized = prompt_buf.trim().replace('\\', "/");
         if normalized.is_empty() || normalized.contains("..") {
             return Some(StatusMsg::InvalidName);
         }
+
         let status = match kind {
             PromptKind::NewFolder => {
                 let path = normalized.trim_matches('/');
@@ -458,47 +197,52 @@ impl ThemeEditor {
                 content.push_str("/* ");
                 content.push_str(path);
                 content.push_str(" */\n");
-                self.files
-                    .push(EditorFile {
-                        path: String::from(path),
-                        language: language.to_string(),
-                        body: content,
-                    });
+                self.files.push(EditorFile {
+                    path: String::from(path),
+                    language,
+                    body: content,
+                });
                 self.ensure_tab(index);
                 StatusMsg::CreatedFile
             }
         };
-        self.close_prompt();
+
         Some(status)
     }
+
     fn mock_upload(&mut self) {
         let index = self.files.len() as u16;
         self.ensure_folder("assets", true);
         let mut path = String::from("assets/upload-");
         push_u16(&mut path, index);
-        self.files
-            .push(EditorFile {
-                path,
-                language: String::from("FILE"),
-                body: String::from("/* Mock upload */\n"),
-            });
+        self.files.push(EditorFile {
+            path,
+            language: String::from("FILE"),
+            body: String::from("/* Mock upload */\n"),
+        });
         self.ensure_tab(index);
     }
+
     fn commit_active_body(&mut self, value: String) {
         if let Some(file) = self.files.get_mut(self.active as usize) {
             file.body = value;
         }
     }
+
     fn active_body(&self) -> String {
         self.files
             .get(self.active as usize)
             .map(|file| file.body.clone())
             .unwrap_or_default()
     }
+
     fn active_language(&self) -> Option<String> {
-        self.files.get(self.active as usize).map(|file| file.language.clone())
+        self.files
+            .get(self.active as usize)
+            .map(|file| file.language.clone())
     }
 }
+
 fn push_u16(buf: &mut String, mut value: u16) {
     if value == 0 {
         buf.push('0');
@@ -516,8 +260,9 @@ fn push_u16(buf: &mut String, mut value: u16) {
         buf.push(digits[n] as char);
     }
 }
-fn language_from_path(path: &str) -> &'static str {
-    match path.rsplit('.').next().unwrap_or("") {
+
+fn language_from_path(path: &str) -> String {
+    let language = match path.rsplit('.').next().unwrap_or("") {
         "html" | "htm" => "HTML",
         "css" => "CSS",
         "js" | "mjs" => "JS",
@@ -528,20 +273,23 @@ fn language_from_path(path: &str) -> &'static str {
         "woff" | "woff2" | "ttf" | "otf" => "FONT",
         "png" | "jpg" | "jpeg" | "webp" | "gif" => "IMG",
         _ => "FILE",
-    }
+    };
+    String::from(language)
 }
+
 #[component]
-fn ThemeFileEditor(feature: ThemeFeature) -> Element {
-    let feature_label = feature.label();
-    let feature_slug = feature.slug();
-    let overview = feature.overview_route();
+fn ThemeFileEditor() -> Element {
+    let _lang = i18n();
     let navigator = use_navigator();
-    let mut editor = use_signal(|| ThemeEditor::new(feature.files()));
+    let mut editor = use_signal(|| ThemeEditor::new(site_theme_files()));
     let mut dirty = use_signal(|| false);
     let mut status = use_signal(|| StatusMsg::Ready);
     let mut draft = use_signal(|| editor.read().active_body());
+    let mut prompt = use_signal(|| Option::<PromptKind>::None);
+    let mut prompt_buf = use_signal(String::new);
+
     let active = editor.read().active;
-    let prompt = editor.read().prompt;
+    let prompt_kind = prompt();
     let tab_count = editor.read().tabs.len();
     let file_count = editor.read().files.len();
     let folder_count = editor.read().folders.len();
@@ -549,6 +297,7 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
     let active_lang = editor.read().active_language();
     let dirty_flag = dirty();
     let status_msg = status();
+
     rsx! {
         div { class: "theme-ide theme-ide-page",
             div { class: "theme-ide-titlebar",
@@ -556,11 +305,11 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                     variant: ButtonVariant::Ghost,
                     size: ButtonSize::Sm,
                     onclick: move |_| {
-                        navigator.push(overview);
+                        navigator.push(Route::SettingsGeneral {});
                     },
-                    "← Overview"
+                    { t!("theme-back-settings") }
                 }
-                p { class: "theme-ide-title", "{feature_label} · themes/{feature_slug}" }
+                p { class: "theme-ide-title", { t!("theme-titlebar") } }
                 div { class: "flex items-center gap-2",
                     Button {
                         variant: ButtonVariant::Secondary,
@@ -572,9 +321,9 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                             status.set(StatusMsg::Saved);
                         },
                         if dirty_flag {
-                            "Save*"
+                            { t!("theme-save-dirty") }
                         } else {
-                            "Save"
+                            { t!("theme-save") }
                         }
                     }
                 }
@@ -582,28 +331,32 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
             div { class: "theme-ide-body",
                 aside { class: "theme-ide-sidebar",
                     div { class: "theme-ide-sidebar-header",
-                        p { class: "theme-ide-sidebar-label", "Explorer" }
+                        p { class: "theme-ide-sidebar-label", { t!("theme-explorer") } }
                         div { class: "theme-ide-sidebar-actions",
                             button {
                                 r#type: "button",
                                 class: "theme-ide-tool",
-                                title: "New file",
-                                onclick: move | _ | editor.write()
-                                        .open_prompt(PromptKind::NewFile),
-                                "File"
+                                title: t_key("theme-new-file"),
+                                onclick: move |_| {
+                                    prompt_buf.set(String::new());
+                                    prompt.set(Some(PromptKind::NewFile));
+                                },
+                                { t!("theme-file") }
                             }
                             button {
                                 r#type: "button",
                                 class: "theme-ide-tool",
-                                title: "New folder",
-                                onclick: move | _ | editor.write()
-                                        .open_prompt(PromptKind::NewFolder),
-                                "Folder"
+                                title: t_key("theme-new-folder"),
+                                onclick: move |_| {
+                                    prompt_buf.set(String::new());
+                                    prompt.set(Some(PromptKind::NewFolder));
+                                },
+                                { t!("theme-folder") }
                             }
                             label {
                                 class: "theme-ide-tool theme-ide-tool-upload",
-                                title: "Upload files",
-                                span { "Upload" }
+                                title: t_key("theme-upload-files"),
+                                span { { t!("theme-upload") } }
                                 input {
                                     r#type: "file",
                                     multiple: true,
@@ -618,7 +371,7 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                             }
                         }
                     }
-                    p { class: "theme-ide-folder theme-ide-folder-root", "themes/{feature_slug}" }
+                    p { class: "theme-ide-folder theme-ide-folder-root", { t!("theme-root-path") } }
                     for index in 0..file_count as u16 {
                         if editor.read().files.get(index as usize).is_some_and(|file| file.parent().is_none()) {
                             ThemeFileRow {
@@ -656,78 +409,113 @@ fn ThemeFileEditor(feature: ThemeFeature) -> Element {
                         }
                     } else {
                         div { class: "theme-ide-empty",
-                            p { "No file open" }
+                            p { { t!("theme-empty-title") } }
                             p { class: "theme-ide-empty-hint",
-                                "Create a file, upload one, or pick something from the explorer."
+                                { t!("theme-empty-hint") }
                             }
                         }
                     }
                 }
             }
-            if let Some(kind) = prompt {
-                div {
-                    class: "theme-ide-prompt-backdrop",
-                    onclick: move |_| editor.write().close_prompt(),
-                    div {
-                        class: "theme-ide-prompt",
-                        onclick: move |evt| evt.stop_propagation(),
-                        p { class: "theme-ide-prompt-title",
-                            match kind {
-                                PromptKind::NewFile => "New file",
-                                PromptKind::NewFolder => "New folder",
+
+            if let Some(kind) = prompt_kind {
+                ThemePromptDialog {
+                    kind,
+                    prompt,
+                    prompt_buf,
+                    editor,
+                    draft,
+                    dirty,
+                    status,
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn ThemePromptDialog(
+    kind: PromptKind,
+    mut prompt: Signal<Option<PromptKind>>,
+    mut prompt_buf: Signal<String>,
+    mut editor: Signal<ThemeEditor>,
+    mut draft: Signal<String>,
+    mut dirty: Signal<bool>,
+    mut status: Signal<StatusMsg>,
+) -> Element {
+    let _lang = i18n();
+    rsx! {
+        div {
+            class: "theme-ide-prompt-backdrop",
+            onclick: move |_| {
+                prompt.set(None);
+                prompt_buf.set(String::new());
+            },
+            div {
+                class: "theme-ide-prompt",
+                onclick: move |evt| evt.stop_propagation(),
+                p { class: "theme-ide-prompt-title",
+                    match kind {
+                        PromptKind::NewFile => t!("theme-new-file"),
+                        PromptKind::NewFolder => t!("theme-new-folder"),
+                    }
+                }
+                p { class: "theme-ide-prompt-hint",
+                    match kind {
+                        PromptKind::NewFile => t!("theme-new-file-hint"),
+                        PromptKind::NewFolder => t!("theme-new-folder-hint"),
+                    }
+                }
+                input {
+                    r#type: "text",
+                    class: "ui-input ui-squircle theme-ide-prompt-input h-10 w-full px-4 text-sm outline-none",
+                    value: "{prompt_buf}",
+                    placeholder: match kind {
+                        PromptKind::NewFile => t_key("theme-new-file-placeholder"),
+                        PromptKind::NewFolder => t_key("theme-new-folder-placeholder"),
+                    },
+                    oninput: move |evt: FormEvent| {
+                        prompt_buf.set(evt.value());
+                    },
+                }
+                div { class: "theme-ide-prompt-actions",
+                    Button {
+                        variant: ButtonVariant::Ghost,
+                        size: ButtonSize::Sm,
+                        onclick: move |_| {
+                            prompt.set(None);
+                            prompt_buf.set(String::new());
+                        },
+                        { t!("common-cancel") }
+                    }
+                    Button {
+                        size: ButtonSize::Sm,
+                        onclick: move |_| {
+                            let buf = prompt_buf();
+                            let msg = editor.write().create_from_prompt(kind, &buf);
+                            prompt.set(None);
+                            prompt_buf.set(String::new());
+                            if let Some(msg) = msg {
+                                let reload = matches!(msg, StatusMsg::CreatedFile);
+                                status.set(msg);
+                                if reload {
+                                    draft.set(editor.read().active_body());
+                                    dirty.set(false);
+                                }
                             }
-                        }
-                        p { class: "theme-ide-prompt-hint",
-                            match kind {
-                                PromptKind::NewFile => "Path relative to the theme root, e.g. assets/hero.css",
-                                PromptKind::NewFolder => "Folder path, e.g. assets/fonts",
-                            }
-                        }
-                        input {
-                            r#type: "text",
-                            class: "ui-input ui-squircle theme-ide-prompt-input h-10 w-full px-4 text-sm outline-none",
-                            value: "{editor.read().prompt_buf}",
-                            placeholder: match kind {
-                                PromptKind::NewFile => "filename.css",
-                                PromptKind::NewFolder => "folder-name",
-                            },
-                            oninput: move |evt: FormEvent| {
-                                let value = evt.value();
-                                editor.write().prompt_buf = value;
-                            },
-                        }
-                        div { class: "theme-ide-prompt-actions",
-                            Button {
-                                variant: ButtonVariant::Ghost,
-                                size: ButtonSize::Sm,
-                                onclick: move | _ |
-                                        editor.write().close_prompt(),
-                                "Cancel"
-                            }
-                            Button {
-                                size: ButtonSize::Sm,
-                                onclick: move |_| {
-                                    let msg = editor.write().create_from_prompt();
-                                    if let Some(msg) = msg {
-                                        let reload = matches!(msg, StatusMsg::CreatedFile);
-                                        status.set(msg);
-                                        if reload {
-                                            draft.set(editor.read().active_body());
-                                            dirty.set(false);
-                                        }
-                                    }
-                                },
-                                "Create"
-                            }
-                        }
+                        },
+                        { t!("theme-create") }
                     }
                 }
             }
         }
     }
 }
+
 #[component]
 fn ThemeStatusBar(editor: Signal<ThemeEditor>, status: StatusMsg) -> Element {
+    let _lang = i18n();
+    let status_label = status.label();
     let (path, language) = {
         let state = editor.read();
         match state.files.get(state.active as usize) {
@@ -735,16 +523,18 @@ fn ThemeStatusBar(editor: Signal<ThemeEditor>, status: StatusMsg) -> Element {
             None => (String::new(), String::new()),
         }
     };
+
     rsx! {
         div { class: "theme-ide-status",
             span { "{path}" }
             span { "{language}" }
             span { "UTF-8" }
             span { "LF" }
-            span { class: "theme-ide-status-msg", "{status.as_str()}" }
+            span { class: "theme-ide-status-msg", "{status_label}" }
         }
     }
 }
+
 #[component]
 fn ThemeCodePane(
     #[props(into)] language: String,
@@ -753,6 +543,7 @@ fn ThemeCodePane(
     mut status: Signal<StatusMsg>,
 ) -> Element {
     let html = use_memo(move || highlighted_html(draft.read().as_str(), language.as_str()));
+
     rsx! {
         div { class: "theme-ide-editor",
             div { class: "theme-ide-gutter-plain", aria_hidden: true }
@@ -785,6 +576,7 @@ fn ThemeCodePane(
         }
     }
 }
+
 #[component]
 fn ThemeFileRow(
     mut editor: Signal<ThemeEditor>,
@@ -807,6 +599,7 @@ fn ThemeFileRow(
         .get(index as usize)
         .map(|file| file.name().to_string())
         .unwrap_or_default();
+
     rsx! {
         button {
             class: if active == index { if nested {
@@ -823,6 +616,7 @@ fn ThemeFileRow(
         }
     }
 }
+
 #[component]
 fn ThemeFolderBlock(
     mut editor: Signal<ThemeEditor>,
@@ -846,11 +640,11 @@ fn ThemeFolderBlock(
         .get(folder_i)
         .map(|folder| folder.name.clone())
         .unwrap_or_default();
+
     rsx! {
         button {
             class: "theme-ide-folder-row",
-            onclick: move | _ | editor.write()
-                    .toggle_folder(folder_i),
+            onclick: move |_| editor.write().toggle_folder(folder_i),
             span { class: "theme-ide-folder-chevron",
                 if is_open {
                     "▾"
@@ -866,7 +660,7 @@ fn ThemeFolderBlock(
                     .read()
                     .files
                     .get(index as usize)
-                    .is_some_and(|file| { file.parent() == Some(name.as_ref()) })
+                    .is_some_and(|file| { file.parent() == Some(name.as_str()) })
                 {
                     ThemeFileRow {
                         editor,
@@ -879,6 +673,7 @@ fn ThemeFolderBlock(
         }
     }
 }
+
 #[component]
 fn ThemeTab(mut editor: Signal<ThemeEditor>, mut draft: Signal<String>, index: u16) -> Element {
     let active = editor.read().active;
@@ -888,6 +683,7 @@ fn ThemeTab(mut editor: Signal<ThemeEditor>, mut draft: Signal<String>, index: u
         .get(index as usize)
         .map(|file| file.name().to_string())
         .unwrap_or_default();
+
     rsx! {
         div { class: if active == index { "theme-ide-tab theme-ide-tab-active" } else { "theme-ide-tab" },
             button {
@@ -900,7 +696,7 @@ fn ThemeTab(mut editor: Signal<ThemeEditor>, mut draft: Signal<String>, index: u
             }
             button {
                 class: "theme-ide-tab-close",
-                title: "Close",
+                title: t_key("theme-close-tab"),
                 onclick: move |_| {
                     editor.write().close_tab(index);
                     draft.set(editor.read().active_body());
@@ -910,257 +706,94 @@ fn ThemeTab(mut editor: Signal<ThemeEditor>, mut draft: Signal<String>, index: u
         }
     }
 }
-const STORE_THEME_CSS: &str = r#":root {
-  --store-primary: #3ecf8e;
-  --store-accent: #87d1fe;
-  --store-bg: #12161a;
-  --store-radius: 12px;
+
+const SITE_THEME_CSS: &str = r#":root {
+  --color-bg: #0b0f14;
+  --color-surface: #12181f;
+  --color-surface-2: #1a222c;
+  --color-border: #2a3441;
+  --color-border-subtle: #1f2833;
+  --color-text: #f4f7fb;
+  --color-text-secondary: #c2ccd8;
+  --color-text-muted: #8b97a8;
+  --color-accent: #5b9dff;
+  --color-accent-soft: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --font-sans: Outfit, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-.store-shell {
-  background: var(--store-bg);
-  color: #f4f7f5;
-  font-family: Outfit, sans-serif;
+.site-shell {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
 }
 "#;
-const STORE_CARD_CSS: &str = r#".product-card {
-  border-radius: var(--store-radius);
-  border: 1px solid color-mix(in srgb, var(--store-primary) 24%, transparent);
-  background: #1c242c;
-  padding: 1rem;
+
+const SITE_LAYOUT_CSS: &str = r#".site-shell {
+  min-height: 100vh;
 }
 
-.product-card__price {
-  color: var(--store-primary);
-  font-weight: 600;
-}
-"#;
-const STORE_CHECKOUT_HTML: &str = r#"<section class="checkout">
-  <h1>Checkout</h1>
-  <div class="checkout__summary">
-    <p>VIP Rank</p>
-    <strong>£29.99</strong>
-  </div>
-  <button class="btn-primary">Pay now</button>
-</section>
-"#;
-const FORUM_THEME_CSS: &str = r#":root {
-  --forum-primary: #5b9dff;
-  --forum-surface: #1e2230;
-  --forum-radius: 8px;
-}
-
-.forum-shell {
-  background: #14161f;
-  font-family: "IBM Plex Sans", sans-serif;
-}
-"#;
-const FORUM_THREAD_HTML: &str = r#"<article class="thread">
-  <header>
-    <h1>Welcome to the forums</h1>
-    <span class="meta">Posted by NovaCraft</span>
-  </header>
-  <div class="thread__body">
-    Share builds, events, and server news.
-  </div>
-</article>
-"#;
-const FORUM_CATEGORY_CSS: &str = r#".category-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem 1rem;
-  border-radius: var(--forum-radius);
-  background: var(--forum-surface);
-}
-"#;
-const SUPPORT_THEME_CSS: &str = r#":root {
-  --support-primary: #f0a35e;
-  --support-accent: #f5c14a;
-  --support-bg: #181410;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
 }
 
-.support-shell {
-  background: var(--support-bg);
-  color: #f7f3ee;
-}
-"#;
-const SUPPORT_PORTAL_HTML: &str = r#"<main class="ticket-portal">
-  <h1>Help Center</h1>
-  <form class="ticket-form">
-    <label>Subject</label>
-    <input placeholder="Briefly describe the issue" />
-    <button type="button">Submit ticket</button>
-  </form>
-</main>
-"#;
-const SUPPORT_REPLY_CSS: &str = r#".ticket-reply {
-  border-left: 3px solid var(--support-primary);
-  background: #262018;
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
-}
-"#;
-const CONTENT_THEME_CSS: &str = r#":root {
-  --content-primary: #87d1fe;
-  --content-display: Fraunces, serif;
-  --content-radius: 14px;
+.site-main {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
 }
 
-.content-shell {
-  background: #101418;
-  font-family: Outfit, sans-serif;
-}
-"#;
-const CONTENT_ARTICLE_HTML: &str = r#"<article class="article">
-  <p class="eyebrow">Patch notes</p>
-  <h1>Season 4 launch</h1>
-  <p>Read about new ranks, crates, and world events.</p>
-</article>
-"#;
-const CONTENT_HERO_CSS: &str = r#".page-hero {
-  border-radius: var(--content-radius);
-  background:
-    linear-gradient(180deg, transparent, #101418),
-    radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--content-primary) 30%, transparent), transparent 55%);
-  padding: 3rem 1.5rem;
-}
-"#;
-const COMMUNITY_THEME_CSS: &str = r#":root {
-  --community-primary: #69bdf2;
-  --community-accent: #3ecf8e;
-  --community-radius: 16px;
+.site-card {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  padding: 1.1rem 1.2rem;
 }
 
-.community-shell {
-  background: #12161c;
-  color: #f2f5fa;
+.site-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.95rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 "#;
-const COMMUNITY_PROFILE_HTML: &str = r#"<section class="profile">
-  <header>
-    <h1>NovaCraft</h1>
-    <span class="rank">VIP</span>
-  </header>
-  <p>Joined Mar 2024 · 128 play sessions</p>
-</section>
-"#;
-const PLAYERS_STATS_CSS: &str = r#".player-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-}
 
-.player-stats__item {
-  border-radius: var(--community-radius);
-  background: #1c2430;
-  padding: 0.85rem;
-}
-"#;
-const LEADERBOARDS_THEME_CSS: &str = r#":root {
-  --boards-primary: #5eead4;
-  --boards-accent: #5b9dff;
-  --boards-radius: 8px;
-}
-
-.leaderboards-shell {
-  background: #101618;
-  color: #eef8f6;
-}
-"#;
-const LEADERBOARDS_BOARD_HTML: &str = r#"<section class="board">
-  <h1>Top players</h1>
-  <ol>
-    <li>NovaCraft · 1,842 pts</li>
-    <li>SkyBuilder · 1,640 pts</li>
-  </ol>
-</section>
-"#;
-const LEADERBOARDS_ROW_CSS: &str = r#".rank-row {
-  display: grid;
-  grid-template-columns: 2.5rem 1fr auto;
-  gap: 0.75rem;
-  border-radius: var(--boards-radius);
-  padding: 0.7rem 0.85rem;
-  background: #172226;
-}
-"#;
-const VOTES_THEME_CSS: &str = r#":root {
-  --votes-primary: #fbbf24;
-  --votes-accent: #f0a35e;
-  --votes-radius: 12px;
-}
-
-.votes-shell {
-  background: #16120a;
-  color: #faf6ee;
-}
-"#;
-const VOTES_CLAIM_HTML: &str = r#"<section class="vote-claim">
-  <h1>Claim rewards</h1>
-  <p>Streak day 7 · Ready to claim</p>
-  <button type="button">Claim now</button>
-</section>
-"#;
-const VOTES_STREAK_CSS: &str = r#".vote-streak {
-  border-radius: var(--votes-radius);
-  border: 1px solid color-mix(in srgb, var(--votes-primary) 30%, transparent);
-  background: #242016;
-  padding: 1rem;
-}
-"#;
-const APPLICATIONS_THEME_CSS: &str = r#":root {
-  --apps-primary: #fb7185;
-  --apps-accent: #f0a35e;
-  --apps-radius: 10px;
-}
-
-.applications-shell {
-  background: #161014;
-  color: #faf2f4;
-}
-"#;
-const APPLICATIONS_FORM_HTML: &str = r#"<form class="application-form">
-  <h1>Moderator application</h1>
-  <label>Why do you want to join staff?</label>
-  <textarea rows="4"></textarea>
-  <button type="button">Submit</button>
-</form>
-"#;
-const COMMUNITY_APP_CSS: &str = r#".application-card {
-  border-radius: var(--apps-radius, 16px);
-  border: 1px solid color-mix(in srgb, var(--apps-primary, #3ecf8e) 28%, transparent);
-  padding: 1rem;
-  background: #241820;
-}
-"#;
-const ANALYTICS_THEME_CSS: &str = r#":root {
-  --analytics-primary: #f5c14a;
-  --analytics-accent: #87d1fe;
-  --analytics-grid: #1a1e24;
-}
-
-.analytics-shell {
-  background: #101214;
-  font-family: "JetBrains Mono", monospace;
-}
-"#;
-const ANALYTICS_REPORT_HTML: &str = r#"<section class="report">
-  <h1>Weekly overview</h1>
-  <div class="report__metrics">
-    <div>Revenue · £4,281</div>
-    <div>Tickets · 37</div>
-  </div>
-</section>
-"#;
-const ANALYTICS_CHARTS_CSS: &str = r#".chart-panel {
-  background: var(--analytics-grid);
-  border: 1px solid color-mix(in srgb, var(--analytics-primary) 22%, transparent);
-  border-radius: 6px;
-  padding: 1rem;
-}
-
-.chart-panel__series {
-  stroke: var(--analytics-accent);
-}
+const SITE_PREVIEW_HTML: &str = r#"<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ServerSpot</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="layout.css" />
+  </head>
+  <body class="site-shell">
+    <header class="site-header">
+      <strong>Your server</strong>
+      <button class="site-btn" type="button">Open store</button>
+    </header>
+    <main class="site-main">
+      <section class="site-card">
+        <h1>Welcome back</h1>
+        <p>One site theme drives colours, type, and radius across every public page.</p>
+      </section>
+    </main>
+  </body>
+</html>
 "#;
