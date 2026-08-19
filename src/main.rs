@@ -29,7 +29,7 @@ use user::placeholder_current_user;
 use crate::i18n::{apply_user_locale, init_i18n_config};
 
 pub const FAVICON: Asset = asset!("/assets/favicon.svg");
-pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
+pub const TAILWIND_CSS: Asset = asset!("/tailwind.css");
 pub const SUPPORT_FORUM_CSS: Asset = asset!("/css-partials/support-forum.css");
 
 fn main() {
